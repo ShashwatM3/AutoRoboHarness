@@ -9,6 +9,14 @@ Context and planning documents for the Recursive Agents Hackathon build (Crusoe 
 | [DECISIONS.md](DECISIONS.md) | Every locked decision: workspace, tasks, robot, ground truth, simulator, brain storage, seeds, and the exact Crusoe model IDs |
 | [BUILD-PLAN.md](BUILD-PLAN.md) | The feature sequence for each version, with Person A and Person B owners and time slots |
 
+## Per-version, per-person build plans
+
+| Version | Overview | Person A | Person B |
+|---|---|---|---|
+| 1, The Closed Loop | [README](versions/version-1/README.md) | [plan](versions/version-1/person-A/BUILD-PLAN.md) | [plan](versions/version-1/person-B/BUILD-PLAN.md) |
+| 2, Grounded, Verified, Governed | [README](versions/version-2/README.md) | [plan](versions/version-2/person-A/BUILD-PLAN.md) | [plan](versions/version-2/person-B/BUILD-PLAN.md) |
+| 3, The Full Harness | [README](versions/version-3/README.md) | [plan](versions/version-3/person-A/BUILD-PLAN.md) | [plan](versions/version-3/person-B/BUILD-PLAN.md) |
+
 ## Design
 
 | File | What it is |
