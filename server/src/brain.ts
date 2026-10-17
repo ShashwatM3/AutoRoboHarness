@@ -22,6 +22,27 @@ import {
 const edgeKey = (e: BrainEdge) => `${e.from}|${e.type}|${e.to}`;
 const isRetired = (n: BrainNode) => n.props?.retired_in != null;
 
+/** One version in the read-only catalog. `status` is the index's, or "unregistered" for a snapshot on disk with
+ *  no index row; `available` is false when an indexed version's file is missing or unreadable. */
+export interface CatalogEntry {
+  v: number;
+  parent: number | null;
+  status: VersionStatus | "unregistered";
+  indexed: boolean;
+  available: boolean;
+  unavailable_reason?: string;
+  created_at: string | null;
+  created_by: BrainFile["created_by"] | null;
+  note: string;
+  heldout_score?: number;
+  heldout?: BrainIndex["versions"][number]["heldout"];
+}
+export interface BrainCatalog {
+  live: number | null; // the index's live version; null only when no index file exists yet
+  indexed: boolean; // whether index.json exists
+  versions: CatalogEntry[];
+}
+
 // ---------- scope ids ----------
 
 // Slot ids follow the engine: "<aisle>-<bay>-<level>-<position>", for example A-3-4-1.
@@ -96,20 +117,61 @@ export class BrainStore {
     return idx;
   }
 
+  /** Read-only list of every brain version that exists anywhere: each vN.json on disk and each index row. Index
+   *  rows keep their status and notes; a valid snapshot with no index row is listed as "unregistered" (it was
+   *  never promoted or rejected here); an indexed version whose file is missing or unreadable is listed as
+   *  unavailable instead of failing the listing. Never writes the index or a snapshot. */
+  catalog(): BrainCatalog {
+    const p = path.join(this.dir, "index.json");
+    const idx: BrainIndex | null = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null;
+    const rows = new Map((idx?.versions ?? []).map((r) => [r.v, r]));
+    const nums = [...new Set([...this.versionsOnDisk(), ...rows.keys()])].sort((a, b) => a - b);
+    const versions = nums.map((v): CatalogEntry => {
+      const row = rows.get(v);
+      let f: BrainFile | null = null;
+      let reason: string | undefined;
+      if (!fs.existsSync(this.filePath(v))) reason = "the snapshot file is missing";
+      else {
+        try {
+          f = this.file(v);
+          if (f.version !== v) {
+            reason = `the file says it is version ${f.version}`;
+            f = null;
+          }
+        } catch {
+          reason = "the snapshot file is not a readable brain";
+        }
+      }
+      return {
+        v,
+        parent: row?.parent ?? f?.parent ?? null,
+        status: row ? row.status : "unregistered",
+        indexed: !!row,
+        available: !!f,
+        ...(reason ? { unavailable_reason: reason } : {}),
+        created_at: row?.created_at ?? f?.created_at ?? null,
+        created_by: f?.created_by ?? null,
+        note: row?.note ?? f?.note ?? "",
+        ...(row?.heldout_score !== undefined ? { heldout_score: row.heldout_score } : {}),
+        ...(row?.heldout ? { heldout: row.heldout } : {}),
+      };
+    });
+    return { live: idx?.live ?? null, indexed: !!idx, versions };
+  }
+
   /** GET /brain/history (V2-3): every version, oldest first, with its latest held-out measurement and its size. */
   history() {
-    const idx = this.index();
+    const c = this.catalog();
     return {
-      live: idx.live,
-      versions: idx.versions.map((r) => {
-        const f = this.file(r.v);
+      live: c.live,
+      versions: c.versions.map((e) => {
+        const f = e.available ? this.file(e.v) : null;
         return {
-          ...r,
-          created_by: f.created_by,
-          nodes: f.nodes.filter((n) => !isRetired(n)).length,
-          edges: f.edges.length,
-          heldout_score: r.heldout_score ?? null,
-          heldout: r.heldout ?? null,
+          ...e,
+          nodes: f ? f.nodes.filter((n) => !isRetired(n)).length : null,
+          edges: f ? f.edges.length : null,
+          heldout_score: e.heldout_score ?? null,
+          heldout: e.heldout ?? null,
         };
       }),
     };

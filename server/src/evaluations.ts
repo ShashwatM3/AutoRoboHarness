@@ -28,25 +28,32 @@ export interface Evaluation {
 
 export interface VersionEvaluations {
   v: number;
-  status: string;
+  status: string; // the index's status, or "unregistered" for a snapshot with no index row
+  indexed: boolean;
+  available: boolean; // false: indexed but its file is missing or unreadable (never evaluated here)
   evaluations: Evaluation[];
 }
 
-/** What a diff changed, independent of order and of node contents. */
+/** Everything a diff changed, in full (node labels and props, changed values, edges), independent of order, so
+ *  a recreated version with the same ids but different rules never matches an older gate's change. */
 function diffKey(d: BrainDiff): string {
+  const byId = <T extends { id: string }>(xs: T[]) => [...xs].sort((a, b) => a.id.localeCompare(b.id));
+  const edge = (e: { from: string; type: string; to: string }) => `${e.from}>${e.type}>${e.to}`;
+  const byEdge = <T extends { from: string; type: string; to: string }>(xs: T[]) => [...xs].sort((a, b) => edge(a).localeCompare(edge(b)));
   return canonicalJson({
-    added: d.added_nodes.map((n) => n.id).sort(),
-    retired: d.retired_nodes.map((n) => n.id).sort(),
-    changed: d.changed.map((c) => `${c.id}.${c.key}`).sort(),
-    added_edges: d.added_edges.map((e) => `${e.from}>${e.type}>${e.to}`).sort(),
-    removed_edges: d.removed_edges.map((e) => `${e.from}>${e.type}>${e.to}`).sort(),
+    added: byId(d.added_nodes),
+    retired: byId(d.retired_nodes),
+    changed: [...d.changed].sort((a, b) => `${a.id}.${a.key}`.localeCompare(`${b.id}.${b.key}`)),
+    added_edges: byEdge(d.added_edges),
+    removed_edges: byEdge(d.removed_edges),
   });
 }
 
 export function evaluationsByVersion(brain: BrainStore): VersionEvaluations[] {
-  const idx = brain.index();
-  const rows = new Map(idx.versions.map((r) => [r.v, r]));
-  const out = new Map<number, Evaluation[]>(idx.versions.map((r) => [r.v, []]));
+  // every available snapshot, registered in the index or not; nothing here writes
+  const catalog = brain.catalog().versions;
+  const rows = new Map(catalog.filter((e) => e.available).map((e) => [e.v, e]));
+  const out = new Map<number, Evaluation[]>(catalog.map((e) => [e.v, []]));
   const shas = new Map<number, string | null>();
   const sha = (v: number) => {
     if (!shas.has(v)) {
@@ -58,7 +65,12 @@ export function evaluationsByVersion(brain: BrainStore): VersionEvaluations[] {
     }
     return shas.get(v);
   };
-  const createdBy = (v: number, iso: string) => Date.parse(rows.get(v)!.created_at) <= Date.parse(iso);
+  // A legacy gate saved no file hashes. Its base counts if that snapshot existed when the gate started; this rests
+  // on snapshots being immutable (never edited in place), since the base's bytes then cannot be proven.
+  const createdBy = (v: number, iso: string) => {
+    const at = rows.get(v)?.created_at;
+    return !!at && Date.parse(at) <= Date.parse(iso);
+  };
 
   for (const g of readJsonDir<Gate>(dataDir("gates"))) {
     if (g.status !== "done" || !g.base_score || !g.candidate_score || !Array.isArray(g.per_seed)) continue;
@@ -130,5 +142,5 @@ export function evaluationsByVersion(brain: BrainStore): VersionEvaluations[] {
     });
   }
 
-  return idx.versions.map((r) => ({ v: r.v, status: r.status, evaluations: out.get(r.v)!.sort((a, b) => a.finished_at.localeCompare(b.finished_at)) }));
+  return catalog.map((e) => ({ v: e.v, status: e.status, indexed: e.indexed, available: e.available, evaluations: out.get(e.v)!.sort((a, b) => a.finished_at.localeCompare(b.finished_at)) }));
 }

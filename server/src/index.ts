@@ -47,7 +47,8 @@ api.get("/brain", (req, res) => {
   res.json({ version: f.version, parent: f.parent, note: f.note, nodes: f.nodes, edges: f.edges });
 });
 
-api.get("/brain/versions", (_req, res) => res.json(brain.index()));
+// every saved version, including snapshots on disk with no index row ("unregistered"); read-only
+api.get("/brain/versions", (_req, res) => res.json(brain.catalog()));
 // history keeps each version's latest score; `evaluations` adds every completed measurement (V2 extension)
 api.get("/brain/history", (_req, res) => {
   const evals = new Map(evaluationsByVersion(brain).map((e) => [e.v, e.evaluations]));

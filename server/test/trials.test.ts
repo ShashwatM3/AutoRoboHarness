@@ -287,3 +287,64 @@ test("a Lightning comparison runs alone; compiled comparisons are never blocked"
     release();
   }
 });
+
+test("a comparison that fails while being set up gives its Lightning claim back", () => {
+  class UnreadableBrain extends BrainStore {
+    fileSha256(): string {
+      throw new Error("disk read failed");
+    }
+  }
+  assert.throws(() => startComparison(new UnreadableBrain(BRAIN_DIR), { versions: [1, 2], seeds: [101], tasks: [PICK], worker: "llm" }), /disk read failed/);
+  const release = claimInference("comparison", "after-failed-setup"); // would be 409 if the claim had leaked
+  release();
+});
+
+test("an old gate never counts for a candidate that has the same node ids but different rule values", () => {
+  const gates = path.join(DATA, "gates");
+  const diff12 = brain.diff(1, 2);
+  const changed = structuredClone(diff12);
+  changed.added_nodes[0].props.when[0].value = 3; // same id, a different weight threshold
+  const created2 = brain.index().versions.find((r) => r.v === 2)!.created_at;
+  const later = new Date(Date.parse(created2) + 1000).toISOString();
+  const s = { task_id: "x", complete: true, refused_actions: 0, steps: 7, item_location: "tote", target_location: "tote" };
+  for (const [id, diff] of [["gate-samechange", diff12], ["gate-sameids", changed]] as const)
+    fs.writeFileSync(path.join(gates, `${id}.json`), JSON.stringify({ gate_id: id, status: "done", shift_id: "s", update_ids: ["U1"], base: 1, candidate: 2, seeds: [101], tasks: [PICK], worker: "llm", progress: {}, per_seed: [{ seed: 101, skipped: [], base: [s], candidate: [s] }], base_score: {}, candidate_score: {}, diff, llm: newTally(), started_at: later, finished_at: later }));
+  const ev = evaluationsByVersion(brain);
+  const ids = (v: number) => ev.find((e) => e.v === v)!.evaluations.map((e) => e.evaluation_id);
+  assert.ok(ids(2).includes("gate-samechange"), "the identical change still counts");
+  assert.ok(!ids(2).includes("gate-sameids"), "same ids, different rule value: not this v2's measurement");
+  assert.ok(ids(1).includes("gate-sameids"), "the base it ran on is unaffected");
+});
+
+test("every saved snapshot is listed, unregistered or unavailable ones included, and browsing writes nothing", () => {
+  const next = Math.max(...brain.versionsOnDisk()) + 1;
+  const [extra, missing, broken] = [next, next + 1, next + 2];
+  const v2 = JSON.parse(fs.readFileSync(path.join(BRAIN_DIR, "v2.json"), "utf8"));
+  fs.writeFileSync(path.join(BRAIN_DIR, `v${extra}.json`), JSON.stringify({ ...v2, version: extra, parent: 2, created_by: "human", note: "copied in by hand" }));
+  fs.writeFileSync(path.join(BRAIN_DIR, `v${broken}.json`), "{ not json");
+  const idxFile = path.join(BRAIN_DIR, "index.json");
+  const idx = JSON.parse(fs.readFileSync(idxFile, "utf8"));
+  idx.versions.push({ v: missing, parent: 1, status: "rejected", created_at: new Date().toISOString(), note: "its file was deleted" });
+  fs.writeFileSync(idxFile, JSON.stringify(idx, null, 2) + "\n");
+  const before = hashDir(BRAIN_DIR);
+
+  const cat = brain.catalog();
+  const entry = (v: number) => cat.versions.find((e) => e.v === v)!;
+  assert.equal(cat.live, idx.live, "the live version is the index's, unchanged");
+  assert.deepEqual(
+    [entry(extra).status, entry(extra).indexed, entry(extra).available, entry(extra).parent, entry(extra).note, entry(extra).created_by],
+    ["unregistered", false, true, 2, "copied in by hand", "human"],
+  );
+  assert.deepEqual([entry(missing).status, entry(missing).indexed, entry(missing).available, entry(missing).note], ["rejected", true, false, "its file was deleted"]);
+  assert.match(entry(missing).unavailable_reason!, /missing/);
+  assert.deepEqual([entry(broken).status, entry(broken).available], ["unregistered", false]);
+  assert.equal(entry(1).status, idx.versions.find((r: any) => r.v === 1).status, "index statuses are kept as they are");
+
+  const h = brain.history().versions;
+  assert.equal(h.find((e) => e.v === extra)!.nodes, v2.nodes.length);
+  assert.deepEqual([h.find((e) => e.v === missing)!.nodes, h.find((e) => e.v === extra)!.heldout_score], [null, null]);
+  const ev = evaluationsByVersion(brain).find((e) => e.v === extra)!;
+  assert.deepEqual([ev.status, ev.indexed, ev.evaluations.length], ["unregistered", false, 0], "listed as Not evaluated");
+  assert.equal(brain.resolveVersion(extra), extra, "a comparison can name it");
+  assert.deepEqual(hashDir(BRAIN_DIR), before, "listing wrote neither the index nor a snapshot");
+});
