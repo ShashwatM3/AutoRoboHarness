@@ -85,7 +85,8 @@ flowchart TD
     Aisle --> Bay[Bay scope]
     Bay --> Level[Shelf-level scope]
     Level --> Slot[Slot scope]
-    Procedure[PICK or RESTOCK procedure] -->|STEP_OF| Step[Action steps]
+    Procedure[PICK or RESTOCK procedure]
+    Step[Action steps] -->|STEP_OF| Procedure
     Step -->|NEXT| Next[Next action]
     Rule[Grasp-by-weight rule] -->|APPLIES_TO| Store
     Procedure -->|APPLIES_TO| Store
