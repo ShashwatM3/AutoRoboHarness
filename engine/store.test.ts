@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ACTIONS, createEngine, createScenario, StoreEngine, type TrajectoryStep } from './store.ts';
+import { ACTIONS, shopperPosition, createEngine, createScenario, StoreEngine, type TrajectoryStep } from './store.ts';
 
 test('seeds reproduce the complete world and preserve unique inventory locations', () => {
   assert.deepEqual(createScenario(1), createScenario(1));
@@ -124,4 +124,40 @@ test('two robots share inventory and cannot both grasp the same item', () => {
   const snapshot = engine.snapshot();
   snapshot.robots['robot-1'].x = 100;
   assert.equal(engine.scenario.robots['robot-1'].x, -3.2);
+});
+
+
+test('shoppers follow a separate seeded clock and each immutable step records real proximity', () => {
+  const a = createEngine(7), b = createEngine(7);
+  assert.deepEqual(a.scenario.shoppers, b.scenario.shoppers);
+  assert.notDeepEqual(a.scenario.shoppers, createScenario(8).shoppers);
+  assert.equal(createScenario(1).items['item:A-1-4-1'].weight_kg, 1.73);
+  const initial = structuredClone(a.scenario.shoppers);
+  const first = a.navigate_to('robot-1', 'A-3').step;
+  const again = b.navigate_to('robot-1', 'A-3').step;
+  assert.deepEqual(first, again);
+  assert.equal(first.shoppers?.length, 4);
+  assert.deepEqual(first.shoppers, Object.values(initial).map(shopper => shopperPosition(shopper, first.t)));
+  assert.ok(first.shoppers!.some(s => s.x !== initial[s.id].x || s.y !== initial[s.id].y));
+  const measured = Math.min(...first.shoppers!.map(s => Math.hypot(s.x-first.position.x, s.y-first.position.y)));
+  assert.equal(first.nearest_shopper_distance_m, measured);
+  const saved = structuredClone(first);
+  a.navigate_to('robot-1', 'tote');
+  assert.deepEqual(first, saved);
+  assert.notDeepEqual(a.scenario.shoppers, initial);
+});
+
+test('four robots retain independent task ownership, step numbers and shopper facts', () => {
+  const engine = createEngine(3, { robotCount: 4 });
+  for (let i = 1; i <= 4; i++) {
+    const id = `robot-${i}`;
+    engine.createTask(id, 'PICK', `A-${i}-1-1`);
+    const step = engine.navigate_to(id, `A-${i}`).step;
+    assert.equal(step.robot, id);
+    assert.equal(step.step, 1);
+    assert.equal(step.task_id, engine.scenario.robots[id].task_id);
+    assert.ok(Number.isFinite(step.nearest_shopper_distance_m));
+  }
+  assert.equal(engine.score().length, 4);
+  assert.equal(new Set(engine.scenario.trajectory.map(s => s.robot)).size, 4);
 });

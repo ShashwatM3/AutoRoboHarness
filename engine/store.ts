@@ -38,6 +38,9 @@ export interface Robot extends Point {
   grasp_mode: GraspMode | null;
   task_id: string | null;
 }
+export interface Shopper extends Point { id: string; path: Point[]; speed_mps: number; phase_s: number }
+export interface ShopperPosition extends Point { id: string }
+
 export interface Task {
   id: string;
   robot: string;
@@ -66,6 +69,8 @@ export interface TrajectoryStep {
   item_id: string | null;
   path?: Point[];
   duration: number;
+  shoppers?: ShopperPosition[];
+  nearest_shopper_distance_m?: number | null;
 }
 export interface Scenario {
   seed: number;
@@ -73,6 +78,7 @@ export interface Scenario {
   layout: { waypoints: Record<string, Waypoint>; slots: Record<string, Slot> };
   items: Record<string, Item>;
   robots: Record<string, Robot>;
+  shoppers: Record<string, Shopper>;
   tasks: Record<string, Task>;
   trajectory: TrajectoryStep[];
   issues: { robot: string; t: number; kind: string; detail: string }[];
@@ -173,7 +179,33 @@ export function createScenario(seed: number, robotCount = 2): Scenario {
     const id = `robot-${i}`;
     robots[id] = { id, x: (i - 1 - (robotCount - 1) / 2) * 0.85, y: -3.2, waypoint: 'backroom', torso_level: 1, arm_out: false, reaching: null, holding: null, grasp_mode: null, task_id: null };
   }
-  return { seed, t: 0, layout: { waypoints, slots }, items, robots, tasks: {}, trajectory: [], issues: [] };
+  // A separate random stream preserves all Version 1 inventory for the same seed.
+  const shopperRandom = seededRandom(seed ^ 0x5a17c9);
+  const shoppers: Record<string, Shopper> = {};
+  for (let i = 0; i < 4; i++) {
+    const x = i % 2 === 0 ? -3.2 : 3.2;
+    const path = [{ x: x - 0.35, y: -1.2 }, { x: x - 0.35, y: 7.7 }, { x: x + 0.35, y: 7.7 }, { x: x + 0.35, y: -1.2 }];
+    const id = `shopper-${i + 1}`;
+    shoppers[id] = { id, x, y: 0, path, speed_mps: 0.35 + shopperRandom() * 0.2, phase_s: shopperRandom() * 36 };
+    Object.assign(shoppers[id], shopperPosition(shoppers[id], 0));
+  }
+  return { seed, t: 0, shoppers, layout: { waypoints, slots }, items, robots, tasks: {}, trajectory: [], issues: [] };
+}
+
+/** A shopper's position depends only on the scenario clock, never on rendering or wall time. */
+export function shopperPosition(shopper: Shopper, t: number): ShopperPosition {
+  const path = shopper.path;
+  const lengths = path.map((p, i) => Math.hypot(path[(i + 1) % path.length].x - p.x, path[(i + 1) % path.length].y - p.y));
+  const perimeter = lengths.reduce((a, b) => a + b, 0);
+  let remaining = (((t + shopper.phase_s) * shopper.speed_mps) % perimeter + perimeter) % perimeter;
+  for (let i = 0; i < path.length; i++) {
+    if (remaining <= lengths[i] || i === path.length - 1) {
+      const a = path[i], b = path[(i + 1) % path.length], p = lengths[i] ? remaining / lengths[i] : 0;
+      return { id: shopper.id, x: a.x + (b.x - a.x) * p, y: a.y + (b.y - a.y) * p };
+    }
+    remaining -= lengths[i];
+  }
+  return { id: shopper.id, x: shopper.x, y: shopper.y };
 }
 
 /** An engine instance belongs to one shift. Every robot in the shift shares this state. */
@@ -337,6 +369,12 @@ export class StoreEngine {
   }
   private record(r: Robot, action: Action, args: Record<string, unknown>, ok: boolean, reason: string, duration = 0.2, path?: Point[], affectedItemId?: string): ActionResult {
     this.scenario.t = Math.round((this.scenario.t + duration) * 1000) / 1000;
+    const shoppers = Object.values(this.scenario.shoppers ?? {}).map(shopper => {
+      const position = shopperPosition(shopper, this.scenario.t);
+      Object.assign(shopper, position);
+      return position;
+    });
+    const nearest_shopper_distance_m = shoppers.length ? Math.min(...shoppers.map(shopper => Math.hypot(shopper.x - r.x, shopper.y - r.y))) : null;
     const task = r.task_id ? this.scenario.tasks[r.task_id] : null;
     const item = task ? this.scenario.items[task.item_id] : affectedItemId ? this.scenario.items[affectedItemId] : r.holding ? this.scenario.items[r.holding] : undefined;
     const slotId = typeof args.slot === 'string' ? args.slot : r.reaching;
@@ -348,7 +386,7 @@ export class StoreEngine {
       position: { x: r.x, y: r.y }, torso_level: r.torso_level, holding: r.holding,
       item_location: item?.slot ?? null, target_location: task?.target ?? null,
       robot_state: r, item_id: affectedItemId ?? r.holding ?? (action === 'place' && ok ? item?.id : observedItem?.id) ?? null,
-      duration, ...(path ? { path } : {}),
+      duration, shoppers, nearest_shopper_distance_m, ...(path ? { path } : {}),
     });
     this.scenario.trajectory.push(step);
     this.onStep?.(structuredClone(step));

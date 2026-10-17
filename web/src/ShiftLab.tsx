@@ -34,10 +34,13 @@ import {
 import { StoreScene } from "./scene/StoreScene.ts";
 import BrainGraph from "./BrainGraph.tsx";
 import ReviewPanel from "./ReviewPanel.tsx";
+import WorkerViews, { ROBOT_NAMES, ROBOT_COLORS } from "./WorkerViews.tsx";
 
 const DEFAULT_TASKS: TaskSpec[] = [
   { type: "PICK", slot: "A-3-4-1" },
   { type: "RESTOCK", slot: "B-1-3-2" },
+  { type: "PICK", slot: "B-3-2-1" },
+  { type: "RESTOCK", slot: "A-2-1-2" },
 ];
 function launchScenario(seed: number, tasks: TaskSpec[]) {
   const engine = createEngine(seed, { robotCount: tasks.length });
@@ -46,9 +49,10 @@ function launchScenario(seed: number, tasks: TaskSpec[]) {
   );
   return engine.snapshot();
 }
-function shiftScenario(seed: number, tasks: Task[]) {
+function shiftScenario(seed: number, tasks: Task[], history?: TrajectoryStep[]) {
   const engine = new StoreEngine(createScenario(seed, tasks.length));
   tasks.forEach((task) => engine.setTask(task));
+  if (history?.length && !history.some(step => step.shoppers)) engine.scenario.shoppers = {};
   return engine.snapshot();
 }
 declare global {
@@ -63,9 +67,9 @@ declare global {
 
 export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
   const [seed, setSeed] = useState(1);
-  const [specs, setSpecs] = useState<TaskSpec[]>(DEFAULT_TASKS);
+  const [specs, setSpecs] = useState<TaskSpec[]>(DEFAULT_TASKS.slice(0, 2));
   const [scenario, setScenario] = useState<Scenario>(() =>
-    launchScenario(1, DEFAULT_TASKS),
+    launchScenario(1, DEFAULT_TASKS.slice(0, 2)),
   );
   const [ready, setReady] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -79,7 +83,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
   const [brainError, setBrainError] = useState<string | null>(null);
   const [brainReads, setBrainReads] = useState<string[]>([]);
   const [readEpoch, setReadEpoch] = useState(0);
-  const [view, setView] = useState<"perspective" | "overhead">("perspective");
+  const [view, setView] = useState<"perspective" | "overhead" | "workers">("perspective");
   const [notice, setNotice] = useState<string | null>(null);
   const [selectedRobot, setSelectedRobot] = useState("robot-1");
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -134,7 +138,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
               slot: task.type === "PICK" ? task.source : task.target,
             })),
           );
-          setScenario(shiftScenario(info.seed, info.tasks));
+          setScenario(shiftScenario(info.seed, info.tasks, history));
           setShift(info);
           const restored = history.map((step) => ({
             ...step,
@@ -207,6 +211,8 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
       delete window.__AUTO_ROBO_LIVE__;
     };
   }, [scenario]);
+
+  useEffect(() => { sceneRef.current?.setView(view); }, [view, scenario]);
 
   // Each robot has its own promise chain, so robots move concurrently and retain their action order.
   useEffect(() => {
@@ -286,7 +292,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
             restored.map((step) => `${step.robot}:${step.step}`),
           );
           stepsRef.current = restored;
-          setScenario(shiftScenario(info.seed, info.tasks));
+          setScenario(shiftScenario(info.seed, info.tasks, trajectory));
           setSteps(restored);
           setNotice(
             "The saved trajectory filled a stream gap. The shift is replaying in full.",
@@ -436,7 +442,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
     (slot) => slot.aisle !== "backroom",
   );
   const finalScore = shift?.scores.find((s) => s.task_id === selectedTask?.id);
-  const activeScene = (next: "perspective" | "overhead") => {
+  const activeScene = (next: "perspective" | "overhead" | "workers") => {
     sceneRef.current?.setView(next);
     setView(next);
   };
@@ -477,7 +483,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
           <Store size={21} />
         </button>
         <span className="rail-spacer" />
-        <div className="version-badge">V1</div>
+        <div className="version-badge">V2</div>
         <span className="avatar">SM</span>
       </aside>
       <div className="workspace">
@@ -513,7 +519,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
               <p>
                 {shift
                   ? `Brain v${shift.brain_version} · Scenario ${String(shift.seed).padStart(2, "0")} · ${live ? "Workers are choosing actions on Crusoe." : animating ? "The robots are finishing their moves." : "Every action is saved for review."}`
-                  : "One shared brain. Two robots. A new lesson every shift."}
+                  : "One shared brain. Up to four robots. A new lesson every shift."}
               </p>
             </div>
             <span className="shift-status">
@@ -567,10 +573,14 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                       <Layers3 size={14} />
                       Top view
                     </button>
+                    <button className={view === "workers" ? "selected" : ""} onClick={() => activeScene("workers")}>
+                      <Focus size={14} />Worker views
+                    </button>
                   </div>
                 </div>
-                <div className="viewport-wrap live-viewport">
+                <div className={`viewport-wrap live-viewport ${view === "workers" ? "worker-viewport" : ""}`} style={view === "workers" ? { "--worker-count": specs.length } as React.CSSProperties : undefined}>
                   <div className="scene-host" ref={host} />
+                  {view === "workers" && <WorkerViews scenario={scenario} steps={steps} latest={latest} />}
                   <div className="viewport-top">
                     <span className="map-label">
                       <span className="status-dot" />
@@ -663,16 +673,16 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                         id="robot-count"
                         disabled={launching}
                         value={specs.length}
-                        onChange={(e) =>
-                          setSpecs(
-                            Number(e.target.value) === 1
-                              ? [specs[0]]
-                              : [specs[0], DEFAULT_TASKS[1]],
-                          )
-                        }
+                        onChange={(e) => {
+                          const count = Number(e.target.value);
+                          setSpecs(current => Array.from({ length: count }, (_, i) => current[i] ?? DEFAULT_TASKS[i]));
+                          setSelectedRobot("robot-1");
+                        }}
                       >
                         <option value={1}>1 robot</option>
                         <option value={2}>2 robots</option>
+                        <option value={3}>3 robots</option>
+                        <option value={4}>4 robots</option>
                       </select>
                     </label>
                     <label htmlFor="training-seed">
@@ -695,10 +705,10 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                     <div className="task-form" key={i}>
                       <div className="task-form-title">
                         <span
-                          className={`robot-tab-dot ${i ? "blue" : "orange"}`}
+                          className={`robot-tab-dot ${ROBOT_COLORS[i]}`}
                         />
                         R0{i + 1}
-                        <span>{i ? "ATLAS" : "SCOUT"}</span>
+                        <span>{ROBOT_NAMES[i].toUpperCase()}</span>
                       </div>
                       <label>
                         Task
@@ -777,7 +787,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                         onClick={() => setSelectedRobot(robot.id)}
                       >
                         <span
-                          className={`robot-tab-dot ${i ? "blue" : "orange"}`}
+                          className={`robot-tab-dot ${ROBOT_COLORS[i]}`}
                         />
                         R0{i + 1}
                       </button>
@@ -785,8 +795,8 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                   </div>
                   <div className="live-robot-heading">
                     <h2>
-                      {selectedRobot === "robot-1" ? "Scout" : "Atlas"}{" "}
-                      <span>0{selectedRobot === "robot-1" ? 1 : 2}</span>
+                      {ROBOT_NAMES[Number(selectedRobot.split("-")[1]) - 1]}{" "}
+                      <span>{selectedRobot.split("-")[1].padStart(2, "0")}</span>
                     </h2>
                     <span>
                       {finalScore
@@ -950,7 +960,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
             <span>
               THE CLOSED LOOP
               <span className="tiny-dot" />
-              VERSION 1
+              VERSION 2
             </span>
           </footer>
         </main>

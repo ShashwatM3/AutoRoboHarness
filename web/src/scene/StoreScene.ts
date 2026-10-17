@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import {
   SHELF_HEIGHTS,
+  shopperPosition,
   type Scenario,
   type TrajectoryStep,
 } from "../../../engine/store.ts";
@@ -12,6 +13,8 @@ import {
   setExtension,
   type RobotRig,
 } from "./robot.ts";
+
+import { workerViewports } from "./workerViewports.ts";
 
 const COLORS = [0xe58a48, 0x7899c4, 0xa188c2, 0x80ae88];
 const ASSET_NAMES: Record<string, string> = {
@@ -26,7 +29,7 @@ type Motion = {
   update: (progress: number) => void;
   complete: () => void;
 };
-type View = "perspective" | "overhead";
+type View = "perspective" | "overhead" | "workers";
 
 export class StoreScene {
   readonly scene = new THREE.Scene();
@@ -34,6 +37,10 @@ export class StoreScene {
   readonly renderer: THREE.WebGLRenderer;
   readonly robots = new Map<string, RobotRig>();
   readonly items = new Map<string, THREE.Object3D>();
+  readonly shoppers = new Map<string, THREE.Object3D>();
+  private shopperMixers: THREE.AnimationMixer[] = [];
+  private shopperTime = 0;
+  private view: View = "perspective";
   readonly ready: Promise<void>;
   readonly initial: Scenario;
   loadedAssets = 0;
@@ -61,7 +68,7 @@ export class StoreScene {
     this.renderer.toneMappingExposure = 1.25;
     this.renderer.domElement.setAttribute(
       "aria-label",
-      "Interactive 3D convenience store with two mobile robots",
+      `Interactive convenience store with ${Object.keys(initial.robots).length} robot cameras`,
     );
     host.appendChild(this.renderer.domElement);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -114,25 +121,32 @@ export class StoreScene {
       const width = host.clientWidth,
         height = host.clientHeight;
       if (width && height) {
+        const columns = width < 640 ? 1 : Math.min(this.robots.size, 2);
+        host.parentElement?.style.setProperty("--worker-columns", String(columns));
+        host.parentElement?.style.setProperty("--worker-rows", String(Math.ceil(this.robots.size / columns)));
         this.renderer.setSize(width, height);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
       }
     });
     this.observer.observe(host);
-    this.ready = this.loadAssets();
+    this.ready = Promise.all([this.loadAssets(), this.loadShoppers()]).then(() => {});
     this.tick();
     // Embedded or background tabs may suspend animation frames while events keep arriving.
     // Keep the presentation clock moving so the event queue cannot stall behind an invisible frame.
     this.heartbeat = setInterval(() => {
       if (!this.disposed && performance.now() - this.lastFrame > 750) {
         this.advanceMotions(performance.now());
-        this.renderer.render(this.scene, this.camera);
+        this.render();
       }
     }, 250);
   }
 
   setView(view: View) {
+    this.view = view;
+    this.controls.enabled = view !== "workers";
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, view === "workers" ? 1.5 : 2));
+    this.renderer.domElement.dataset.cameraViews = String(view === "workers" ? this.robots.size : 1);
     this.camera.position.set(
       ...((view === "overhead" ? [0.01, 24, 3] : [13, 15, 17]) as [
         number,
@@ -178,7 +192,9 @@ export class StoreScene {
       setExtension(rig, 0);
       setAperture(rig, 1);
     }
+    this.setShopperTime(0);
     for (const step of steps.slice(0, index + 1)) {
+      this.setShopperTime(step.t);
       const rig = this.robots.get(step.robot);
       if (!rig) continue;
       rig.root.position.set(step.position.x, 0, step.position.y);
@@ -219,7 +235,7 @@ export class StoreScene {
         setAperture(rig, 1);
       }
     }
-    this.renderer.render(this.scene, this.camera);
+    this.render();
   }
 
   async playStep(step: TrajectoryStep, speed = 1): Promise<void> {
@@ -227,6 +243,8 @@ export class StoreScene {
     if (this.disposed) return;
     const rig = this.robots.get(step.robot);
     if (!rig) throw new Error(`Unknown robot in animation: ${step.robot}`);
+    const fromTime = this.shopperTime;
+    const toTime = Math.max(fromTime, step.t);
     const startPosition = rig.root.position.clone();
     const fromTorso = rig.lift.position.y,
       fromExtension = rig.extension,
@@ -268,6 +286,7 @@ export class StoreScene {
         duration,
         update: (p) => {
           const ease = p * p * (3 - 2 * p);
+          this.setShopperTime(Math.max(this.shopperTime, THREE.MathUtils.lerp(fromTime, toTime, p)));
           if (!step.ok) {
             rig.root.position.x =
               startPosition.x + Math.sin(p * Math.PI * 6) * (1 - p) * 0.04;
@@ -323,6 +342,7 @@ export class StoreScene {
           }
         },
         complete: () => {
+          this.setShopperTime(Math.max(this.shopperTime, toTime));
           if (step.ok) {
             rig.root.position.set(step.position.x, 0, step.position.y);
             rig.lift.position.y = SHELF_HEIGHTS[step.torso_level] + 0.06;
@@ -345,6 +365,66 @@ export class StoreScene {
         },
       });
     });
+  }
+
+  private render() {
+    const renderer = this.renderer;
+    renderer.setScissorTest(false);
+    if (this.view !== "workers") {
+      const size = renderer.getSize(new THREE.Vector2());
+      renderer.setViewport(0, 0, size.x, size.y);
+      renderer.render(this.scene, this.camera);
+      return;
+    }
+    const size = renderer.getSize(new THREE.Vector2());
+    renderer.setViewport(0, 0, size.x, size.y);
+    renderer.clear();
+    const views = workerViewports(size.x, size.y, this.robots.size);
+    renderer.setScissorTest(true);
+    [...this.robots.values()].forEach((robot, i) => {
+      const v = views[i];
+      robot.headCamera.aspect = v.width / v.height;
+      robot.headCamera.updateProjectionMatrix();
+      renderer.setViewport(v.x, v.y, v.width, v.height);
+      renderer.setScissor(v.x, v.y, v.width, v.height);
+      renderer.render(this.scene, robot.headCamera);
+    });
+    renderer.setScissorTest(false);
+  }
+
+  private setShopperTime(t: number) {
+    this.shopperTime = t;
+    for (const [id, mesh] of this.shoppers) {
+      const definition = this.initial.shoppers?.[id];
+      if (!definition) continue;
+      const p = shopperPosition(definition, t);
+      const next = shopperPosition(definition, t + 0.05);
+      mesh.position.set(p.x, 0, p.y);
+      mesh.rotation.y = Math.atan2(next.x - p.x, next.y - p.y);
+    }
+    this.shopperMixers.forEach(mixer => mixer.setTime(t));
+  }
+
+  private async loadShoppers() {
+    const names = ["character-male-a", "character-female-b", "character-male-c", "character-female-d"];
+    await Promise.all(Object.keys(this.initial.shoppers ?? {}).map(async (id, i) => {
+      const gltf = await new GLTFLoader().loadAsync(`/assets/mini-characters/${names[i % names.length]}.glb`);
+      if (this.disposed) return;
+      this.assetSources.push(gltf.scene);
+      gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
+      const model = this.fit(gltf.scene, new THREE.Vector3(0.6, 1.65, 0.6), true);
+      model.name = id;
+      this.shoppers.set(id, model);
+      this.scene.add(model);
+      const walk = gltf.animations.find(clip => /walk/i.test(clip.name));
+      if (walk) {
+        const mixer = new THREE.AnimationMixer(gltf.scene);
+        mixer.clipAction(walk).play();
+        this.shopperMixers.push(mixer);
+      }
+      this.setShopperTime(this.shopperTime);
+    }));
+    this.renderer.domElement.dataset.shopperCount = String(this.shoppers.size);
   }
 
   private samplePath(points: THREE.Vector3[], progress: number) {
@@ -640,7 +720,7 @@ export class StoreScene {
     this.lastFrame = now;
     this.advanceMotions(now);
     this.controls.update();
-    this.renderer.render(this.scene, this.camera);
+    this.render();
     this.frame = requestAnimationFrame(this.tick);
   };
   private advanceMotions(now: number) {
@@ -681,6 +761,7 @@ export class StoreScene {
     geometries.forEach((g) => g.dispose());
     textures.forEach((t) => t.dispose());
     materials.forEach((m) => m.dispose());
+    this.shopperMixers.forEach(mixer => { mixer.stopAllAction(); mixer.uncacheRoot(mixer.getRoot()); });
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

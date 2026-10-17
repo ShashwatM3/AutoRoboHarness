@@ -11,6 +11,7 @@ export interface RobotRig {
   wheels: THREE.Mesh[];
   ring: THREE.Mesh;
   eye: THREE.Mesh;
+  headCamera: THREE.PerspectiveCamera;
   extension: number;
   aperture: number;
 }
@@ -72,6 +73,11 @@ export function buildRobot(id: string, color: number): RobotRig {
     [0, 0.005, 0.135],
     new THREE.MeshBasicMaterial({ color }),
   );
+  const headCamera = new THREE.PerspectiveCamera(68, 1, 0.04, 70);
+  headCamera.name = `${id}:head-camera`;
+  headCamera.position.set(0, 0.02, 0.19);
+  headCamera.lookAt(0, -0.2, 1.19);
+  head.add(headCamera);
   const shoulder = new THREE.Group();
   shoulder.position.set(0.17, 0.03, 0.1);
   lift.add(shoulder);
@@ -113,6 +119,7 @@ export function buildRobot(id: string, color: number): RobotRig {
     wheels,
     ring,
     eye,
+    headCamera,
     extension: 0,
     aperture: 1,
   };

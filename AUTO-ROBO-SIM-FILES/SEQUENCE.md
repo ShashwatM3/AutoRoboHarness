@@ -64,6 +64,14 @@ The requested [Crusoe MCP setup guide](CRUSOE-MCP-SETUP.md) is complete. The loc
 
 ---
 
+## Version 2 coordination checkpoint (3:04 PM Pacific)
+
+Person A has implemented head cameras and the four-tile worker grid, four seeded Kenney Mini Characters, and launch support for one to four robots. Engine tests cover immutable shopper snapshots and exact nearest distances; web tests cover camera attachment and grid layout. Engine and web tests, server type checking, and the web production build pass. Browser checks confirm four independent head views and four loaded characters. Live four-robot streaming and final joint verification remain in progress, so the Version 2 boxes stay open.
+
+The new optional trajectory fields are `shoppers: { id, x, y }[]` and `nearest_shopper_distance_m: number | null`. They record shopper positions and the nearest distance from the robot at action-end time `step.t`; older Version 1 trajectories remain readable. Person B owns server work and has pushed the independent judge in `aaefb8c`. Person A owns engine/web work and will integrate the judge, cache, citations, and history as their endpoints land. Only Person A runs the shared held-out gate. A private SSH coordination inbox on Person B's machine carries progress and quota locks; credentials stay outside the repository.
+
+---
+
 ## Version 3: The Full Harness
 
 ### Person A
