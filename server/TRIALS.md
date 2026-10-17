@@ -223,6 +223,42 @@ Rules:
 ## 4. Path and ID safety
 `shift_id`, `gate_id`, `trial_id`, `comparison_id` and review ids must match `^[A-Za-z0-9][A-Za-z0-9_-]{0,80}$`. Otherwise the response is 400 `bad_id`, so a path such as `../` can never reach the file system. A trial or comparison id is never a shift id, so `POST /review/<trial_id>` gets 404.
 
+## 5. Saved training runs (read-only library)
+
+These two routes list and open the training shifts this server already has, with their saved review and the gates that came from them. They are strictly read-only:
+- They never start a shift, review or gate, never call a model and never write a file. A shift with no review stays without one; use `POST /review/:shiftId` to start one deliberately.
+- Only training shifts are visible: shifts saved under `data/shifts`, plus any still running in memory. Held-out gate runs and comparison runs are trials, never shifts, so their ids, like gate and comparison ids, get 404 here.
+
+```ts
+interface RunSummary {
+  shift_id: string;
+  status: "running" | "done" | "error";
+  seed: number;
+  brain_version: number;
+  worker: "llm" | "compiled";
+  tasks: Shift["tasks"];                  // as stored, with task cards
+  scores: TaskScore[];                    // empty while running
+  llm: LlmTally;
+  started_at: string;
+  finished_at: string | null;
+  trial_id: string | null;                // the shift's recording; null for shifts made before trials existed
+  replay_available: boolean;              // trial_id !== null
+  review_status: "running" | "done" | "error" | null; // null: no review was ever made for this shift
+  gate_ids: string[];                     // every gate whose shift_id is this shift (saved or running), oldest first
+}
+interface RunDetail {
+  shift: Shift;                           // the stored shift, trajectory included (empty while still running)
+  review: Review | null;                  // the saved review exactly as GET /review/:shiftId would show it; null if none
+  gates: Gate[];                          // the full gate records for gate_ids, oldest first
+}
+```
+
+- `GET /runs` → `{ runs: RunSummary[] }`, newest first (by `started_at`). It has no trajectories; open one with the next route.
+- `GET /runs/:shift_id` → `RunDetail`.
+- Errors: 400 `bad_id` (see section 4); 404 `{ error, code: "no_run" }` when no training shift has that id.
+
+The review is read from saved storage with no side effects, unlike `GET /review/:shiftId`, which starts a review when none exists. Gates are matched by the `shift_id` recorded in each gate file, so every gate made from a shift is listed, including errored ones (check `status` and `verdict`).
+
 ## Runtime details
 
 `AUTOROBO_DATA_DIR` optionally relocates shifts, reviews, gates, trials and comparisons together. The default is `server/data`. `BRAIN_DIR` independently selects the brain snapshot directory. Both are read on the server, never in the browser.
