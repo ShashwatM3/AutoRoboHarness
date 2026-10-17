@@ -60,3 +60,42 @@ test("twenty concurrent gate callers are paced at actual request start", async (
   assert.equal(starts.length, 20);
   assert.ok(starts.slice(1).every((time, i) => time - starts[i] >= 1000), "calls reserved quota before their actual start time");
 });
+
+test("a shared quota can recover after more than six 429 attempts", async (t) => {
+  process.env.LLM_429_WAIT_S = "600";
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 3_000_000 });
+  const starts: number[] = [];
+  provider = async () => {
+    starts.push(Date.now());
+    return starts.length <= 7
+      ? new Response(JSON.stringify({ error: { message: "shared quota busy" } }), { status: 429, headers: { "content-type": "application/json" } })
+      : new Response(JSON.stringify({ id: "recovered", object: "chat.completion", choices: [] }), { headers: { "content-type": "application/json" } });
+  };
+  const call = chat({ model: "recovery-test", messages: [{ role: "user", content: "test" }] }, { role: "test", cache: false });
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  for (let i = 0; i < 10; i++) {
+    t.mock.timers.tick(60_000);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+  }
+  assert.equal((await call).id, "recovered");
+  assert.equal(starts.length, 8);
+  assert.ok(starts.slice(1).every((time, i) => time - starts[i] >= 60_000), "a missing Retry-After did not pause the shared model queue");
+});
+
+test("persistent 429s stop at the configured recovery budget", async (t) => {
+  process.env.LLM_429_WAIT_S = "120";
+  t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 4_000_000 });
+  let attempts = 0;
+  provider = async () => {
+    attempts++;
+    return new Response(JSON.stringify({ error: { message: "persistent quota limit" } }), { status: 429, headers: { "content-type": "application/json" } });
+  };
+  const call = assert.rejects(chat({ model: "budget-test", messages: [{ role: "user", content: "test" }] }, { role: "test", cache: false }), { status: 429 });
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  for (let i = 0; i < 5; i++) {
+    t.mock.timers.tick(60_000);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+  }
+  await call;
+  assert.equal(attempts, 3, "requests continued after the recovery budget expired");
+});
