@@ -67,6 +67,8 @@ export interface TrajectoryStep {
   // Extra facts allow the renderer to animate without guessing an action's result.
   robot_state: Robot;
   item_id: string | null;
+  /** Actual affected item, distinct from the intended task item when stock is misplaced. */
+  item_state?: Item | null;
   path?: Point[];
   duration: number;
   shoppers?: ShopperPosition[];
@@ -388,6 +390,7 @@ export class StoreEngine {
       robot_state: r, item_id: affectedItemId ?? r.holding ?? (action === 'place' && ok ? item?.id : observedItem?.id) ?? null,
       duration, shoppers, nearest_shopper_distance_m, ...(path ? { path } : {}),
     });
+    step.item_state = step.item_id ? structuredClone(this.scenario.items[step.item_id] ?? null) : null;
     this.scenario.trajectory.push(step);
     this.onStep?.(structuredClone(step));
     return { ok, reason, state: structuredClone({ t: this.scenario.t, robot: r, task: task ?? null, item: observedItem ?? item ?? null, ...(slotId ? { slot: this.scenario.layout.slots[slotId] } : {}) }), step: structuredClone(step) };

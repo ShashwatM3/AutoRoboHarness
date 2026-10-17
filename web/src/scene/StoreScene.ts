@@ -15,6 +15,7 @@ import {
 } from "./robot.ts";
 
 import { workerViewports } from "./workerViewports.ts";
+import { replayCursor, sampleRecordedPath } from "./recordedReplay.ts";
 
 const COLORS = [0xe58a48, 0x7899c4, 0xa188c2, 0x80ae88];
 const ASSET_NAMES: Record<string, string> = {
@@ -55,7 +56,10 @@ export class StoreScene {
   private labels: THREE.Sprite[] = [];
   private assetSources: THREE.Object3D[] = [];
 
-  constructor(private host: HTMLElement, initial: Scenario) {
+  constructor(
+    private host: HTMLElement,
+    initial: Scenario,
+  ) {
     this.initial = structuredClone(initial);
     this.scene.background = new THREE.Color("#eaece2");
     this.scene.fog = new THREE.Fog("#eaece2", 35, 70);
@@ -119,7 +123,9 @@ export class StoreScene {
     });
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(host);
-    this.ready = Promise.all([this.loadAssets(), this.loadShoppers()]).then(() => {});
+    this.ready = Promise.all([this.loadAssets(), this.loadShoppers()]).then(
+      () => {},
+    );
     this.tick();
     // Embedded or background tabs may suspend animation frames while events keep arriving.
     // Keep the presentation clock moving so the event queue cannot stall behind an invisible frame.
@@ -134,8 +140,12 @@ export class StoreScene {
   setView(view: View) {
     this.view = view;
     this.controls.enabled = view !== "workers";
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, view === "workers" ? 1.5 : 2));
-    this.renderer.domElement.dataset.cameraViews = String(view === "workers" ? this.robots.size : 1);
+    this.renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, view === "workers" ? 1.5 : 2),
+    );
+    this.renderer.domElement.dataset.cameraViews = String(
+      view === "workers" ? this.robots.size : 1,
+    );
     this.camera.position.set(
       ...((view === "overhead" ? [0.01, 24, 3] : [13, 15, 17]) as [
         number,
@@ -178,10 +188,21 @@ export class StoreScene {
       rig.root.position.set(r.x, 0, r.y);
       rig.root.rotation.y = 0;
       rig.lift.position.y = SHELF_HEIGHTS[r.torso_level] + 0.06;
-      setExtension(rig, 0);
-      setAperture(rig, 1);
+      setExtension(rig, r.arm_out ? 1 : 0);
+      setAperture(rig, r.holding ? 0 : 1);
+      if (r.holding) {
+        const item = this.items.get(r.holding);
+        if (item) {
+          rig.gripper.add(item);
+          item.position.set(0, -0.06, 0.1);
+        }
+      }
+      rig.eye.scale.x = 1;
+      (rig.eye.material as THREE.MeshBasicMaterial).color.set(
+        COLORS[[...this.robots.keys()].indexOf(id)],
+      );
     }
-    this.setShopperTime(0);
+    this.setShopperTime(this.initial.t);
     for (const step of steps.slice(0, index + 1)) {
       this.setShopperTime(step.t);
       const rig = this.robots.get(step.robot);
@@ -223,6 +244,68 @@ export class StoreScene {
         }
         setAperture(rig, 1);
       }
+    }
+    const last = steps[index];
+    for (const p of last?.shoppers ?? [])
+      this.shoppers.get(p.id)?.position.set(p.x, 0, p.y);
+    this.render();
+  }
+
+  /** Seek on the saved simulation clock. Every frame is independent, so pause/backward seeks are exact. */
+  seekToTime(steps: TrajectoryStep[], time: number) {
+    const { index, next, progress: p } = replayCursor(steps, time);
+    this.seekToStep(steps, index);
+    this.setShopperTime(Math.min(time, steps.at(-1)?.t ?? this.initial.t));
+    if (steps[index]?.t === time)
+      for (const s of steps[index].shoppers ?? [])
+        this.shoppers.get(s.id)?.position.set(s.x, 0, s.y);
+    if (!next || p <= 0) {
+      this.render();
+      return;
+    }
+    const rig = this.robots.get(next.robot);
+    if (!rig) return;
+    if (!next.ok) {
+      (rig.eye.material as THREE.MeshBasicMaterial).color.set("#e65e42");
+      this.render();
+      return;
+    }
+    if (next.action === "navigate_to") {
+      const point = sampleRecordedPath(
+        next.path ?? [
+          { x: rig.root.position.x, y: rig.root.position.z },
+          next.position,
+        ],
+        p,
+      );
+      rig.root.position.set(point.x, 0, point.y);
+      rig.root.rotation.y = point.heading;
+    } else if (next.action === "set_torso") {
+      rig.lift.position.y = THREE.MathUtils.lerp(
+        rig.lift.position.y,
+        SHELF_HEIGHTS[next.torso_level] + 0.06,
+        p,
+      );
+    } else if (next.action === "reach") {
+      const slot = this.initial.layout.slots[String(next.args.slot)];
+      if (slot)
+        rig.root.rotation.y = Math.atan2(
+          slot.x - rig.root.position.x,
+          slot.y - rig.root.position.z,
+        );
+      setExtension(rig, p);
+    } else if (next.action === "retract") setExtension(rig, 1 - p);
+    else if (next.action === "grasp") setAperture(rig, 1 - p);
+    else if (next.action === "place" && next.item_id) {
+      const item = this.items.get(next.item_id);
+      if (item) {
+        this.scene.attach(item);
+        item.position.lerp(
+          this.locationPosition(String(next.args.target), next.item_id),
+          p,
+        );
+      }
+      setAperture(rig, p);
     }
     this.render();
   }
@@ -275,7 +358,12 @@ export class StoreScene {
         duration,
         update: (p) => {
           const ease = p * p * (3 - 2 * p);
-          this.setShopperTime(Math.max(this.shopperTime, THREE.MathUtils.lerp(fromTime, toTime, p)));
+          this.setShopperTime(
+            Math.max(
+              this.shopperTime,
+              THREE.MathUtils.lerp(fromTime, toTime, p),
+            ),
+          );
           if (!step.ok) {
             rig.root.position.x =
               startPosition.x + Math.sin(p * Math.PI * 6) * (1 - p) * 0.04;
@@ -358,11 +446,15 @@ export class StoreScene {
 
   private resize() {
     const { host, renderer } = this;
-    const width = host.clientWidth, height = host.clientHeight;
+    const width = host.clientWidth,
+      height = host.clientHeight;
     if (!width || !height) return;
     const columns = width < 640 ? 1 : Math.min(this.robots.size, 2);
     host.parentElement?.style.setProperty("--worker-columns", String(columns));
-    host.parentElement?.style.setProperty("--worker-rows", String(Math.ceil(this.robots.size / columns)));
+    host.parentElement?.style.setProperty(
+      "--worker-rows",
+      String(Math.ceil(this.robots.size / columns)),
+    );
     const current = renderer.getSize(new THREE.Vector2());
     if (current.x !== width || current.y !== height) {
       renderer.setSize(width, height);
@@ -407,29 +499,43 @@ export class StoreScene {
       mesh.position.set(p.x, 0, p.y);
       mesh.rotation.y = Math.atan2(next.x - p.x, next.y - p.y);
     }
-    this.shopperMixers.forEach(mixer => mixer.setTime(t));
+    this.shopperMixers.forEach((mixer) => mixer.setTime(t));
   }
 
   private async loadShoppers() {
-    const names = ["character-male-a", "character-female-b", "character-male-c", "character-female-d"];
-    await Promise.all(Object.keys(this.initial.shoppers ?? {}).map(async (id, i) => {
-      const gltf = await new GLTFLoader().loadAsync(`/assets/mini-characters/${names[i % names.length]}.glb`);
-      if (this.disposed) return;
-      this.assetSources.push(gltf.scene);
-      gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
-      // Match the store's metre scale while leaving room within the aisle walking paths.
-      const model = this.fit(gltf.scene, new THREE.Vector3(0.6, 1.6, 0.6));
-      model.name = id;
-      this.shoppers.set(id, model);
-      this.scene.add(model);
-      const walk = gltf.animations.find(clip => /walk/i.test(clip.name));
-      if (walk) {
-        const mixer = new THREE.AnimationMixer(gltf.scene);
-        mixer.clipAction(walk).play();
-        this.shopperMixers.push(mixer);
-      }
-      this.setShopperTime(this.shopperTime);
-    }));
+    const names = [
+      "character-male-a",
+      "character-female-b",
+      "character-male-c",
+      "character-female-d",
+    ];
+    await Promise.all(
+      Object.keys(this.initial.shoppers ?? {}).map(async (id, i) => {
+        const gltf = await new GLTFLoader().loadAsync(
+          `/assets/mini-characters/${names[i % names.length]}.glb`,
+        );
+        if (this.disposed) return;
+        this.assetSources.push(gltf.scene);
+        gltf.scene.traverse((object) => {
+          if (object instanceof THREE.Mesh) {
+            object.castShadow = true;
+            object.receiveShadow = true;
+          }
+        });
+        // Match the store's metre scale while leaving room within the aisle walking paths.
+        const model = this.fit(gltf.scene, new THREE.Vector3(0.6, 1.6, 0.6));
+        model.name = id;
+        this.shoppers.set(id, model);
+        this.scene.add(model);
+        const walk = gltf.animations.find((clip) => /walk/i.test(clip.name));
+        if (walk) {
+          const mixer = new THREE.AnimationMixer(gltf.scene);
+          mixer.clipAction(walk).play();
+          this.shopperMixers.push(mixer);
+        }
+        this.setShopperTime(this.shopperTime);
+      }),
+    );
     this.renderer.domElement.dataset.shopperCount = String(this.shoppers.size);
   }
 
@@ -767,7 +873,10 @@ export class StoreScene {
     geometries.forEach((g) => g.dispose());
     textures.forEach((t) => t.dispose());
     materials.forEach((m) => m.dispose());
-    this.shopperMixers.forEach(mixer => { mixer.stopAllAction(); mixer.uncacheRoot(mixer.getRoot()); });
+    this.shopperMixers.forEach((mixer) => {
+      mixer.stopAllAction();
+      mixer.uncacheRoot(mixer.getRoot());
+    });
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }

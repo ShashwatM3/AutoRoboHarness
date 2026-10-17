@@ -33,6 +33,8 @@ import {
 } from "../../engine/store.ts";
 import { StoreScene } from "./scene/StoreScene.ts";
 import ShiftLab from "./ShiftLab.tsx";
+import BrainExplorer from "./BrainExplorer.tsx";
+import TrialExplorer from "./TrialExplorer.tsx";
 
 type Preview = { initial: Scenario; steps: TrajectoryStep[] };
 const ACTION_LABELS: Record<Action, string> = {
@@ -109,10 +111,39 @@ declare global {
 
 export default function App() {
   const [previewMode, setPreviewMode] = useState(false);
-  return previewMode ? (
-    <PreviewLab onLaunch={() => setPreviewMode(false)} />
-  ) : (
-    <ShiftLab onPreview={() => setPreviewMode(true)} />
+  const [page, setPage] = useState(
+    () => location.hash.slice(1).split("?")[0] || "shift",
+  );
+  useEffect(() => {
+    const change = () =>
+      setPage(location.hash.slice(1).split("?")[0] || "shift");
+    window.addEventListener("hashchange", change);
+    return () => window.removeEventListener("hashchange", change);
+  }, []);
+  return (
+    <>
+      <nav className="research-nav" aria-label="Workspace navigation">
+        <a className={page === "shift" ? "selected" : ""} href="#shift">
+          Run a shift
+        </a>
+        <a className={page === "brains" ? "selected" : ""} href="#brains">
+          Brain explorer
+        </a>
+        <a className={page === "trials" ? "selected" : ""} href="#trials">
+          Saved trials & comparisons
+        </a>
+        <span>VERSION 2</span>
+      </nav>
+      {page === "brains" ? (
+        <BrainExplorer />
+      ) : page === "trials" ? (
+        <TrialExplorer />
+      ) : previewMode ? (
+        <PreviewLab onLaunch={() => setPreviewMode(false)} />
+      ) : (
+        <ShiftLab onPreview={() => setPreviewMode(true)} />
+      )}
+    </>
   );
 }
 

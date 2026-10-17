@@ -11,7 +11,11 @@ export interface LlmUsage {
   cached_tokens?: number;
   cache_share?: number | null;
   replayed?: number;
-  crusoe_cache?: { calls_reporting: number; prompt_tokens: number; cached_tokens: number };
+  crusoe_cache?: {
+    calls_reporting: number;
+    prompt_tokens: number;
+    cached_tokens: number;
+  };
 }
 export interface ShiftInfo {
   shift_id: string;
@@ -23,6 +27,8 @@ export interface ShiftInfo {
   scores: TaskScore[];
   cache_share?: number | null;
   llm: LlmUsage;
+  trial_id?: string | null;
+  replay_available?: boolean;
 }
 export interface ShiftStep extends TrajectoryStep {
   shift_id: string;
@@ -39,9 +45,12 @@ export interface BrainEdge {
   from: string;
   to: string;
   type: string;
+  props?: Record<string, unknown>;
 }
 export interface BrainGraphData {
   version: number;
+  parent?: number | null;
+  note?: string;
   nodes: BrainNode[];
   edges: BrainEdge[];
 }
@@ -109,11 +118,26 @@ export type Grounding =
       verified: boolean;
       judge_supports?: boolean;
     };
-export interface JudgeVerdict { keep: boolean; why: string }
-export interface Citation { source_id?: string; url: string; title?: string; snippet?: string; note?: string; judge_supports?: boolean }
+export interface JudgeVerdict {
+  keep: boolean;
+  why: string;
+}
+export interface Citation {
+  source_id?: string;
+  url: string;
+  title?: string;
+  snippet?: string;
+  note?: string;
+  judge_supports?: boolean;
+}
 export interface ReviewInfo {
   llm?: LlmUsage;
-  judge?: { model: string; kept: string[]; dropped: { id: string; why: string }[]; error?: string };
+  judge?: {
+    model: string;
+    kept: string[];
+    dropped: { id: string; why: string }[];
+    error?: string;
+  };
   shift_id: string;
   status: "running" | "done" | "error";
   error?: string;

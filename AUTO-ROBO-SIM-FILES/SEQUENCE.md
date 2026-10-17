@@ -98,3 +98,27 @@ Nine engine tests, fourteen server tests, two camera/grid tests, engine/server/w
 - [ ] 5. **Fine-tuning job.** A supervised LoRA job on Nemotron 3.5 Lightning is created and its ID, status, and console link are returned through `POST /post-training`. **Waits for:** nothing.
 - [ ] 6. **Hugging Face copy, if time.** A LeRobot-style copy goes to a public dataset repository on the Hugging Face Hub. **Waits for:** nothing.
 - [ ] 7. **Final steps, with Person A.** Same as Person A step 4.
+
+
+## Version 2 extension: brain explorer and saved-trial playback (in progress)
+
+The user reopened V2 to finish version browsing and durable replay before any V3 work. The original verified gate remains 6/10 for v4 and 9/10 for v5 (`gate-mvcynupn`); those score-only records have no replay and must remain unchanged. Fresh comparisons have their own evaluation IDs, full denominators and actual results.
+
+### Person A
+
+- [ ] 1. Dynamic version explorer, actual graph details and full node/edge/property comparison, with zoom, pan, search, focus and neighbor highlighting.
+- [ ] 2. Historical brain selector and matched comparison controls, default v4 versus v5.
+- [ ] 3. Saved-trial browser and synchronized recorded playback with camera views, action logs and timeline controls.
+- [ ] 4. Run a fresh complete ten-seed Lightning comparison after backend integration. Person A owns inference quota; Person B runs offline tests only.
+- [ ] 5. Verify restart durability, zero-inference replay, exact recorded scene restoration, unchanged live brain/snapshots and finished dashboard. Publish the explanatory README with pipeline diagrams.
+
+### Person B
+
+- [ ] 1. Atomically persist explicit initial scene, actions, shoppers, outcomes and final state for new shifts and gate runs. Keep held-out records isolated from supervisor inputs.
+- [ ] 2. Read-only trial APIs and historical matched-comparison runner, with identical settings and no brain/index mutation.
+- [ ] 3. Complete evaluation metadata and meaningful storage, matching, isolation and immutability tests.
+- [ ] 4. Push isolated backend branch for Person A integration; jointly verify complete V2 extension.
+
+Person B received the backend scope through the authorized Forge Claude session. Existing brain and evidence file hashes were captured before edits. No V3 work has begun.
+
+Extension checkpoint: the frontend compiles and its five tests pass, including every recorded action boundary across four robots and backward seeks. Nine engine tests pass. The explorer includes graph navigation and property comparison; saved playback uses the shared recorded simulation clock. The explanatory README now covers setup, four pipeline/concept diagrams, original evaluation limits and runtime data. Person B published the backend contract and is implementing it in an isolated branch with offline tests. Integration and fresh Lightning recording remain pending.

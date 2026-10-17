@@ -2780,3 +2780,125 @@ footer .tiny-dot {
 
 .check-evidence { border:1px solid #b3c9b7; background:#fff; color:#315943; padding:8px 13px; border-radius:7px; font-size:12px; cursor:pointer; }
 .check-evidence:disabled { opacity:.5; cursor:wait; }
+
+/* Version 2 explorer and recorded experiments. */
+.research-nav { position: sticky; top: 0; z-index: 30; min-height: 46px; display: flex; align-items: center; gap: 8px; padding: 7px 28px; background: #203f32; color: #d5e2ca; box-shadow: 0 1px 0 #49614b; }
+.research-nav a { border-radius: 6px; padding: 8px 14px; font-size: 12px; font-weight: 600; }
+.research-nav a.selected { background: #cee798; color: #203f32; }
+.research-nav > span { margin-left: auto; font-size: 10px; letter-spacing: .12em; }
+.research-nav ~ .app-shell .rail { top: 46px; }
+.research-main { max-width: 1600px; padding: 48px 48px 80px; margin: 0 auto; }
+.research-main h1 { margin: 14px 0; font: 500 clamp(30px,4vw,48px)/1.1 'Space Grotesk', sans-serif; letter-spacing: -.05em; }
+.research-main h1 > span { color: #d48c47; }
+.research-main h2 { margin: 0 0 15px; font: 500 22px/1.3 'Space Grotesk', sans-serif; letter-spacing: -.03em; }
+.research-main h3 { font-weight: 600; }
+.research-main p { color: #6b7768; line-height: 1.65; }
+.research-main small { display: block; color: #77816f; line-height: 1.6; font-size: 11px; }
+.research-intro { max-width: 850px; margin-bottom: 30px; }
+.research-card { border: 1px solid #dce1d3; background: #fdfef8; border-radius: 12px; padding: 26px; margin: 24px 0; }
+.research-error { background: #fff1e9; border: 1px solid #d9a48e; padding: 16px; border-radius: 8px; }
+.explorer-controls { display: flex; gap: 18px; flex-wrap: wrap; align-items: end; margin: 16px 0 22px; }
+.research-main label, .historical-brain-label { display: flex; flex-direction: column; gap: 7px; font-size: 11px; font-weight: 600; color: #65735c; }
+.research-main select, .research-main input:not([type=range]), .historical-brain-label select { min-height: 38px; padding: 8px 10px; border: 1px solid #d5dccb; border-radius: 6px; background: #fffef9; color: #314b36; font: 450 13px 'DM Sans', sans-serif; max-width: 100%; }
+.research-main input[type=number] { width: 110px; }
+.historical-brain-label { margin: 20px 0; }
+.historical-brain-label small { color: #7b8470; font-size: 10px; line-height: 1.5; font-weight: 400; }
+.version-table { overflow-x: auto; }
+.version-table table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+.version-table th { color: #7a846d; text-transform: uppercase; font-size: 10px; letter-spacing: .08em; background: #f1f4e9; }
+.version-table th, .version-table td { border-bottom: 1px solid #e1e5d8; padding: 14px 13px; vertical-align: top; }
+.version-table td:first-child { white-space: nowrap; }
+.version-table td:nth-child(3) { max-width: 470px; }
+.text-button { padding: 0; background: none; color: #356544; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.evaluation-chip + .evaluation-chip { border-top: 1px solid #e4e7db; margin-top: 9px; padding-top: 9px; }
+.graph-comparison { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px; }
+.graph-comparison h2 { margin-top: 16px; }
+.graph-comparison .brain-card { margin: 0; }
+.graph-comparison .brain-body { display: block; }
+.graph-comparison .brain-body svg { width: 100%; min-height: 235px; }
+.graph-comparison .graph-description { min-height: 110px; padding: 16px; border-top: 1px solid #dce1d3; }
+.graph-comparison .graph-description p { word-break: break-word; max-height: 180px; overflow: auto; }
+.research-main pre { font-size: 11px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; background: #f1f4e9; border: 1px solid #dfe5d5; border-radius: 5px; padding: 13px; max-height: 420px; overflow: auto; }
+.research-main details { border-bottom: 1px solid #e0e5d6; padding: 11px 0; }
+.research-main summary { cursor: pointer; font-size: 12px; overflow-wrap: anywhere; }
+.graph-records { max-height: 330px; overflow-y: auto; padding-right: 8px; }
+.graph-inspector .explorer-controls label { min-width: 0; flex: 1; }
+.graph-diff-summary { border-top: 1px solid #dce3d3; margin-top: 26px; padding-top: 12px; }
+.diff-legend { display: flex; gap: 15px; margin-left: auto; font-size: 11px; padding: 10px 0; }
+.diff-added { color: #287e49; }
+.diff-removed { color: #b8573f; }
+.diff-changed { color: #a97519; }
+.property-diff { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 12px 0; font-size: 11px; }
+.property-diff th, .property-diff td { border: 1px solid #dde2d4; padding: 10px; overflow-wrap: anywhere; text-align: left; vertical-align: top; }
+.property-diff td:nth-child(2) { background: #fcf0e9; }
+.property-diff td:nth-child(3) { background: #edf5e7; }
+.original-evaluation { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: #eef3e4; border-color: #cbd8b7; }
+.original-score { font: 500 40px 'Space Grotesk', sans-serif; white-space: nowrap; color: #376340; letter-spacing: -.05em; }
+.original-score span { font-size: 24px; color: #93a67e; }
+.comparison-task-forms { display: flex; gap: 20px; flex-wrap: wrap; }
+.comparison-task-forms .explorer-controls { background: #f4f6ed; border-radius: 6px; padding: 14px; gap: 12px; align-items: center; margin: 0 0 15px; }
+.comparison-task-forms input { width: 110px; }
+.seeds-input { flex: 1; min-width: 230px; max-width: 500px; }
+.comparison-scores { display: flex; gap: 20px; margin: 25px 0; }
+.comparison-scores > div { flex: 1; padding: 22px; border: 1px solid #d7dfc9; border-radius: 9px; background: #f1f5e8; }
+.comparison-scores strong { display: block; font: 500 42px 'Space Grotesk', sans-serif; letter-spacing: -.05em; margin: 8px 0; }
+.comparison-scores span { font-size: 13px; }
+.matched-trials { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.matched-trials > div { padding: 12px; border: 1px solid #e0e5d6; border-radius: 6px; display: flex; gap: 10px; justify-content: space-between; align-items: center; }
+.matched-trials strong { font-size: 12px; }
+.replay-heading { display: flex; justify-content: space-between; gap: 20px; }
+.saved-playback-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 16px 0; }
+.saved-playback-controls button:not(.play-button) { border: 1px solid #d2dcc4; padding: 10px 13px; border-radius: 6px; display: flex; align-items: center; gap: 8px; background: #f3f6eb; }
+.saved-playback-controls output { margin-left: auto; font: 500 13px 'Space Grotesk', sans-serif; }
+.saved-playback-controls label { flex-direction: row; align-items: center; }
+.replay-timeline { width: 100%; accent-color: #4a7650; margin: 5px 0 24px; cursor: pointer; }
+.replay-grid { display: grid; gap: 24px; }
+.replay-grid.paired { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.replay-view { min-width: 0; border: 1px solid #d7dfcc; border-radius: 9px; overflow: hidden; }
+.replay-view > header { display: flex; justify-content: space-between; align-items: center; padding: 15px 17px; background: #ecf2e1; gap: 12px; }
+.replay-view h3 { margin: 0; font: 500 20px 'Space Grotesk', sans-serif; }
+.replay-view header span { font-size: 11px; }
+.replay-view > .recording-id { padding: 9px 14px; overflow-wrap: anywhere; }
+.trial-viewport { height: 460px; position: relative; background: #eaece2; }
+.trial-viewport .scene-host { position: absolute; inset: 0; width: 100%; height: 100%; }
+.trial-viewport[data-robots="3"], .trial-viewport[data-robots="4"] { height: 800px; }
+.replay-current { padding: 10px 14px; margin: 0; border-top: 1px solid #d7dfcc; min-height: 65px; font-size: 12px; }
+.replay-view > details { margin: 0 14px; }
+.replay-loading { position: absolute; inset: 0; display: grid; place-items: center; }
+.replay-full-log { font-size: 11px; line-height: 1.8; max-height: 300px; overflow: auto; padding-left: 24px; }
+.replay-view .worker-camera-label { font-size: 10px; }
+.replay-view .worker-camera-label > span:last-child { font-size: 8px; }
+@media (max-width: 1000px) {
+ .research-main { padding: 30px 20px 60px; }
+ .graph-comparison, .replay-grid.paired { grid-template-columns: 1fr; }
+ .original-score { font-size: 30px; }
+}
+@media (max-width: 640px) {
+ .research-nav { padding: 6px; gap: 0; }
+ .research-nav a { padding: 9px 8px; font-size: 10px; }
+ .research-nav > span { display: none; }
+ .research-card { padding: 17px; }
+ .research-main { padding: 26px 12px 50px; }
+ .original-evaluation, .replay-heading { display: block; }
+ .matched-trials { grid-template-columns: 1fr; }
+ .comparison-scores { gap: 10px; }
+ .comparison-scores > div { padding: 14px; }
+ .comparison-scores strong { font-size: 32px; }
+ .trial-viewport[data-robots="2"] { height: 800px; }
+ .trial-viewport[data-robots="3"] { height: 1200px; }
+ .trial-viewport[data-robots="4"] { height: 1600px; }
+ .saved-playback-controls { gap: 8px; }
+ .version-table td, .version-table th { padding: 10px 9px; }
+}
+.graph-navigation { padding: 10px 14px; border-bottom: 1px solid #e0e5d6; display: flex; gap: 10px; position: relative; align-items: center; }
+.graph-navigation > label { flex: 1; min-width: 0; }
+.graph-navigation input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid #d3dcc6; background: #fafcf4; border-radius: 5px; font: inherit; font-size: 11px; color: #3c563b; }
+.graph-zoom-buttons { display: flex; align-items: center; gap: 4px; }
+.graph-zoom-buttons button { display: grid; place-items: center; width: 28px; height: 29px; background: #e9efdf; border: 1px solid #d6dec9; border-radius: 4px; }
+.graph-zoom-buttons > span { font-size: 9px; min-width: 32px; text-align: right; color: #687b5d; }
+.graph-search-results { position: absolute; top: 100%; left: 14px; right: 14px; z-index: 5; max-height: 270px; overflow-y: auto; padding: 6px; background: #fcfef5; border: 1px solid #ccd7bd; border-radius: 6px; box-shadow: 0 8px 20px #203f3222; }
+.graph-search-results button { display: block; width: 100%; text-align: left; padding: 9px; background: none; border-radius: 4px; }
+.graph-search-results button:hover { background: #eaf1dc; }
+.graph-search-results strong, .graph-search-results small { display: block; font-size: 11px; }
+.graph-search-results small { font-size: 9px; color: #7b8870; }
+.graph-comparison .brain-body svg { min-height: 360px; }
