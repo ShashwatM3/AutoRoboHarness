@@ -8,7 +8,9 @@ cd server && npm install && npm run dev        # http://localhost:8787 (PORT to 
 
 Keys come from the repo-root `.env` (see `.env.example`). Every route answers both at `/` and at `/api`, with CORS on.
 
-Model calls (`src/llm.ts`) are limited per model to `LLM_RPM` a minute (default 18) and `LLM_CONCURRENCY` in flight (default 4). A 429 is waited out for up to `LLM_429_WAIT_S` seconds (default 600), since the key's request bucket is shared with anyone else using the same key; 5xx and network errors get 6 tries. Responses are cached in `server/.cache/llm/` (`LLM_CACHE=0` turns that off).
+`npm start` runs without file watching, so a pull does not interrupt a long evaluation. `npm test` runs the provider scheduling regressions with a simulated clock and no API calls. Calls are paced per model at `LLM_RPM` (default 18), with at most `LLM_CONCURRENCY` (default 4) requests in flight. A 429 pauses all queued calls for that model using `Retry-After`, or 60 seconds when the provider omits it. Limits apply to the whole Crusoe project, so other processes sharing that project also consume its allowance. The gate runs seed/version pairs in sequence and drains current robot workers before reporting a fatal error.
+
+A call retries 429s for up to `LLM_429_WAIT_S` seconds (default 600); 5xx and network errors get 6 tries. Responses are cached in `server/.cache/llm/` (`LLM_CACHE=0` turns that off).
 
 ## Brain (step 1)
 

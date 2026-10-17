@@ -179,7 +179,7 @@ async function runGate(brain: BrainStore, gate: Gate) {
       const task = engine.createTask(`robot-${i + 1}`, t.type, t.slot, `${ctx.shift_id}-t${i + 1}`);
       return { ...task, card: taskCard(engine, task) };
     });
-    await Promise.all(
+    const workers = await Promise.allSettled(
       created.map((t) =>
         (gate.worker === "llm" ? runWorker : runCompiled)(brain, engine, ctx, t).finally(() => {
           gate.progress.done++;
@@ -187,15 +187,20 @@ async function runGate(brain: BrainStore, gate: Gate) {
         }),
       ),
     );
+    // Do not report a terminal gate while a sibling worker still spends quota.
+    const failed = workers.find((result) => result.status === "rejected");
+    if (failed?.status === "rejected") throw failed.reason;
     return engine.score();
   };
 
-  gate.per_seed = await Promise.all(
-    plan.map(async (p) => {
-      const [base, candidate] = await Promise.all([runOne(p.seed, p.tasks, gate.base), runOne(p.seed, p.tasks, gate.candidate)]);
-      return { seed: p.seed, skipped: p.skipped, base, candidate };
-    }),
-  );
+  // Keep the evaluation bounded: finish a seed/version before starting the next.
+  // A fatal provider error stops new work; only the current robot workers drain.
+  gate.per_seed = [];
+  for (const p of plan) {
+    const base = await runOne(p.seed, p.tasks, gate.base);
+    const candidate = await runOne(p.seed, p.tasks, gate.candidate);
+    gate.per_seed.push({ seed: p.seed, skipped: p.skipped, base, candidate });
+  }
 
   const agg = (key: "base" | "candidate"): Score => {
     const all = gate.per_seed.flatMap((p) => p[key]);

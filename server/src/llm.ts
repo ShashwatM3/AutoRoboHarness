@@ -28,14 +28,21 @@ function getClient() {
   return client;
 }
 
-// ---------- rate limiter: requests in flight per model, plus a sliding one-minute window ----------
-// Measured on our key (Oct 17, 1:45-1:50 PM): a bucket of roughly 48 requests that refills at about 15-20 per
-// minute (429 max_requests_limit). A burst drains it, and then a gate-sized run fails. So: a per-minute window
-// (LLM_RPM, default 18) and a small concurrency cap (LLM_CONCURRENCY, default 4).
-
-const maxInFlight = () => Number(process.env.LLM_CONCURRENCY ?? 4);
+// ---------- per-model concurrency, paced starts, and a shared provider cooldown ----------
+// A minute-sized burst can exhaust the provider's bucket even below the nominal RPM.
+// Reserve a concurrency slot first, then check the clock immediately before sending.
+const positive = (value: string | undefined, fallback: number) => {
+  const n = Number(value ?? fallback);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+};
+const maxInFlight = () => Math.max(1, Math.floor(positive(process.env.LLM_CONCURRENCY, 4)));
+const rpm = () => positive(process.env.LLM_RPM, 18);
 const inFlight = new Map<string, number>();
 const waiters = new Map<string, (() => void)[]>();
+const chains = new Map<string, Promise<unknown>>();
+const nextStart = new Map<string, number>();
+const blockedUntil = new Map<string, number>();
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function enter(model: string) {
   while ((inFlight.get(model) ?? 0) >= maxInFlight()) await new Promise<void>((r) => waiters.set(model, [...(waiters.get(model) ?? []), r]));
@@ -44,16 +51,10 @@ async function enter(model: string) {
 
 function leave(model: string) {
   inFlight.set(model, (inFlight.get(model) ?? 1) - 1);
-  const q = waiters.get(model);
-  q?.shift()?.();
+  waiters.get(model)?.shift()?.();
 }
 
-const rpm = () => Number(process.env.LLM_RPM ?? 18);
-const windows = new Map<string, number[]>();
-const chains = new Map<string, Promise<unknown>>();
-
 async function acquire(model: string) {
-  // serialize acquisition per model so the window check and the push are atomic
   const prev = chains.get(model) ?? Promise.resolve();
   let release!: () => void;
   const mine = new Promise<void>((r) => (release = r));
@@ -61,27 +62,33 @@ async function acquire(model: string) {
   await prev;
   try {
     for (;;) {
-      const now = Date.now();
-      const w = (windows.get(model) ?? []).filter((t) => now - t < 60_000);
-      if (w.length < rpm()) {
-        w.push(now);
-        windows.set(model, w);
+      const wait = Math.max(nextStart.get(model) ?? 0, blockedUntil.get(model) ?? 0) - Date.now();
+      if (wait <= 0) {
+        nextStart.set(model, Date.now() + 60_000 / rpm());
         return;
       }
-      await sleep(60_000 - (now - w[0]) + 50);
+      await sleep(wait);
+      // Another in-flight request may have extended the cooldown while we slept.
     }
   } finally {
     release();
   }
 }
 
-/** Pause a model's window after a 429, so queued calls back off together. */
-function penalize(model: string, ms: number) {
-  const until = Date.now() + ms - 60_000;
-  windows.set(model, Array.from({ length: rpm() }, () => until));
+function retryAfterMs(err: any): number {
+  const headers = err?.headers;
+  const value = typeof headers?.get === "function" ? headers.get("retry-after") : headers?.["retry-after"];
+  if (value == null) return 60_000;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  const date = Date.parse(String(value));
+  return Number.isFinite(date) ? Math.max(0, date - Date.now()) : 60_000;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+function penalize(model: string, ms: number) {
+  // Concurrent 429s can extend a cooldown, never shorten it.
+  blockedUntil.set(model, Math.max(blockedUntil.get(model) ?? 0, Date.now() + ms));
+}
 
 // ---------- the call ----------
 
@@ -110,18 +117,19 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
     return hit;
   }
 
-  // A 429 always clears as the bucket refills, even when another client on the same key drained it, so it is
-  // waited out for up to LLM_429_WAIT_S (default 600); other errors (5xx, network) get 6 tries.
+  // Allow time for the shared project's quota to recover. Persistent 429s are bounded
+  // by LLM_429_WAIT_S (default 600); other errors (5xx, network) get 6 tries.
   const waitUntil = Date.now() + Number(process.env.LLM_429_WAIT_S ?? 600) * 1000;
   let delay = 2000;
   let errors = 0;
   for (let attempt = 1; ; attempt++) {
     const model = String(body.model);
-    await acquire(model);
     await enter(model);
-    const t0 = Date.now();
+    let retryDelay = 0;
     try {
-      const res = (await getClient().chat.completions.create(body as any).finally(() => leave(model))) as ChatCompletion;
+      await acquire(model);
+      const t0 = Date.now();
+      const res = (await getClient().chat.completions.create(body as any)) as ChatCompletion;
       const latency_s = +((Date.now() - t0) / 1000).toFixed(2);
       emit("llm", { role: opts.role, model: body.model, cached: false, latency_s, ...usage(res), ...opts.meta });
       if (useCache) {
@@ -132,13 +140,19 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
     } catch (err: any) {
       const status = err?.status ?? 0;
       const retryable = status === 429 || status >= 500 || status === 0;
-      const exhausted = status === 429 ? Date.now() + delay > waitUntil : ++errors >= 6;
+      const wait = status === 429 ? retryAfterMs(err) : delay + Math.random() * 500;
+      if (status === 429) penalize(model, wait);
+      const exhausted = status === 429 ? Date.now() + wait > waitUntil : ++errors >= 6;
       if (!retryable || exhausted) throw err;
-      if (status === 429) penalize(String(body.model), delay);
-      console.warn(`[llm] ${opts.role} ${body.model} ${status || err?.code || "error"}; retry ${attempt} in ${delay} ms`);
-      await sleep(delay + Math.random() * 500);
+      console.warn(`[llm] ${opts.role} ${body.model} ${status || err?.code || "error"}; retry ${attempt} after ${Math.ceil(wait)} ms`);
+      // 429 uses the model-wide clock so every queued caller observes the same pause.
+      if (status !== 429) retryDelay = wait;
       delay = Math.min(delay * 2, 30_000);
+    } finally {
+      // Also release on synchronous client/configuration errors.
+      leave(model);
     }
+    if (retryDelay) await sleep(retryDelay);
   }
 }
 
