@@ -11,7 +11,7 @@ import { httpError, type BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
 import { claimInference } from "./inference-lock.ts";
 import { mergeTally, newTally } from "./llm.ts";
-import { dataDir, safeId } from "./paths.ts";
+import { dataDir, readJsonDir, safeId } from "./paths.ts";
 import { runCompiled } from "./policy.ts";
 import { getReview, type Review } from "./supervisor.ts";
 import { compileUpdates } from "./supervisor-ops.ts";
@@ -70,6 +70,13 @@ export function getGate(id: string): Gate | undefined {
   if (gates.has(gid)) return gates.get(gid);
   const f = path.join(gatesDir(), `${gid}.json`);
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : undefined;
+}
+
+/** Every gate this server knows: running ones in memory, then every saved gate file. Read-only. */
+export function listGates(): Gate[] {
+  const byId = new Map<string, Gate>(readJsonDir<Gate>(gatesDir()).map((g) => [g.gate_id, g]));
+  for (const [id, g] of gates) byId.set(id, g); // a gate in memory is the newer copy (it is saved when it ends)
+  return [...byId.values()].sort((a, b) => String(a.started_at).localeCompare(String(b.started_at)));
 }
 
 export interface UpdateBrainInput {

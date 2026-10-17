@@ -14,6 +14,7 @@ import { getGate, updateBrain } from "./gate.ts";
 import { getComparison, listComparisons, recoverInterruptedComparisons, startComparison, summarizeComparison } from "./comparisons.ts";
 import { evaluationsByVersion } from "./evaluations.ts";
 import { getTrial, listTrials, recoverInterruptedTrials } from "./trials.ts";
+import { getRun, listRuns } from "./runs.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(ROOT, ".env"), quiet: true });
@@ -92,6 +93,15 @@ api.post(["/shift", "/shifts"], (req, res) => {
 });
 
 api.get("/shifts", (_req, res) => res.json(listShifts()));
+
+// Saved training-run library (read-only; never starts a shift, review or gate, never calls a model)
+// GET /runs -> { runs: summaries, newest first }; GET /runs/:id -> { shift, review | null, gates }
+api.get("/runs", (_req, res) => res.json({ runs: listRuns() }));
+api.get("/runs/:id", (req, res) => {
+  const run = getRun(req.params.id as string);
+  if (!run) return res.status(404).json({ error: "no saved training run with that id", code: "no_run" });
+  res.json(run);
+});
 
 api.get(["/shift/:id", "/shifts/:id"], (req, res) => {
   const s = getShift(req.params.id as string);
