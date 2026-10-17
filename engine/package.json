@@ -1,0 +1,16 @@
+{
+  "name": "autorobo-engine",
+  "private": true,
+  "type": "module",
+  "exports": "./store.ts",
+  "scripts": {
+    "test": "tsx --test store.test.ts",
+    "typecheck": "tsc --noEmit",
+    "demo": "tsx scripts/pick.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
