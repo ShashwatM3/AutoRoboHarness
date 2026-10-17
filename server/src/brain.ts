@@ -346,6 +346,7 @@ export class BrainStore {
       edges: res.edges,
     };
     fs.writeFileSync(this.filePath(v), JSON.stringify(file, null, 2) + "\n", { flag: "wx" });
+    this.cache.delete(v); // a reset may have deleted an older file with this number while it was cached
     const idx = this.index();
     idx.versions.push({ v, parent: base, status: "candidate", created_at: file.created_at, note: file.note });
     this.writeIndex(idx);
