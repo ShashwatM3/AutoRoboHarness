@@ -171,7 +171,7 @@ export function createScenario(seed: number, robotCount = 2): Scenario {
   const robots: Record<string, Robot> = {};
   for (let i = 1; i <= robotCount; i++) {
     const id = `robot-${i}`;
-    robots[id] = { id, x: 0, y: -3.2, waypoint: 'backroom', torso_level: 1, arm_out: false, reaching: null, holding: null, grasp_mode: null, task_id: null };
+    robots[id] = { id, x: (i - 1 - (robotCount - 1) / 2) * 0.85, y: -3.2, waypoint: 'backroom', torso_level: 1, arm_out: false, reaching: null, holding: null, grasp_mode: null, task_id: null };
   }
   return { seed, t: 0, layout: { waypoints, slots }, items, robots, tasks: {}, trajectory: [], issues: [] };
 }
@@ -232,6 +232,7 @@ export class StoreEngine {
     const route = this.route(r.waypoint, waypointId);
     if (!route) return this.record(r, 'navigate_to', args, false, 'no traversable route');
     const path = route.map(id => ({ x: this.scenario.layout.waypoints[id].x, y: this.scenario.layout.waypoints[id].y }));
+    if (r.x !== path[0].x || r.y !== path[0].y) path.unshift({ x: r.x, y: r.y });
     const distance = path.slice(1).reduce((sum, p, i) => sum + Math.hypot(p.x - path[i].x, p.y - path[i].y), 0);
     r.x = wp.x; r.y = wp.y; r.waypoint = wp.id;
     return this.record(r, 'navigate_to', args, true, 'arrived', distance / this.maxSpeed, path);
@@ -289,9 +290,10 @@ export class StoreEngine {
       if (r.waypoint !== slot.waypoint || !r.arm_out || r.reaching !== targetId) return this.record(r, 'place', args, false, 'reach target slot before placing');
       if (this.itemAt(targetId)) return this.record(r, 'place', args, false, 'target slot is occupied');
     }
-    this.scenario.items[r.holding].slot = targetId;
+    const placedItem = this.scenario.items[r.holding];
+    placedItem.slot = targetId;
     r.holding = null; r.grasp_mode = null;
-    return this.record(r, 'place', args, true, 'item placed', 0.6);
+    return this.record(r, 'place', args, true, 'item placed', 0.6, undefined, placedItem.id);
   }
   retract(robotId: string): ActionResult {
     const r = this.robot(robotId);
@@ -333,10 +335,10 @@ export class StoreEngine {
     }
     return null;
   }
-  private record(r: Robot, action: Action, args: Record<string, unknown>, ok: boolean, reason: string, duration = 0.2, path?: Point[]): ActionResult {
+  private record(r: Robot, action: Action, args: Record<string, unknown>, ok: boolean, reason: string, duration = 0.2, path?: Point[], affectedItemId?: string): ActionResult {
     this.scenario.t = Math.round((this.scenario.t + duration) * 1000) / 1000;
     const task = r.task_id ? this.scenario.tasks[r.task_id] : null;
-    const item = task ? this.scenario.items[task.item_id] : r.holding ? this.scenario.items[r.holding] : undefined;
+    const item = task ? this.scenario.items[task.item_id] : affectedItemId ? this.scenario.items[affectedItemId] : r.holding ? this.scenario.items[r.holding] : undefined;
     const slotId = typeof args.slot === 'string' ? args.slot : r.reaching;
     const observedItem = slotId ? this.itemAt(slotId) : undefined;
     const step: TrajectoryStep = structuredClone({
@@ -345,7 +347,7 @@ export class StoreEngine {
       brain_nodes_read: this.brainReads.get(r.id) ?? [], action, args, ok, reason,
       position: { x: r.x, y: r.y }, torso_level: r.torso_level, holding: r.holding,
       item_location: item?.slot ?? null, target_location: task?.target ?? null,
-      robot_state: r, item_id: r.holding ?? (action === 'place' && ok ? item?.id : observedItem?.id) ?? null,
+      robot_state: r, item_id: affectedItemId ?? r.holding ?? (action === 'place' && ok ? item?.id : observedItem?.id) ?? null,
       duration, ...(path ? { path } : {}),
     });
     this.scenario.trajectory.push(step);
