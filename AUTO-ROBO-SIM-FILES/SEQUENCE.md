@@ -59,7 +59,7 @@ The requested [Crusoe MCP setup guide](CRUSOE-MCP-SETUP.md) is complete. The loc
 - [x] ~~2. **Cache share.** The shift runner sums `cached_tokens` against `prompt_tokens` across all worker calls and exposes `cache_share`. **Waits for:** nothing.~~
 - [x] ~~3. **Brain history.** `GET /brain/history` returns each brain version with its held-out score. **Waits for:** nothing.~~
 - [x] ~~4. **You.com citations.** The supervisor gets a `research(question)` tool calling `POST https://api.you.com/v1/research`, and each insight carries its citations. **Waits for:** nothing.~~
-- [ ] 5. **OpenShell, only if idle.** The supervisor runs in an OpenShell sandbox that cannot read the held-out seeds folder; dropped if it does not work within 15 minutes. **Waits for:** nothing.
+- [x] ~~5. **OpenShell, only if idle.** The supervisor runs in an OpenShell sandbox that cannot read the held-out seeds folder; dropped if it does not work within 15 minutes. **Waits for:** nothing.~~
 - [ ] 6. **Version 2 check, with Person A.** Same as Person A step 6.
 
 ---
