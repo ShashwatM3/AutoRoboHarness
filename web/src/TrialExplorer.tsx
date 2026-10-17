@@ -491,6 +491,14 @@ export default function TrialExplorer() {
                         {task.target}
                       </div>
                     ))}
+                    {t.task_selection
+                      ?.filter((s) => !s.actual)
+                      .map((s) => (
+                        <div className="diff-removed" key={s.index}>
+                          {s.requested.type} {s.requested.slot} · infeasible ·
+                          failed
+                        </div>
+                      ))}
                   </td>
                   <td>
                     {t.scores.filter((s) => s.complete).length}/{t.tasks.length}{" "}

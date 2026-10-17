@@ -100,7 +100,7 @@ function ReplayView({
       </small>
       <div
         className={`viewport-wrap trial-viewport ${view === "workers" ? "worker-mode" : ""}`}
-        data-robots={trial.tasks.length}
+        data-robots={Object.keys(trial.initial.robots).length}
       >
         <div className="scene-host" ref={host} />
         {ready && view === "workers" && (
@@ -128,6 +128,8 @@ function ReplayView({
           {JSON.stringify(
             {
               tasks: trial.tasks,
+              requested_tasks: trial.requested_tasks,
+              task_selection: trial.task_selection,
               seed: trial.seed,
               environment: trial.environment,
               scores: trial.scores,

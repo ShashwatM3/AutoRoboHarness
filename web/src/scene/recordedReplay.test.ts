@@ -129,3 +129,29 @@ test("graph comparison includes removals, nested properties, labels, types and e
   assert.equal(diff.edges.changed[0].changes[0].path, "props.order");
   assert.equal(diff.edges.added.length, 1);
 });
+
+test("a misplaced product replays its own physical location, independently of the intended task item", () => {
+  const engine = new StoreEngine(createScenario(1, 1));
+  const displaced = Object.values(engine.scenario.items).find(
+    (i) =>
+      i.id.startsWith("item:") &&
+      i.slot !== i.home_slot &&
+      engine.scenario.layout.slots[i.slot]?.aisle !== "backroom",
+  );
+  assert.ok(displaced);
+  const task = engine.createTask("robot-1", "PICK", displaced.slot);
+  assert.notEqual(task.item_id, displaced.id);
+  const initial = engine.snapshot(),
+    slot = initial.layout.slots[displaced.slot];
+  engine.navigate_to("robot-1", slot.waypoint);
+  engine.set_torso("robot-1", slot.level);
+  engine.reach("robot-1", slot.id);
+  engine.grasp("robot-1", "two_hand");
+  engine.retract("robot-1");
+  engine.navigate_to("robot-1", "tote");
+  engine.place("robot-1", "tote");
+  const final = engine.snapshot();
+  assert.equal(final.items[displaced.id].slot, "tote");
+  assert.notEqual(final.items[task.item_id].slot, "tote");
+  assert.deepEqual(recordedStateAt(initial, final.trajectory, final.t), final);
+});
