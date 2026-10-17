@@ -10,7 +10,7 @@ import type { TrajectoryStep } from "../../engine/store.ts";
 import type { BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
 import { judgeReview, type JudgeResult } from "./judge.ts";
-import { chat, MODELS, parseJson } from "./llm.ts";
+import { chat, MODELS, newTally, parseJson, tally, type LlmTally } from "./llm.ts";
 import { compileUpdates, REVIEW_SCHEMA, type CompiledUpdate, type EvidenceById, type Update } from "./supervisor-ops.ts";
 import { getShift, listShifts, taskContext, type Shift } from "./worker.ts";
 
@@ -46,6 +46,7 @@ export interface Review {
   evidence?: EvidenceById;
   tool_calls: { name: string; args: unknown }[];
   judge?: JudgeResult;
+  llm?: LlmTally; // supervisor, clip and judge calls; reviews made before V2-2 have none
 }
 
 type Verdict = { keep: boolean; why: string };
@@ -105,7 +106,7 @@ function fn(name: string, description: string, properties: Record<string, unknow
   return { type: "function", function: { name, description, parameters: { type: "object", properties, required } } };
 }
 
-async function runTool(brain: BrainStore, shift: Shift, name: string, a: any): Promise<unknown> {
+async function runTool(brain: BrainStore, shift: Shift, name: string, a: any, usage?: LlmTally): Promise<unknown> {
   switch (name) {
     case "list_steps":
       return shift.trajectory.filter((s) => s.robot === a.robot).map(fmtStep);
@@ -173,6 +174,7 @@ async function runTool(brain: BrainStore, shift: Shift, name: string, a: any): P
         },
         { role: "clips", meta: { shift_id: shift.shift_id, clip_id: c.clip_id } },
       );
+      if (usage) tally(usage, res);
       return { clip_id: c.clip_id, answer: res.choices[0]?.message?.content ?? "" };
     }
     default:
@@ -246,6 +248,7 @@ export function startReview(brain: BrainStore, shiftId: string): Review {
     updates: [],
     detected: detectFailures(shift),
     tool_calls: [],
+    llm: newTally(),
   };
   reviews.set(shiftId, review);
   runReview(brain, shift, review)
@@ -258,7 +261,7 @@ export function startReview(brain: BrainStore, shiftId: string): Review {
     .finally(() => {
       review.finished_at = new Date().toISOString();
       saveReview(review);
-      emit("review_done", { shift_id: shiftId, status: review.status, failures: review.failures.length, insights: review.insights.length, updates: review.updates.length, judge: judgeCounts(review) });
+      emit("review_done", { shift_id: shiftId, status: review.status, failures: review.failures.length, insights: review.insights.length, updates: review.updates.length, judge: judgeCounts(review), cache_share: review.llm?.cache_share ?? null });
     });
   return review;
 }
@@ -287,7 +290,7 @@ export async function rejudgeReview(brain: BrainStore, shiftId: string): Promise
   if (review.status !== "done") throw Object.assign(new Error(`review is ${review.status}`), { status: 409 });
   await runJudge(brain, getShift(shiftId)!, review);
   saveReview(review);
-  emit("review_done", { shift_id: shiftId, status: review.status, failures: review.failures.length, insights: review.insights.length, updates: review.updates.length, judge: judgeCounts(review) });
+  emit("review_done", { shift_id: shiftId, status: review.status, failures: review.failures.length, insights: review.insights.length, updates: review.updates.length, judge: judgeCounts(review), cache_share: review.llm?.cache_share ?? null });
   return review;
 }
 
@@ -299,14 +302,19 @@ async function runReview(brain: BrainStore, shift: Shift, review: Review) {
   ];
 
   let model: string = MODELS.supervisor;
+  const send = async (params: Record<string, unknown>) => {
+    const res = await chat({ model, messages, max_tokens: 2048, ...params } as any, { role: "supervisor", meta: { shift_id: shift.shift_id } });
+    tally(review.llm!, res);
+    return res;
+  };
   const call = async (params: Record<string, unknown>) => {
     try {
-      return await chat({ model, messages, max_tokens: 2048, ...params } as any, { role: "supervisor", meta: { shift_id: shift.shift_id } });
+      return await send(params);
     } catch (e: any) {
       if (model !== MODELS.supervisor_fallback && (e?.status === 400 || e?.status === 404 || e?.status >= 500)) {
         console.warn(`[supervisor] ${model} failed (${e?.status}); falling back to ${MODELS.supervisor_fallback}`);
         model = MODELS.supervisor_fallback;
-        return await chat({ model, messages, max_tokens: 2048, ...params } as any, { role: "supervisor", meta: { shift_id: shift.shift_id } });
+        return await send(params);
       }
       throw e;
     }
@@ -329,7 +337,7 @@ async function runReview(brain: BrainStore, shift: Shift, review: Review) {
       } catch {}
       review.tool_calls.push({ name: tc.function.name, args });
       progress(tc.function.name === "get_human_clips" || tc.function.name === "inspect_clip" ? "clips" : tc.function.name === "find_sibling_runs" ? "siblings" : "evidence", `${tc.function.name} ${JSON.stringify(args)}`);
-      const out = await runTool(brain, shift, tc.function.name, args);
+      const out = await runTool(brain, shift, tc.function.name, args, review.llm);
       messages.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(out).slice(0, 12000) });
     }
   }
@@ -387,8 +395,15 @@ function finalize(brain: BrainStore, shift: Shift, review: Review, j: any): Reco
         const c = clipIds.get(g.clip_id);
         return { ...g, verified: !!c, frames: c?.frames, sheet: c?.sheet, label: c?.action, description: c?.description };
       }
-      // the model sometimes decorates run ids ("shift-x/robot-1 (PICK, ...)"); keep the id, move the rest to the note
-      const runId = (s: unknown) => /shift-[a-z0-9]+\/robot-\d+/.exec(String(s ?? ""))?.[0] ?? String(s ?? "");
+      // the model sometimes decorates run ids ("shift-x/robot-1 (PICK, ...)"); keep the id, move the rest to the note.
+      // It also cites the reviewed shift's runs by task id ("shift-x-t1"), as the digest lists them; map those to their robot.
+      const runId = (s: unknown) => {
+        const run = /shift-[a-z0-9]+\/robot-\d+/.exec(String(s ?? ""))?.[0];
+        if (run) return run;
+        const task = /(shift-[a-z0-9]+)-t\d+/.exec(String(s ?? ""));
+        const robot = task && getShift(task[1])?.tasks.find((t) => t.id === task[0])?.robot;
+        return robot ? `${task![1]}/${robot}` : String(s ?? "");
+      };
       const ok_run = runId(g.ok_run);
       const failed_run = runId(g.failed_run);
       const extra = [g.ok_run, g.failed_run].filter((s) => s && !runs.has(s)).join("; ");

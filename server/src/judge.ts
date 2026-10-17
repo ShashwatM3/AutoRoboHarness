@@ -3,7 +3,7 @@
 // Citations that point at nothing (no such step, clip or run) are dropped without asking the model.
 
 import type { BrainStore } from "./brain.ts";
-import { chat, MODELS, parseJson } from "./llm.ts";
+import { chat, MODELS, parseJson, tally } from "./llm.ts";
 import { clips, fmtStep, type Review } from "./supervisor.ts";
 import { getShift, type Shift } from "./worker.ts";
 
@@ -133,6 +133,7 @@ export async function judgeReview(_brain: BrainStore, shift: Shift, review: Revi
       model = MODELS.supervisor_fallback;
       res = await ask(model);
     }
+    if (review.llm) tally(review.llm, res);
     const out = parseJson<{ verdicts?: any[] }>(res.choices[0]?.message?.content);
     for (const v of Array.isArray(out.verdicts) ? out.verdicts : []) {
       if (asked.includes(String(v?.id))) verdicts.set(String(v.id), { keep: v.keep === true, why: String(v.why ?? ""), weak_grounding: Array.isArray(v.weak_grounding) ? v.weak_grounding.map(Number) : [] });

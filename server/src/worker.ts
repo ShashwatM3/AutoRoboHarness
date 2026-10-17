@@ -9,7 +9,7 @@ import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/reso
 import { createScenario, StoreEngine, type ActionResult, type Task, type TaskScore, type TrajectoryStep } from "../../engine/store.ts";
 import type { BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
-import { chat, MODELS } from "./llm.ts";
+import { chat, MODELS, newTally, tally, type LlmTally } from "./llm.ts";
 import { runCompiled } from "./policy.ts";
 import type { ResolvedContext } from "./types.ts";
 
@@ -33,7 +33,7 @@ export interface Shift {
   finished_at?: string;
   tasks: (Task & { card: TaskCard; finish_summary?: string })[];
   scores: TaskScore[];
-  llm: { calls: number; prompt_tokens: number; completion_tokens: number };
+  llm: LlmTally;
   trajectory: TrajectoryStep[];
 }
 
@@ -183,7 +183,7 @@ export function startShift(brain: BrainStore, input: StartShiftInput): Shift {
     started_at: new Date().toISOString(),
     tasks,
     scores: [],
-    llm: { calls: 0, prompt_tokens: 0, completion_tokens: 0 },
+    llm: newTally(),
     trajectory: [],
   };
   shifts.set(shift_id, shift);
@@ -253,9 +253,7 @@ export async function runWorker(brain: BrainStore, engine: StoreEngine, shift: R
       { model: MODELS.worker, messages, tools: TOOLS, tool_choice: "auto", max_tokens: 1024 },
       { role: shift.headless ? "gate-worker" : "worker", meta: { shift_id: shift.shift_id, robot } },
     );
-    shift.llm.calls++;
-    shift.llm.prompt_tokens += res.usage?.prompt_tokens ?? 0;
-    shift.llm.completion_tokens += res.usage?.completion_tokens ?? 0;
+    tally(shift.llm, res);
     const msg = res.choices[0]?.message;
     const calls = msg?.tool_calls?.filter((tc) => tc.type === "function") ?? [];
     if (!calls.length) {

@@ -12,6 +12,8 @@ Keys come from the repo-root `.env` (see `.env.example`). Every route answers bo
 
 A call retries 429s for up to `LLM_429_WAIT_S` seconds (default 600); 5xx and network errors get 6 tries. Responses are cached in `server/.cache/llm/` (`LLM_CACHE=0` turns that off).
 
+**Token tallies and Crusoe's cache (Version 2).** Shifts, gates and reviews carry `llm: { calls, prompt_tokens, completion_tokens, replayed, crusoe_cache: { calls_reporting, prompt_tokens, cached_tokens }, cache_share }`. `cache_share` is the share of prompt tokens Crusoe served from its prefix cache (`usage.prompt_tokens_details.cached_tokens`), over the live calls that reported it. Crusoe reports it for Super VL but returns null for Lightning and DeepSeek, so a Lightning shift's `cache_share` is `null` (not reported), never an estimate. Calls replayed from our own response cache count in `replayed` and never as Crusoe cache hits. Measured on Oct 17: a live review served 38.7% of the supervisor's prompt tokens from Crusoe's cache (16,320 of 42,164 over 8 Super VL calls), because each round of its tool loop resends the growing conversation.
+
 ## Brain (step 1)
 
 | Route | Returns |
@@ -28,11 +30,11 @@ A call retries 429s for up to `LLM_429_WAIT_S` seconds (default 600); 5xx and ne
 | Route | Returns |
 |---|---|
 | `POST /shift` | body `{ seed: 1-20, tasks: [{ type: "PICK" \| "RESTOCK", slot: "A-2-3-1", robot? }], brain?: "live" \| n }`; returns `{ shift_id, brain_version, tasks }` at once, then the robots work in parallel |
-| `GET /shift/:id` | `{ status: "running" \| "done" \| "error", seed, brain_version, tasks, scores, llm: { calls, prompt_tokens, completion_tokens }, steps }`; `scores` is the engine's `score()` once done |
+| `GET /shift/:id` | `{ status: "running" \| "done" \| "error", seed, brain_version, tasks, scores, llm: { calls, ..., cache_share }, steps }`; `scores` is the engine's `score()` once done; `llm` is the token tally above |
 | `GET /shift/:id/trajectory?robot=` | the engine's trajectory steps |
 | `GET /shifts` | every shift (finished shifts are saved in `server/data/shifts/`) |
 
-Events on `GET /events` during a shift: each engine step as a plain message (`{ type: "step", ...TrajectoryStep, shift_id, seed, brain_version }`), and named events `brain_read { shift_id, robot, version, node_ids }`, `llm { role, model, latency_s, robot }`, `task_done { shift_id, robot, task_id, score }`, `shift_done { shift_id, status, scores }`.
+Events on `GET /events` during a shift: each engine step as a plain message (`{ type: "step", ...TrajectoryStep, shift_id, seed, brain_version }`), and named events `brain_read { shift_id, robot, version, node_ids }`, `llm { role, model, cached, latency_s, prompt_tokens, completion_tokens, crusoe_cached_tokens, robot }` (`cached` means replayed from our response cache; `crusoe_cached_tokens` is null when Crusoe doesn't report it), `task_done { shift_id, robot, task_id, score }`, `shift_done { shift_id, status, scores, llm }`.
 
 RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied one). Seeds 101 to 110 are refused here; only the gate runs them. Each worker makes one Lightning call per action, about 0.5 s each.
 
@@ -49,6 +51,7 @@ RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied 
   updates:  [{ id: "U1", summary, ops: [supervisor edits], compiled: [BrainOps], valid, errors, touches_guardrail, judge_supported }],
   detected: { refused_steps, incomplete_tasks },   // the engine's facts, before any model
   judge: { model, kept: ["F1", "I1"], dropped: [{ id, why }], finished_at, error? },
+  llm: { calls, ..., cache_share },   // supervisor, clip and judge calls (the token tally above)
   tool_calls: [{ name, args }] }
 ```
 

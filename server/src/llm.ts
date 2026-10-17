@@ -117,7 +117,8 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
   const file = path.join(CACHE_DIR, `${key}.json`);
   if (useCache && fs.existsSync(file)) {
     const hit = JSON.parse(fs.readFileSync(file, "utf8")) as ChatCompletion;
-    emit("llm", { role: opts.role, model: body.model, cached: true, latency_s: 0, ...usage(hit), ...opts.meta });
+    replays.add(hit);
+    emit("llm", { role: opts.role, model: body.model, cached: true, latency_s: 0, ...usage(hit), crusoe_cached_tokens: null, ...opts.meta });
     return hit;
   }
 
@@ -135,7 +136,7 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
       const t0 = Date.now();
       const res = (await getClient().chat.completions.create(body as any)) as ChatCompletion;
       const latency_s = +((Date.now() - t0) / 1000).toFixed(2);
-      emit("llm", { role: opts.role, model: body.model, cached: false, latency_s, ...usage(res), ...opts.meta });
+      emit("llm", { role: opts.role, model: body.model, cached: false, latency_s, ...usage(res), crusoe_cached_tokens: crusoeCached(res), ...opts.meta });
       if (useCache) {
         fs.mkdirSync(CACHE_DIR, { recursive: true });
         fs.writeFileSync(file, JSON.stringify(res));
@@ -162,6 +163,38 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
 
 function usage(r: ChatCompletion) {
   return { prompt_tokens: r.usage?.prompt_tokens ?? null, completion_tokens: r.usage?.completion_tokens ?? null };
+}
+
+// ---------- usage tallies and Crusoe's prefix cache (V2-2) ----------
+// Crusoe reports usage.prompt_tokens_details.cached_tokens for Super VL, but null for Lightning and DeepSeek
+// (checked over every saved response on Oct 17). So cache_share covers only the live calls that reported it,
+// and is null when none did; it is never estimated. Replays from our own response cache are not Crusoe cache hits.
+
+const replays = new WeakSet<object>();
+const crusoeCached = (r: ChatCompletion) => (replays.has(r) ? null : (r.usage?.prompt_tokens_details?.cached_tokens ?? null));
+
+export interface LlmTally {
+  calls: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  replayed: number; // calls answered from our own response cache
+  crusoe_cache: { calls_reporting: number; prompt_tokens: number; cached_tokens: number };
+  cache_share: number | null; // crusoe_cache.cached_tokens / crusoe_cache.prompt_tokens
+}
+
+export const newTally = (): LlmTally => ({ calls: 0, prompt_tokens: 0, completion_tokens: 0, replayed: 0, crusoe_cache: { calls_reporting: 0, prompt_tokens: 0, cached_tokens: 0 }, cache_share: null });
+
+export function tally(t: LlmTally, r: ChatCompletion) {
+  t.calls++;
+  t.prompt_tokens += r.usage?.prompt_tokens ?? 0;
+  t.completion_tokens += r.usage?.completion_tokens ?? 0;
+  if (replays.has(r)) t.replayed++;
+  const cached = crusoeCached(r);
+  if (typeof cached !== "number") return;
+  t.crusoe_cache.calls_reporting++;
+  t.crusoe_cache.prompt_tokens += r.usage?.prompt_tokens ?? 0;
+  t.crusoe_cache.cached_tokens += cached;
+  t.cache_share = t.crusoe_cache.prompt_tokens ? +(t.crusoe_cache.cached_tokens / t.crusoe_cache.prompt_tokens).toFixed(3) : null;
 }
 
 /** Parse a JSON object from a model reply, tolerating code fences or text around it. */

@@ -14,6 +14,7 @@ import { compileUpdates } from "./supervisor-ops.ts";
 import type { BrainDiff, BrainOp } from "./types.ts";
 import { getShift, runWorker, taskCard, type RunCtx, type TaskSpec } from "./worker.ts";
 import { runCompiled } from "./policy.ts";
+import { newTally } from "./llm.ts";
 
 const HELDOUT_SEEDS = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
 const GATE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../data/gates");
@@ -108,7 +109,7 @@ export function updateBrain(brain: BrainStore, input: UpdateBrainInput): { gate:
     progress: { done: 0, total: 0 },
     per_seed: [],
     diff,
-    llm: { calls: 0, prompt_tokens: 0, completion_tokens: 0 },
+    llm: newTally(),
     started_at: new Date().toISOString(),
   };
   gates.set(gate.gate_id, gate);
