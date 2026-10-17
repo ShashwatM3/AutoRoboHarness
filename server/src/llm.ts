@@ -1,4 +1,4 @@
-// Crusoe model calls: one OpenAI client, a per-model rate limiter, retries on 429/503,
+// Crusoe model calls: one OpenAI client, a per-model rate limiter, retries on 429/5xx,
 // a response cache keyed by the request, and an `llm` event per call.
 // Temperature 0 is not deterministic on Crusoe, so the cache is what makes re-runs repeatable.
 
@@ -110,7 +110,11 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
     return hit;
   }
 
+  // A 429 always clears as the bucket refills, even when another client on the same key drained it, so it is
+  // waited out for up to LLM_429_WAIT_S (default 600); other errors (5xx, network) get 6 tries.
+  const waitUntil = Date.now() + Number(process.env.LLM_429_WAIT_S ?? 600) * 1000;
   let delay = 2000;
+  let errors = 0;
   for (let attempt = 1; ; attempt++) {
     const model = String(body.model);
     await acquire(model);
@@ -128,7 +132,8 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
     } catch (err: any) {
       const status = err?.status ?? 0;
       const retryable = status === 429 || status >= 500 || status === 0;
-      if (!retryable || attempt >= 6) throw err;
+      const exhausted = status === 429 ? Date.now() + delay > waitUntil : ++errors >= 6;
+      if (!retryable || exhausted) throw err;
       if (status === 429) penalize(String(body.model), delay);
       console.warn(`[llm] ${opts.role} ${body.model} ${status || err?.code || "error"}; retry ${attempt} in ${delay} ms`);
       await sleep(delay + Math.random() * 500);

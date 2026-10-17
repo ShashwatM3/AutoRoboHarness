@@ -8,6 +8,8 @@ cd server && npm install && npm run dev        # http://localhost:8787 (PORT to 
 
 Keys come from the repo-root `.env` (see `.env.example`). Every route answers both at `/` and at `/api`, with CORS on.
 
+Model calls (`src/llm.ts`) are limited per model to `LLM_RPM` a minute (default 18) and `LLM_CONCURRENCY` in flight (default 4). A 429 is waited out for up to `LLM_429_WAIT_S` seconds (default 600), since the key's request bucket is shared with anyone else using the same key; 5xx and network errors get 6 tries. Responses are cached in `server/.cache/llm/` (`LLM_CACHE=0` turns that off).
+
 ## Brain (step 1)
 
 | Route | Returns |
