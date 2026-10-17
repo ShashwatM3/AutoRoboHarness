@@ -609,5 +609,18 @@
   "runtime_transfer": {
     "files": 47,
     "archive_sha256": "7c800cc4b3b94d3b42494b5536a3f9f889bf9d745e8f10389eca25faf171f279"
+  },
+  "peer_verification": {
+    "code_commit": "c6177d6e411362a975969fac2c5a54229a5203ce",
+    "service": "active",
+    "live_brain": 5,
+    "fresh_recordings": 20,
+    "api_sha256_matches_person_a": {
+      "brain": "b729b897f039086afe518ca0c67dc6a1c34150b70a4a77ca94e7c09d3b274195",
+      "comparison": "948c8fd5dbba4fccb645fd03befb5f32a7231e93f6e459ec2b12c4b4863a7073",
+      "trials": "f32b0f62b572d36d0322c6bf467050ba76f50725a13c3b3aa4bf9c01a05985f5"
+    },
+    "private_env_mode": "0600",
+    "inference_calls_on_peer_during_work": 0
   }
 }
