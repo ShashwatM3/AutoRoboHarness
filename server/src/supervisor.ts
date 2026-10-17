@@ -11,6 +11,7 @@ import type { BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
 import { judgeReview, type JudgeResult } from "./judge.ts";
 import { chat, MODELS, newTally, parseJson, tally, type LlmTally } from "./llm.ts";
+import { MAX_RESEARCH_CALLS, research, type Research } from "./research.ts";
 import { compileUpdates, REVIEW_SCHEMA, type CompiledUpdate, type EvidenceById, type Update } from "./supervisor-ops.ts";
 import { getShift, listShifts, taskContext, type Shift } from "./worker.ts";
 
@@ -40,16 +41,19 @@ export interface Review {
   started_at: string;
   finished_at?: string;
   failures: { id: string; robot: string; task_id: string; step: number; check: string; nodes_in_effect: string[]; cause: string; verified: boolean; judge?: Verdict }[];
-  insights: { id: string; claim: string; addresses: string[]; grounding: any[]; verified: boolean; judge?: Verdict }[];
+  insights: { id: string; claim: string; addresses: string[]; grounding: any[]; verified: boolean; judge?: Verdict; citations?: Citation[] }[];
   updates: (Update & CompiledUpdate & { judge_supported?: boolean })[];
   detected: ReturnType<typeof detectFailures>;
   evidence?: EvidenceById;
   tool_calls: { name: string; args: unknown }[];
   judge?: JudgeResult;
   llm?: LlmTally; // supervisor, clip and judge calls; reviews made before V2-2 have none
+  research?: Research[]; // You.com questions asked during the review, with their numbered sources
 }
 
 type Verdict = { keep: boolean; why: string };
+/** A You.com source an insight cites (V2-4); supporting evidence only, never grounding on its own. */
+export type Citation = { source_id: string; url: string; title: string; snippet: string; note?: string; judge_supports?: boolean };
 
 const reviews = new Map<string, Review>();
 
@@ -100,13 +104,20 @@ const TOOLS: ChatCompletionTool[] = [
     [],
   ),
   fn("inspect_clip", "Look at one clip's frames yourself and answer a question about it.", { clip_id: { type: "string" }, question: { type: "string" } }, ["clip_id", "question"]),
+  fn(
+    "research",
+    `Ask published practice on the web (You.com Research): ergonomics, warehouse and retail handling, robot manipulation. Returns a short answer and numbered sources (S1, S2, ...) that insights can cite. At most ${MAX_RESEARCH_CALLS} questions per review.`,
+    { question: { type: "string" } },
+    ["question"],
+  ),
 ];
 
 function fn(name: string, description: string, properties: Record<string, unknown>, required: string[]): ChatCompletionTool {
   return { type: "function", function: { name, description, parameters: { type: "object", properties, required } } };
 }
 
-async function runTool(brain: BrainStore, shift: Shift, name: string, a: any, usage?: LlmTally): Promise<unknown> {
+async function runTool(brain: BrainStore, shift: Shift, name: string, a: any, review?: Review): Promise<unknown> {
+  const usage = review?.llm;
   switch (name) {
     case "list_steps":
       return shift.trajectory.filter((s) => s.robot === a.robot).map(fmtStep);
@@ -177,6 +188,20 @@ async function runTool(brain: BrainStore, shift: Shift, name: string, a: any, us
       if (usage) tally(usage, res);
       return { clip_id: c.clip_id, answer: res.choices[0]?.message?.content ?? "" };
     }
+    case "research": {
+      if (!review) return { error: "research is only available during a review" };
+      const asked = (review.research ??= []);
+      if (asked.length >= MAX_RESEARCH_CALLS) return { error: `research is limited to ${MAX_RESEARCH_CALLS} questions per review` };
+      const question = String(a.question ?? "").trim().slice(0, 400);
+      if (!question) return { error: "question is required" };
+      try {
+        const r = await research(question, asked.reduce((n, x) => n + x.sources.length, 0) + 1);
+        asked.push(r);
+        return { answer: r.answer, sources: r.sources.map((s) => ({ ...s, snippet: s.snippet.slice(0, 300) })) };
+      } catch (e: any) {
+        return { error: `research failed: ${e?.message ?? e}` };
+      }
+    }
     default:
       return { error: `unknown tool ${name}` };
   }
@@ -192,7 +217,7 @@ How robots use the brain: they run the PROCEDURE steps in order, filling $task.*
 
 The engine's physical limits are not given to you. Infer them from refusal reasons, item weights and shelf levels in the trajectories and sibling runs.
 
-Evidence: the shift's trajectories (list_steps, get_step), the brain nodes in effect (get_brain_nodes), runs of the same task in other training shifts (find_sibling_runs), and real ceiling-camera footage of shoppers in US convenience stores, RetailAction (get_human_clips, inspect_clip). Ground every insight in at least one clip or one contrast between two runs. Cite only clip ids and runs that the tools returned.
+Evidence: the shift's trajectories (list_steps, get_step), the brain nodes in effect (get_brain_nodes), runs of the same task in other training shifts (find_sibling_runs), real ceiling-camera footage of shoppers in US convenience stores, RetailAction (get_human_clips, inspect_clip), and published practice on the web (research, at most ${MAX_RESEARCH_CALLS} questions; use it once to check your main lesson). Ground every insight in at least one clip or one contrast between two runs; a web source can add support to an insight but never grounds it alone. Cite only clip ids, runs and source ids (S1, S2, ...) that the tools returned.
 
 The only allowed brain edits:
 - add_rule { scope, label, when: [{ field, op, value }], then: { param, value }, priority, cites }
@@ -336,8 +361,8 @@ async function runReview(brain: BrainStore, shift: Shift, review: Review) {
         args = JSON.parse(tc.function.arguments || "{}");
       } catch {}
       review.tool_calls.push({ name: tc.function.name, args });
-      progress(tc.function.name === "get_human_clips" || tc.function.name === "inspect_clip" ? "clips" : tc.function.name === "find_sibling_runs" ? "siblings" : "evidence", `${tc.function.name} ${JSON.stringify(args)}`);
-      const out = await runTool(brain, shift, tc.function.name, args, review.llm);
+      progress(tc.function.name === "get_human_clips" || tc.function.name === "inspect_clip" ? "clips" : tc.function.name === "find_sibling_runs" ? "siblings" : tc.function.name === "research" ? "research" : "evidence", `${tc.function.name} ${JSON.stringify(args)}`);
+      const out = await runTool(brain, shift, tc.function.name, args, review);
       messages.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(out).slice(0, 12000) });
     }
   }
@@ -347,7 +372,7 @@ async function runReview(brain: BrainStore, shift: Shift, review: Review) {
   messages.push({
     role: "user",
     content:
-      "Now write your review as one JSON object: { failures: [{ id, robot, task_id, step, check, nodes_in_effect, cause }], insights: [{ id, claim, addresses, grounding: [{ kind: \"clip\", clip_id, note } | { kind: \"run_contrast\", ok_run, failed_run, note }] }], updates: [{ id, summary, ops: [ ...brain edits with all their fields and cites ] }] }. One update per lesson, at most 3 updates, at most 5 ops each.",
+      "Now write your review as one JSON object: { failures: [{ id, robot, task_id, step, check, nodes_in_effect, cause }], insights: [{ id, claim, addresses, grounding: [{ kind: \"clip\", clip_id, note } | { kind: \"run_contrast\", ok_run, failed_run, note } | { kind: \"citation\", source_id, note }] }], updates: [{ id, summary, ops: [ ...brain edits with all their fields and cites ] }] }. One update per lesson, at most 3 updates, at most 5 ops each.",
   });
   let parsed: any;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -384,6 +409,7 @@ function finalize(brain: BrainStore, shift: Shift, review: Review, j: any): Reco
   const runs = new Set(shift.tasks.map((t) => `${shift.shift_id}/${t.robot}`));
   for (const s of listShifts()) for (const t of s.tasks) runs.add(`${s.shift_id}/${t.robot}`);
   const clipIds = new Map(clips().map((c) => [c.clip_id, c]));
+  const sources = new Map((review.research ?? []).flatMap((r) => r.sources).map((s) => [s.id, s]));
 
   review.failures = (Array.isArray(j.failures) ? j.failures : []).map((f: any) => ({
     ...f,
@@ -394,6 +420,10 @@ function finalize(brain: BrainStore, shift: Shift, review: Review, j: any): Reco
       if (g.kind === "clip") {
         const c = clipIds.get(g.clip_id);
         return { ...g, verified: !!c, frames: c?.frames, sheet: c?.sheet, label: c?.action, description: c?.description };
+      }
+      if (g.kind === "citation") {
+        const s = sources.get(String(g.source_id ?? "").trim().toUpperCase());
+        return { ...g, source_id: s?.id ?? g.source_id, verified: !!s, url: s?.url, title: s?.title, snippet: s?.snippet };
       }
       // the model sometimes decorates run ids ("shift-x/robot-1 (PICK, ...)"); keep the id, move the rest to the note.
       // It also cites the reviewed shift's runs by task id ("shift-x-t1"), as the digest lists them; map those to their robot.
@@ -409,13 +439,17 @@ function finalize(brain: BrainStore, shift: Shift, review: Review, j: any): Reco
       const extra = [g.ok_run, g.failed_run].filter((s) => s && !runs.has(s)).join("; ");
       return { ...g, ok_run, failed_run, note: extra ? `${g.note ?? ""} (${extra})`.trim() : g.note, verified: runs.has(ok_run) && runs.has(failed_run) && ok_run !== failed_run };
     });
-    return { ...ins, grounding, verified: grounding.some((g: any) => g.verified) };
+    // a web source supports an insight but never grounds it alone: verified needs a real clip or run contrast
+    const citations: Citation[] = grounding
+      .filter((g: any) => g.kind === "citation" && g.verified)
+      .map((g: any) => ({ source_id: g.source_id, url: g.url, title: g.title, snippet: g.snippet, note: g.note }));
+    return { ...ins, grounding, citations, verified: grounding.some((g: any) => g.verified && g.kind !== "citation") };
   });
 
   const known = new Set<string>([...review.failures.map((f) => f.id), ...review.insights.map((i) => i.id)]);
   const evidence: EvidenceById = {};
   for (const ins of review.insights) {
-    const g = ins.grounding.find((x: any) => x.verified);
+    const g = ins.grounding.find((x: any) => x.verified && x.kind !== "citation"); // web text never enters the brain
     if (!g) continue;
     evidence[ins.id] =
       g.kind === "clip"

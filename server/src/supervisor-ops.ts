@@ -247,8 +247,9 @@ export const REVIEW_SCHEMA = {
             items: {
               type: "object",
               properties: {
-                kind: { type: "string", enum: ["clip", "run_contrast"] },
+                kind: { type: "string", enum: ["clip", "run_contrast", "citation"] },
                 clip_id: { type: "string" },
+                source_id: { type: "string", description: "S1, S2, ...: a source the research tool returned" },
                 ok_run: { type: "string", description: "shift_id/robot of the run that went better" },
                 failed_run: { type: "string", description: "shift_id/robot of the failed run" },
                 note: { type: "string" },
