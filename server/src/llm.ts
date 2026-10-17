@@ -197,6 +197,18 @@ export function tally(t: LlmTally, r: ChatCompletion) {
   t.cache_share = t.crusoe_cache.prompt_tokens ? +(t.crusoe_cache.cached_tokens / t.crusoe_cache.prompt_tokens).toFixed(3) : null;
 }
 
+/** Add one tally into another (a gate's or comparison's total over its trials). */
+export function mergeTally(into: LlmTally, from: LlmTally) {
+  into.calls += from.calls;
+  into.prompt_tokens += from.prompt_tokens;
+  into.completion_tokens += from.completion_tokens;
+  into.replayed += from.replayed;
+  into.crusoe_cache.calls_reporting += from.crusoe_cache.calls_reporting;
+  into.crusoe_cache.prompt_tokens += from.crusoe_cache.prompt_tokens;
+  into.crusoe_cache.cached_tokens += from.crusoe_cache.cached_tokens;
+  into.cache_share = into.crusoe_cache.prompt_tokens ? +(into.crusoe_cache.cached_tokens / into.crusoe_cache.prompt_tokens).toFixed(3) : null;
+}
+
 /** Parse a JSON object from a model reply, tolerating code fences or text around it. */
 export function parseJson<T = any>(text: string | null | undefined): T {
   if (!text) throw new Error("empty model reply");

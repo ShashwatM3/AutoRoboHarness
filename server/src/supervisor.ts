@@ -13,10 +13,11 @@ import { judgeReview, type JudgeResult } from "./judge.ts";
 import { chat, MODELS, newTally, parseJson, tally, type LlmTally } from "./llm.ts";
 import { MAX_RESEARCH_CALLS, research, type Research } from "./research.ts";
 import { compileUpdates, REVIEW_SCHEMA, type CompiledUpdate, type EvidenceById, type Update } from "./supervisor-ops.ts";
+import { dataDir, safeId } from "./paths.ts";
 import { getShift, listShifts, taskContext, type Shift } from "./worker.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const REVIEW_DIR = path.join(ROOT, "server/data/reviews");
+const reviewsDir = () => dataDir("reviews");
 const LIBRARY = path.join(ROOT, "ground_truth/library.json");
 const MAX_ROUNDS = 8;
 
@@ -57,9 +58,10 @@ export type Citation = { source_id: string; url: string; title: string; snippet:
 
 const reviews = new Map<string, Review>();
 
-export function getReview(shiftId: string): Review | undefined {
+export function getReview(id: string): Review | undefined {
+  const shiftId = safeId(id, "shift_id"); // a review file name comes from this id: no path tricks
   if (reviews.has(shiftId)) return reviews.get(shiftId);
-  const f = path.join(REVIEW_DIR, `${shiftId}.json`);
+  const f = path.join(reviewsDir(), `${shiftId}.json`);
   if (fs.existsSync(f)) {
     const r = JSON.parse(fs.readFileSync(f, "utf8")) as Review;
     reviews.set(shiftId, r);
@@ -292,8 +294,8 @@ export function startReview(brain: BrainStore, shiftId: string): Review {
 }
 
 function saveReview(review: Review) {
-  fs.mkdirSync(REVIEW_DIR, { recursive: true });
-  fs.writeFileSync(path.join(REVIEW_DIR, `${review.shift_id}.json`), JSON.stringify(review, null, 2));
+  fs.mkdirSync(reviewsDir(), { recursive: true });
+  fs.writeFileSync(path.join(reviewsDir(), `${safeId(review.shift_id, "shift_id")}.json`), JSON.stringify(review, null, 2));
 }
 
 const judgeCounts = (r: Review) => (r.judge && !r.judge.error ? { kept: r.judge.kept.length, dropped: r.judge.dropped.length } : null);

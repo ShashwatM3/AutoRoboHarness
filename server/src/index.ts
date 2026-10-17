@@ -11,11 +11,18 @@ import type { BrainOp } from "./types.ts";
 import { getShift, listShifts, startShift, type TaskSpec } from "./worker.ts";
 import { getReview, rejudgeReview, startReview } from "./supervisor.ts";
 import { getGate, updateBrain } from "./gate.ts";
+import { getComparison, listComparisons, recoverInterruptedComparisons, startComparison, summarizeComparison } from "./comparisons.ts";
+import { evaluationsByVersion } from "./evaluations.ts";
+import { getTrial, listTrials, recoverInterruptedTrials } from "./trials.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(ROOT, ".env"), quiet: true });
 
 export const brain = new BrainStore(process.env.BRAIN_DIR ?? path.join(ROOT, "brain"));
+
+// runs cut off by a restart are recorded as interrupted; their model calls are never resumed
+const cut = [...recoverInterruptedTrials(), ...recoverInterruptedComparisons()];
+if (cut.length) console.log(`marked ${cut.length} interrupted run(s): ${cut.join(", ")}`);
 
 const app = express();
 app.use(cors());
@@ -41,7 +48,13 @@ api.get("/brain", (req, res) => {
 });
 
 api.get("/brain/versions", (_req, res) => res.json(brain.index()));
-api.get("/brain/history", (_req, res) => res.json(brain.history()));
+// history keeps each version's latest score; `evaluations` adds every completed measurement (V2 extension)
+api.get("/brain/history", (_req, res) => {
+  const evals = new Map(evaluationsByVersion(brain).map((e) => [e.v, e.evaluations]));
+  const h = brain.history();
+  res.json({ ...h, versions: h.versions.map((v) => ({ ...v, evaluations: evals.get(v.v) ?? [] })) });
+});
+api.get("/evaluations", (_req, res) => res.json({ versions: evaluationsByVersion(brain) }));
 
 // GET /brain/diff?from=1&to=2
 api.get("/brain/diff", (req, res) => {
@@ -83,7 +96,7 @@ api.get(["/shift/:id", "/shifts/:id"], (req, res) => {
   const s = getShift(req.params.id as string);
   if (!s) return res.status(404).json({ error: "no such shift" });
   const { trajectory, ...rest } = s;
-  res.json({ ...rest, steps: trajectory.length });
+  res.json({ ...rest, steps: trajectory.length, trial_id: s.trial_id ?? null, replay_available: !!s.trial_id });
 });
 
 api.get(["/shift/:id/trajectory", "/shifts/:id/trajectory"], (req, res) => {
@@ -128,6 +141,42 @@ api.get("/gate/:id", (req, res) => {
   const g = getGate(req.params.id as string);
   if (!g) return res.status(404).json({ error: "no such gate" });
   res.json(g);
+});
+
+// ---------- trials, matched comparisons (V2 extension) ----------
+
+// GET /trials?partition=&kind=&status=&shift_id=&gate_id=&comparison_id= -> { trials: summaries, newest first }
+api.get("/trials", (req, res) => {
+  const q = req.query as Record<string, string | undefined>;
+  res.json({ trials: listTrials({ partition: q.partition, kind: q.kind, status: q.status, shift_id: q.shift_id, gate_id: q.gate_id, comparison_id: q.comparison_id }) });
+});
+// GET /trials/:id -> the full recording: initial world, every step, final world. Only runs recorded since trials
+// existed have one; older shifts and gates are never reconstructed.
+api.get("/trials/:id", (req, res) => {
+  const t = getTrial(req.params.id as string);
+  if (!t) return res.status(404).json({ error: "no recording with that id", code: "no_trial", replay_available: false });
+  res.json(t);
+});
+
+// POST /comparisons { versions: [a, b], seeds, tasks, worker?, environment?: { max_speed_mps? } } -> 202 at once
+api.post("/comparisons", (req, res) => {
+  const { comparison: c } = startComparison(brain, req.body);
+  res.status(202).json({
+    comparison_id: c.comparison_id,
+    status: c.status,
+    versions: c.versions,
+    seeds: c.seeds,
+    partition: c.partition,
+    worker: c.worker,
+    expected_tasks_per_version: c.aggregates[0].expected_tasks,
+    total_pairs: c.progress.pairs_total,
+  });
+});
+api.get("/comparisons", (_req, res) => res.json({ comparisons: listComparisons().map(summarizeComparison) }));
+api.get("/comparisons/:id", (req, res) => {
+  const c = getComparison(req.params.id as string);
+  if (!c) return res.status(404).json({ error: "no comparison with that id", code: "no_comparison" });
+  res.json(c);
 });
 
 api.get("/events", sseHandler);

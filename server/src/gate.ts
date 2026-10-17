@@ -1,23 +1,25 @@
 // The gate (B6): apply the supervisor's updates to a candidate brain, re-run the same tasks on held-out seeds
 // 101-110 with the old and the candidate brain (same Lightning workers, headless, no event stream), and keep the
 // candidate as the live brain only if the score rises. Only this module knows the held-out seeds; gate runs are
-// never saved as shifts, so the supervisor cannot see them.
+// never saved as shifts, so the supervisor cannot see them. Each seed × version run is a held-out trial (V2
+// extension), recorded in full under data/trials/heldout.
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { createScenario, StoreEngine, type TaskScore } from "../../engine/store.ts";
+import type { TaskScore } from "../../engine/store.ts";
 import { httpError, type BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
+import { claimInference } from "./inference-lock.ts";
+import { mergeTally, newTally } from "./llm.ts";
+import { dataDir, safeId } from "./paths.ts";
+import { runCompiled } from "./policy.ts";
 import { getReview, type Review } from "./supervisor.ts";
 import { compileUpdates } from "./supervisor-ops.ts";
+import { ENGINE_DEFAULT_MAX_SPEED, executeTrial, guardrailSpeed, HELDOUT_SEEDS, prepareTrial, selectTasks, type TaskSelection, type TrialEnvironment } from "./trials.ts";
 import type { BrainDiff, BrainOp } from "./types.ts";
-import { getShift, runWorker, taskCard, type RunCtx, type TaskSpec } from "./worker.ts";
-import { runCompiled } from "./policy.ts";
-import { newTally } from "./llm.ts";
+import { getShift, runWorker, type RunCtx, type TaskSpec } from "./worker.ts";
 
-const HELDOUT_SEEDS = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
-const GATE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../data/gates");
+const gatesDir = () => dataDir("gates");
 
 interface Score {
   tasks: number;
@@ -40,7 +42,14 @@ export interface Gate {
   tasks: TaskSpec[];
   worker: "compiled" | "llm";
   progress: { done: number; total: number };
-  per_seed: { seed: number; skipped: string[]; base: TaskScore[]; candidate: TaskScore[] }[]; // skipped also lists substitutions
+  per_seed: {
+    seed: number;
+    skipped: string[]; // also lists substitutions
+    base: TaskScore[];
+    candidate: TaskScore[];
+    trial_ids?: { base: string | null; candidate: string | null }; // V2 extension: the two recordings
+    task_selection?: TaskSelection[]; // V2 extension: the tasks actually run in this seed (the same for both)
+  }[];
   base_score?: Score;
   candidate_score?: Score;
   delta?: number;
@@ -50,13 +59,16 @@ export interface Gate {
   llm: RunCtx["llm"];
   started_at: string;
   finished_at?: string;
+  brain_sha256?: { base: string; candidate: string }; // V2 extension: exactly which files were measured
+  environment?: TrialEnvironment; // V2 extension
 }
 
 const gates = new Map<string, Gate>();
 
 export function getGate(id: string): Gate | undefined {
-  if (gates.has(id)) return gates.get(id);
-  const f = path.join(GATE_DIR, `${id}.json`);
+  const gid = safeId(id, "gate_id");
+  if (gates.has(gid)) return gates.get(gid);
+  const f = path.join(gatesDir(), `${gid}.json`);
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : undefined;
 }
 
@@ -125,12 +137,23 @@ export function updateBrain(brain: BrainStore, input: UpdateBrainInput): { gate:
     ops = chosen.flatMap((u) => fresh[u.id].compiled);
   }
   const note = chosen.map((u) => `${u.id}: ${u.summary}`).join(" | ");
-  const { version: candidate, diff } = brain.apply(base, ops, { created_by: "supervisor", note });
+  const gate_id = `gate-${Date.now().toString(36)}`;
+  const worker = input.worker === "llm" ? "llm" : "compiled";
+  // claimed before the candidate is written, so a busy refusal (409) leaves the brain untouched
+  const release = worker === "llm" ? claimInference("gate", gate_id) : () => {};
+  let candidate: number, diff: BrainDiff;
+  try {
+    ({ version: candidate, diff } = brain.apply(base, ops, { created_by: "supervisor", note }));
+  } catch (e) {
+    release();
+    throw e;
+  }
   emit("brain_version", { v: candidate, status: "candidate" });
 
+  const guard = guardrailSpeed(brain, base);
   const tasks: TaskSpec[] = shift.tasks.map((t) => ({ type: t.type, slot: t.type === "PICK" ? t.source : t.target }));
   const gate: Gate = {
-    gate_id: `gate-${Date.now().toString(36)}`,
+    gate_id,
     status: "running",
     shift_id: input.shift_id,
     update_ids: chosen.map((u) => u.id),
@@ -139,12 +162,15 @@ export function updateBrain(brain: BrainStore, input: UpdateBrainInput): { gate:
     candidate,
     seeds: HELDOUT_SEEDS.slice(0, Math.min(10, Math.max(1, Number(input.seeds ?? 10)))),
     tasks,
-    worker: input.worker === "llm" ? "llm" : "compiled",
+    worker,
     progress: { done: 0, total: 0 },
     per_seed: [],
     diff,
     llm: newTally(),
     started_at: new Date().toISOString(),
+    brain_sha256: { base: brain.fileSha256(base), candidate: brain.fileSha256(candidate) },
+    // the base brain's guardrail, applied to both brains so they face the same world
+    environment: { max_speed_mps: Math.min(guard ?? ENGINE_DEFAULT_MAX_SPEED, ENGINE_DEFAULT_MAX_SPEED), requested_max_speed_mps: null, guardrail_max_speed_mps: guard, engine_default_max_speed_mps: ENGINE_DEFAULT_MAX_SPEED },
   };
   gates.set(gate.gate_id, gate);
   const done = runGate(brain, gate)
@@ -158,83 +184,56 @@ export function updateBrain(brain: BrainStore, input: UpdateBrainInput): { gate:
       brain.setStatus(candidate, "rejected");
     })
     .then(() => {
+      release();
       gate.finished_at = new Date().toISOString();
-      fs.mkdirSync(GATE_DIR, { recursive: true });
-      fs.writeFileSync(path.join(GATE_DIR, `${gate.gate_id}.json`), JSON.stringify(gate, null, 2));
+      fs.mkdirSync(gatesDir(), { recursive: true });
+      fs.writeFileSync(path.join(gatesDir(), `${gate.gate_id}.json`), JSON.stringify(gate, null, 2));
       emit("gate_done", { gate_id: gate.gate_id, status: gate.status, verdict: gate.verdict, base_score: gate.base_score, candidate_score: gate.candidate_score, reason: gate.reason });
       return gate;
     });
   return { gate, done };
 }
 
-/** Whether a task can be done in a seed's world: not a PICK whose item is in reserve, not a RESTOCK into a
- *  slot that is already stocked. */
-function feasible(s: ReturnType<typeof createScenario>, type: TaskSpec["type"], slot: string): boolean {
-  if (type === "RESTOCK") return !Object.values(s.items).some((i) => i.slot === slot);
-  return !s.items[`item:${slot}`]?.slot.startsWith("reserve:");
-}
-
-/** The task as given if it can be done in this seed; otherwise the nearest slot of the same type on the same
- *  aisle and shelf level (same difficulty), the same for both brains. Null if there is none. */
-function taskForSeed(seed: number, t: TaskSpec): { task: TaskSpec; note?: string } | null {
-  const s = createScenario(seed, 1);
-  if (feasible(s, t.type, t.slot)) return { task: t };
-  const [aisle, bay, level, pos] = t.slot.split("-");
-  const options = Object.values(s.layout.slots)
-    .filter((x) => x.aisle === aisle && String(x.level) === level && x.id !== t.slot && feasible(s, t.type, x.id))
-    .sort((a, b) => Math.abs(a.bay - Number(bay)) - Math.abs(b.bay - Number(bay)) || Math.abs(a.position - Number(pos)) - Math.abs(b.position - Number(pos)));
-  if (!options.length) return null;
-  return { task: { type: t.type, slot: options[0].id }, note: `${t.type} ${t.slot} -> ${options[0].id} (${t.type === "RESTOCK" ? "slot already stocked" : "item in reserve"} in seed ${seed})` };
-}
-
 async function runGate(brain: BrainStore, gate: Gate) {
-  const guard = brain.resolve(gate.base, "store").guardrails.find((g) => g.props.param === "max_speed_mps");
-  const maxSpeed = guard ? Math.min(Number(guard.props.value), 0.8) : undefined;
-
+  // one selection per seed (substitutes included), shared by both brains: same tasks, robots, task ids and world
   const plan = gate.seeds.map((seed) => {
-    const skipped: string[] = [];
-    const tasks: TaskSpec[] = [];
-    for (const t of gate.tasks) {
-      const r = taskForSeed(seed, t);
-      if (!r) skipped.push(`${t.type} ${t.slot}: no feasible slot on that level in seed ${seed}`);
-      else {
-        tasks.push(r.task);
-        if (r.note) skipped.push(r.note);
-      }
-    }
-    return { seed, skipped, tasks };
+    const selection = selectTasks(seed, gate.tasks, `${gate.gate_id}-s${seed}`);
+    return { seed, selection, skipped: selection.flatMap((s) => (s.note ? [s.note] : [])), runnable: selection.filter((s) => s.actual).length };
   });
-  gate.progress.total = plan.reduce((n, p) => n + p.tasks.length * 2, 0);
+  gate.progress.total = plan.reduce((n, p) => n + p.runnable * 2, 0);
 
-  const runOne = async (seed: number, tasks: TaskSpec[], v: number): Promise<TaskScore[]> => {
-    if (!tasks.length) return [];
-    const engine = new StoreEngine(createScenario(seed, tasks.length), { maxSpeed });
-    const ctx: RunCtx = { shift_id: `${gate.gate_id}-s${seed}-v${v}`, brain_version: v, llm: gate.llm, headless: true };
-    const created = tasks.map((t, i) => {
-      const task = engine.createTask(`robot-${i + 1}`, t.type, t.slot, `${ctx.shift_id}-t${i + 1}`);
-      return { ...task, card: taskCard(engine, task) };
+  const runOne = async (p: (typeof plan)[number], v: number, role: "base" | "candidate") => {
+    const prepared = prepareTrial(brain, {
+      kind: "gate",
+      partition: "heldout",
+      seed: p.seed,
+      version: v,
+      worker: gate.worker,
+      run_id: `${gate.gate_id}-s${p.seed}-v${v}`,
+      requested_tasks: gate.tasks,
+      selection: p.selection,
+      robot_count: gate.tasks.length,
+      environment: gate.environment!,
+      provenance: { gate_id: gate.gate_id, evaluation_id: gate.gate_id, role },
+      headless: true,
     });
-    const workers = await Promise.allSettled(
-      created.map((t) =>
-        (gate.worker === "llm" ? runWorker : runCompiled)(brain, engine, ctx, t).finally(() => {
-          gate.progress.done++;
-          emit("gate_progress", { gate_id: gate.gate_id, done: gate.progress.done, total: gate.progress.total });
-        }),
-      ),
-    );
-    // Do not report a terminal gate while a sibling worker still spends quota.
-    const failed = workers.find((result) => result.status === "rejected");
-    if (failed?.status === "rejected") throw failed.reason;
-    return engine.score();
+    const { trial, error } = await executeTrial(brain, prepared, gate.worker === "llm" ? runWorker : runCompiled, () => {
+      gate.progress.done++;
+      emit("gate_progress", { gate_id: gate.gate_id, done: gate.progress.done, total: gate.progress.total });
+    });
+    mergeTally(gate.llm, trial.llm);
+    // executeTrial waits for every robot, so no sibling worker still spends quota when the gate reports an error
+    if (error) throw error;
+    return { scores: trial.scores, trial_id: trial.trial_id };
   };
 
   // Keep the evaluation bounded: finish a seed/version before starting the next.
   // A fatal provider error stops new work; only the current robot workers drain.
   gate.per_seed = [];
   for (const p of plan) {
-    const base = await runOne(p.seed, p.tasks, gate.base);
-    const candidate = await runOne(p.seed, p.tasks, gate.candidate);
-    gate.per_seed.push({ seed: p.seed, skipped: p.skipped, base, candidate });
+    const base = await runOne(p, gate.base, "base");
+    const candidate = await runOne(p, gate.candidate, "candidate");
+    gate.per_seed.push({ seed: p.seed, skipped: p.skipped, base: base.scores, candidate: candidate.scores, trial_ids: { base: base.trial_id, candidate: candidate.trial_id }, task_selection: p.selection });
   }
 
   const agg = (key: "base" | "candidate"): Score => {

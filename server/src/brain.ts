@@ -1,6 +1,7 @@
 // The brain: versioned knowledge graph files in brain/, loaded with graphology.
 // Version files are immutable; status (live, candidate, rejected) lives in brain/index.json.
 
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import Graph from "graphology";
@@ -123,6 +124,11 @@ export class BrainStore {
     const n = Number(v);
     if (!Number.isInteger(n) || !fs.existsSync(this.filePath(n))) throw httpError(404, `brain version ${v} not found`);
     return n;
+  }
+
+  /** sha256 of the version's file bytes, read fresh from disk (identifies exactly what a run measured). */
+  fileSha256(v: number): string {
+    return crypto.createHash("sha256").update(fs.readFileSync(this.filePath(v))).digest("hex");
   }
 
   file(v: number): BrainFile {
