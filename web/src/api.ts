@@ -98,9 +98,19 @@ export type Grounding =
       note?: string;
       verified: boolean;
       judge_supports?: boolean;
+    }
+  | {
+      kind: "citation";
+      source_id: string;
+      url?: string;
+      title?: string;
+      snippet?: string;
+      note?: string;
+      verified: boolean;
+      judge_supports?: boolean;
     };
 export interface JudgeVerdict { keep: boolean; why: string }
-export interface Citation { url: string; title?: string; snippet?: string }
+export interface Citation { source_id?: string; url: string; title?: string; snippet?: string; note?: string; judge_supports?: boolean }
 export interface ReviewInfo {
   llm?: LlmUsage;
   judge?: { model: string; kept: string[]; dropped: { id: string; why: string }[]; error?: string };

@@ -115,6 +115,8 @@ function Evidence({ grounding }: { grounding: Grounding }) {
       </div>
     );
   }
+  // Web sources are displayed once in the insight's research source list.
+  if (grounding.kind === "citation") return null;
   return (
     <div className="contrast-evidence">
       <div className="evidence-caption">
@@ -372,7 +374,10 @@ export default function ReviewPanel({
                   </div>
                   <h4>{insight.claim}</h4>
                   {insight.judge && <p className="judge-verdict">Judge confirmed: {insight.judge.why}</p>}
-                  {!!insight.citations?.length && <div className="research-citations"><strong>Research sources</strong><ol>{insight.citations.filter(c => /^https?:\/\//i.test(c.url)).map((citation, i) => <li key={`${citation.url}-${i}`}><a href={citation.url} target="_blank" rel="noreferrer">{citation.title || citation.url}</a>{citation.snippet && <p>{citation.snippet}</p>}</li>)}</ol></div>}
+                  {!!insight.citations?.length && <div className="research-citations">
+                    {insight.citations.some(c => c.judge_supports !== false) && <><strong>Research sources</strong><ol>{insight.citations.filter(c => c.judge_supports !== false && /^https?:\/\//i.test(c.url)).map((citation, i) => <li key={`${citation.url}-${i}`}><a href={citation.url} target="_blank" rel="noreferrer">{citation.title || citation.url}</a>{citation.snippet && <p>{citation.snippet}</p>}</li>)}</ol></>}
+                    {insight.citations.some(c => c.judge_supports === false) && <details><summary>Sources excluded by the judge</summary><p>These sources do not support this insight's claim.</p><ul>{insight.citations.filter(c => c.judge_supports === false && /^https?:\/\//i.test(c.url)).map((citation, i) => <li key={i}><a href={citation.url} target="_blank" rel="noreferrer">{citation.title || citation.url}</a></li>)}</ul></details>}
+                  </div>}
                   {!insight.verified && (
                     <p className="unverified-note">
                       The evidence references could not be confirmed.
