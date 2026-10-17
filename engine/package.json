@@ -4,7 +4,7 @@
   "type": "module",
   "exports": "./store.ts",
   "scripts": {
-    "test": "tsx --test store.test.ts",
+    "test": "tsx --test *.test.ts",
     "typecheck": "tsc --noEmit",
     "demo": "tsx scripts/pick.ts"
   },

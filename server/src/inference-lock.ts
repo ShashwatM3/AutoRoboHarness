@@ -5,7 +5,7 @@
 
 import { httpError } from "./brain.ts";
 
-export type InferenceKind = "shift" | "gate" | "comparison";
+export type InferenceKind = "shift" | "gate" | "comparison" | "adversary" | "post-training";
 const active = new Map<string, { kind: InferenceKind; id: string }>();
 
 export function activeInference() {
@@ -14,7 +14,8 @@ export function activeInference() {
 
 /** Claim the quota for a Lightning run, or throw 409 inference_busy; returns the release function. */
 export function claimInference(kind: InferenceKind, id: string): () => void {
-  const blockers = [...active.values()].filter((a) => kind === "comparison" || a.kind === "comparison");
+  const exclusive = (k: InferenceKind) => ["comparison", "adversary", "post-training"].includes(k);
+  const blockers = [...active.values()].filter((a) => exclusive(kind) || exclusive(a.kind));
   if (blockers.length)
     throw httpError(409, `Lightning workers are busy (${blockers.map((b) => `${b.kind} ${b.id}`).join(", ")}); try again when they finish`, {
       code: "inference_busy",

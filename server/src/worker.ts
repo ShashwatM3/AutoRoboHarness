@@ -12,7 +12,8 @@ import { claimInference } from "./inference-lock.ts";
 import { chat, MODELS, newTally, tally, type LlmTally } from "./llm.ts";
 import { dataDir, safeId } from "./paths.ts";
 import { runCompiled } from "./policy.ts";
-import { ENGINE_DEFAULT_MAX_SPEED, exactSelection, executeTrial, guardrailSpeed, prepareTrial, type PreparedTrial } from "./trials.ts";
+import { ENGINE_DEFAULT_MAX_SPEED, exactSelection, executeTrial, guardrailSpeed, prepareTrial, type PreparedTrial, type TrialRecord } from "./trials.ts";
+import { writeJsonAtomic } from "./paths.ts";
 import type { ResolvedContext } from "./types.ts";
 
 const shiftsDir = () => dataDir("shifts");
@@ -38,6 +39,7 @@ export interface Shift {
   llm: LlmTally;
   trajectory: TrajectoryStep[];
   trial_id?: string; // its full recording (V2 extension); shifts made before it have none
+  source?: { kind: "adversary"; adversary_id: string; disturbance: Record<string, unknown> };
 }
 
 const shifts = new Map<string, Shift>();
@@ -69,6 +71,23 @@ export function listShifts(): Omit<Shift, "trajectory">[] {
     const { trajectory, ...rest } = s;
     return [rest];
   });
+}
+
+/** Only a completed, failed training attack may enter the supervisor's ordinary shift pool. */
+export function publishAdversarialShift(trial: TrialRecord, adversary_id: string, disturbance: Record<string, unknown>): Shift {
+  if (trial.kind !== "adversary" || trial.partition !== "training" || trial.seed < 1 || trial.seed > 20 || trial.status !== "done" || !trial.final || !trial.scores.length || trial.scores.every(s => s.complete))
+    throw new RangeError("only failed completed adversarial training trials can become review inputs");
+  const shift_id = safeId(trial.provenance.shift_id, "shift_id");
+  if (getShift(shift_id)) throw new RangeError("an attack shift with this id already exists");
+  const shift: Shift = {
+    shift_id, seed: trial.seed, brain_version: trial.brain_version, worker: trial.worker,
+    status: "done", started_at: trial.started_at, finished_at: trial.finished_at,
+    tasks: trial.tasks, scores: trial.scores, trajectory: trial.trajectory, llm: trial.llm,
+    trial_id: trial.trial_id, source: { kind: "adversary", adversary_id, disturbance },
+  };
+  shifts.set(shift_id, shift);
+  writeJsonAtomic(path.join(shiftsDir(), `${shift_id}.json`), shift);
+  return shift;
 }
 
 // ---------- the task card: what the worker is told about its task ----------

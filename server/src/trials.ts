@@ -13,7 +13,7 @@ import { taskCard, type RunCtx, type Shift, type TaskSpec } from "./worker.ts";
 
 export type Partition = "training" | "heldout";
 export type TrialStatus = "running" | "done" | "error" | "interrupted";
-export type TrialKind = "shift" | "gate" | "comparison";
+export type TrialKind = "shift" | "gate" | "comparison" | "adversary" | "posttraining";
 export type WorkerKind = "llm" | "compiled";
 
 export const ENGINE_DEFAULT_MAX_SPEED = 0.8;
@@ -43,6 +43,10 @@ export interface TrialProvenance {
   comparison_id?: string;
   evaluation_id?: string;
   role?: "base" | "candidate" | "a" | "b";
+  parent_trial_id?: string;
+  post_training_id?: string;
+  adversary_id?: string;
+  augmentation?: Record<string, unknown>;
 }
 
 export type TrialTask = Shift["tasks"][number];
@@ -147,6 +151,8 @@ export interface TrialInput {
   headless: boolean;
   llm?: LlmTally; // share a tally (a shift's); default: the trial's own
   onStep?: (step: TrajectoryStep) => void; // extra hook (a shift's event stream)
+  /** Explicit training-only variant. Never alters the seeded held-out evaluation worlds. */
+  scenario?: Scenario;
 }
 
 export interface PreparedTrial {
@@ -166,7 +172,9 @@ function persist(r: TrialRecord) {
  *  cannot be created. */
 export function prepareTrial(brain: BrainStore, input: TrialInput): PreparedTrial {
   let record: TrialRecord | null = null;
-  const engine = new StoreEngine(createScenario(input.seed, input.robot_count), {
+  if (input.scenario && (input.partition !== "training" || input.seed < 1 || input.seed > 20 || input.scenario.seed !== input.seed || input.scenario.t !== 0 || input.scenario.trajectory.length || Object.keys(input.scenario.tasks).length || Object.keys(input.scenario.robots).length !== input.robot_count))
+    throw new RangeError("explicit scenario must be a fresh matching training world with no tasks or trajectory");
+  const engine = new StoreEngine(input.scenario ? structuredClone(input.scenario) : createScenario(input.seed, input.robot_count), {
     maxSpeed: input.environment.max_speed_mps,
     onStep: (step) => {
       input.onStep?.(step);
