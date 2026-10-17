@@ -30,7 +30,7 @@ The browser app runs at http://127.0.0.1:5173. Its launch screen selects one or 
 
 The Motion Preview button opens a separate local preview of PICK and RESTOCK using actual engine results. It makes no model calls and does not claim to be an agent-driven shift or a measured brain improvement.
 
-After a finished shift, Review Shift opens the supervisor's failures, insights and proposed graph edits. A failure replays its recorded step in the 3D store; insights show real RetailAction frames or the two referenced trajectories. Update Brain remains unavailable until the held-out gate is connected.
+After a finished shift, Review Shift opens the supervisor's failures, insights and proposed graph edits. A failure replays its recorded step in the 3D store; insights show real RetailAction frames or the two referenced trajectories. Update Brain applies the selected valid edits to a candidate and requests the same Lightning workers on ten held-out seeds. The screen shows the gate's progress, both scores, and the graph before and after. The server keeps the candidate only if the score improves. A guardrail change requires explicit approval in the review UI.
 
 The brain server has its own setup in [server/README.md](server/README.md). The web dev server forwards `/api` requests to port 8787. Credentials remain on the server and are never bundled into the web app.
 

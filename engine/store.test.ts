@@ -5,7 +5,7 @@ import { ACTIONS, createEngine, createScenario, StoreEngine, type TrajectoryStep
 test('seeds reproduce the complete world and preserve unique inventory locations', () => {
   assert.deepEqual(createScenario(1), createScenario(1));
   assert.notDeepEqual(createScenario(1).items, createScenario(2).items);
-  for (const seed of [1, 2, 20, 101, 110]) {
+  for (const seed of [1, 2, 7, 13, 20]) {
     const s = createScenario(seed);
     assert.equal(Object.keys(s.items).length, 256);
     assert.equal(new Set(Object.values(s.items).map(i => i.slot)).size, 256);
