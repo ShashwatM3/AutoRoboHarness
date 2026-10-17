@@ -42,6 +42,7 @@ export interface Review {
   insights: { id: string; claim: string; addresses: string[]; grounding: any[]; verified: boolean }[];
   updates: (Update & CompiledUpdate)[];
   detected: ReturnType<typeof detectFailures>;
+  evidence?: EvidenceById;
   tool_calls: { name: string; args: unknown }[];
 }
 
@@ -374,6 +375,7 @@ function finalize(brain: BrainStore, shift: Shift, review: Review, j: any): Reco
         ? { type: "Evidence", label: `RetailAction clip ${g.clip_id}: ${ins.claim}`.slice(0, 160), props: { kind: "clip", clip_id: g.clip_id, frames: g.frames, sheet: g.sheet, note: g.note, shift_id: shift.shift_id } }
         : { type: "Evidence", label: `Runs ${g.ok_run} vs ${g.failed_run}: ${ins.claim}`.slice(0, 160), props: { kind: "run_contrast", ok_run: g.ok_run, failed_run: g.failed_run, note: g.note, shift_id: shift.shift_id } };
   }
+  review.evidence = evidence;
   const updates: Update[] = (Array.isArray(j.updates) ? j.updates : []).slice(0, 3);
   const compiled = compileUpdates(brain, shift.brain_version, updates, known, evidence);
   review.updates = updates.map((u) => ({ ...u, ...compiled[u.id] }));

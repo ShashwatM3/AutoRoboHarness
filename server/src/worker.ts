@@ -10,6 +10,7 @@ import { createScenario, StoreEngine, type ActionResult, type Task, type TaskSco
 import type { BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
 import { chat, MODELS } from "./llm.ts";
+import { runCompiled } from "./policy.ts";
 import type { ResolvedContext } from "./types.ts";
 
 const DATA_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../data/shifts");
@@ -25,7 +26,7 @@ export interface Shift {
   shift_id: string;
   seed: number;
   brain_version: number;
-  worker: "llm";
+  worker: "llm" | "compiled";
   status: "running" | "done" | "error";
   error?: string;
   started_at: string;
@@ -71,7 +72,7 @@ export interface TaskCard {
   target_level: number | null;
 }
 
-function taskCard(engine: StoreEngine, task: Task): TaskCard {
+export function taskCard(engine: StoreEngine, task: Task): TaskCard {
   const { slots } = engine.scenario.layout;
   const item = engine.scenario.items[task.item_id];
   const src = slots[task.source];
@@ -148,6 +149,7 @@ export interface StartShiftInput {
   seed: number;
   tasks: TaskSpec[];
   brain?: number | "live";
+  worker?: "llm" | "compiled"; // compiled: the brain executed as written, no model calls
 }
 
 export function startShift(brain: BrainStore, input: StartShiftInput): Shift {
@@ -176,7 +178,7 @@ export function startShift(brain: BrainStore, input: StartShiftInput): Shift {
     shift_id,
     seed,
     brain_version: v,
-    worker: "llm",
+    worker: input.worker === "compiled" ? "compiled" : "llm",
     status: "running",
     started_at: new Date().toISOString(),
     tasks,
@@ -186,7 +188,8 @@ export function startShift(brain: BrainStore, input: StartShiftInput): Shift {
   };
   shifts.set(shift_id, shift);
 
-  Promise.all(tasks.map((task) => runWorker(brain, engine, shift, task)))
+  const run = shift.worker === "compiled" ? runCompiled : runWorker;
+  Promise.all(tasks.map((task) => run(brain, engine, shift, task)))
     .then(() => (shift.status = "done"))
     .catch((e) => {
       console.error(e);
@@ -204,11 +207,19 @@ export function startShift(brain: BrainStore, input: StartShiftInput): Shift {
   return shift;
 }
 
-async function runWorker(brain: BrainStore, engine: StoreEngine, shift: Shift, task: Shift["tasks"][number]) {
+/** What a worker needs from its run: a shift, or a headless gate re-run (no events, not saved as a shift). */
+export interface RunCtx {
+  shift_id: string;
+  brain_version: number;
+  llm: Shift["llm"];
+  headless?: boolean;
+}
+
+export async function runWorker(brain: BrainStore, engine: StoreEngine, shift: RunCtx, task: Shift["tasks"][number]) {
   const robot = task.robot;
   const ctx = taskContext(brain, shift.brain_version, task);
   engine.setBrainNodesRead(robot, ctx.node_ids);
-  emit("brain_read", { shift_id: shift.shift_id, robot, version: shift.brain_version, node_ids: ctx.node_ids });
+  if (!shift.headless) emit("brain_read", { shift_id: shift.shift_id, robot, version: shift.brain_version, node_ids: ctx.node_ids });
 
   // The card is what an order system knows: item, weight, slot and waypoint. Shelf heights are store knowledge,
   // so the level is not on the card; it comes from the brain or from scanning the slot.
@@ -240,7 +251,7 @@ async function runWorker(brain: BrainStore, engine: StoreEngine, shift: Shift, t
   while (actions < MAX_STEPS) {
     const res = await chat(
       { model: MODELS.worker, messages, tools: TOOLS, tool_choice: "auto", max_tokens: 1024 },
-      { role: "worker", meta: { shift_id: shift.shift_id, robot } },
+      { role: shift.headless ? "gate-worker" : "worker", meta: { shift_id: shift.shift_id, robot } },
     );
     shift.llm.calls++;
     shift.llm.prompt_tokens += res.usage?.prompt_tokens ?? 0;
@@ -275,7 +286,7 @@ async function runWorker(brain: BrainStore, engine: StoreEngine, shift: Shift, t
       } else if (tc.function.name === "read_brain") {
         const rc = brain.resolve(shift.brain_version, String(args.scope ?? "store"), task.type);
         engine.setBrainNodesRead(robot, [...new Set([...ctx.node_ids, ...rc.node_ids])]);
-        emit("brain_read", { shift_id: shift.shift_id, robot, version: shift.brain_version, node_ids: rc.node_ids });
+        if (!shift.headless) emit("brain_read", { shift_id: shift.shift_id, robot, version: shift.brain_version, node_ids: rc.node_ids });
         out = { ok: true, brain: rc.text };
       } else {
         out = observation(act(engine, robot, tc.function.name, args));
@@ -287,7 +298,7 @@ async function runWorker(brain: BrainStore, engine: StoreEngine, shift: Shift, t
     // done as soon as the item is at its target; saves a model call
     if (engine.scenario.items[task.item_id].slot === task.target) break;
   }
-  emit("task_done", { shift_id: shift.shift_id, robot, task_id: task.id, score: engine.score().find((s) => s.task_id === task.id) });
+  if (!shift.headless) emit("task_done", { shift_id: shift.shift_id, robot, task_id: task.id, score: engine.score().find((s) => s.task_id === task.id) });
 }
 
 /** Execute one contract action on the engine. Unknown actions are recorded as refused by the engine's own checks. */

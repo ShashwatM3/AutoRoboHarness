@@ -49,6 +49,30 @@ RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied 
 
 `step` matches the trajectory's `step` for that robot. Clip images are served at `/ground_truth/...`, so `frames` and `sheet` paths can be used as URLs directly (for example `http://localhost:8787/ground_truth/frames/d16_rank0_8264/sheet.jpg`).
 
+## Update Brain and the gate (step 6)
+
+`POST /brain/update` with `{ shift_id, update_ids?: ["U1", "U2"], approve_guardrails?: false, wait?: false, worker?: "compiled" | "llm", seeds?: 10 }`:
+
+1. applies the chosen updates from that shift's review (default: every valid one) to the live brain as candidate `brain/v(N+1).json`;
+2. re-runs the shift's tasks on held-out seeds 101 to 110 with the live and the candidate brain, headless;
+3. makes the candidate live only if the score rises (more tasks complete, or as many with fewer refused actions); otherwise marks it rejected.
+
+It returns `{ gate_id, base, candidate, diff, status }` at once (or the whole result with `wait: true`; the compiled gate takes well under a second). `GET /gate/:id` returns:
+
+```
+{ gate_id, status, verdict: "promoted" | "rejected", reason, base, candidate, seeds, worker,
+  base_score:      { tasks, complete, complete_rate, refused_per_task, steps_per_task },
+  candidate_score: { ...same },  delta,
+  per_seed: [{ seed, base: [TaskScore], candidate: [TaskScore], skipped: [notes] }],
+  diff }          // same shape as GET /brain/diff, for the before-and-after graph
+```
+
+Events: `gate_progress { gate_id, done, total }`, `gate_done { gate_id, verdict, base_score, candidate_score }`, `brain_version { v, status }`.
+
+- **Worker.** The gate defaults to the compiled policy (`server/src/policy.ts`), which runs the brain exactly as written, with no model calls. `worker: "llm"` uses the Lightning workers instead. That's about 9 calls per task, and our key allows roughly 15 to 20 calls a minute, so a full LLM gate takes about 20 minutes; use `seeds: 1` for a spot check. `POST /shift` also accepts `worker: "compiled"` for a fast run with no model calls.
+- **Substitutes.** When a task can't be done in a held-out seed (a RESTOCK slot already stocked, or a PICK item in reserve), the gate uses the nearest slot of the same type on the same aisle and level. Both brains get the same substitute, and `skipped` lists each one.
+- **Guardrails.** An update that touches a guardrail is refused with 403 unless `approve_guardrails: true`, which is the human's click.
+
 Scope ids: `store`, `zone:backroom`, `zone:packing`, `aisle:A`, `bay:A-3`, `level:A-3-4`, `slot:A-3-4-1`. A bare slot id such as `A-3-4-1` works too.
 
 ## The brain contract

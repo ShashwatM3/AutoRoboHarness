@@ -10,6 +10,7 @@ import { emit, sseHandler } from "./events.ts";
 import type { BrainOp } from "./types.ts";
 import { getShift, listShifts, startShift, type TaskSpec } from "./worker.ts";
 import { getReview, startReview } from "./supervisor.ts";
+import { getGate, updateBrain } from "./gate.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(ROOT, ".env"), quiet: true });
@@ -71,7 +72,7 @@ api.post(["/shift", "/shifts"], (req, res) => {
     : Array.isArray(b.robots)
       ? b.robots.map((r: any) => ({ robot: r.robot_id ?? r.robot, type: r.task?.type, slot: r.task?.slot }))
       : [];
-  const shift = startShift(brain, { seed: b.seed, tasks, brain: b.brain });
+  const shift = startShift(brain, { seed: b.seed, tasks, brain: b.brain, worker: b.worker });
   res.json({ shift_id: shift.shift_id, brain_version: shift.brain_version, tasks: shift.tasks });
 });
 
@@ -104,6 +105,24 @@ api.post("/review/:shiftId", (req, res) => {
 api.get("/review/:shiftId", (req, res) => {
   const id = req.params.shiftId as string;
   res.json(getReview(id) ?? startReview(brain, id));
+});
+
+// ---------- Update Brain and the gate (B6) ----------
+
+// POST /brain/update { shift_id, update_ids?: ["U1"], approve_guardrails?: boolean, wait?: boolean }
+// Applies the chosen updates from that shift's review as a candidate brain, then re-runs the shift's tasks on
+// held-out seeds with the live and the candidate brain. Returns { gate_id, base, candidate, diff } at once,
+// or the whole gate result with wait: true (about a minute). Progress: gate_progress and gate_done events.
+api.post("/brain/update", async (req, res) => {
+  const { gate, done } = updateBrain(brain, req.body ?? {});
+  if (req.body?.wait || req.query.wait) return res.json(await done);
+  res.json({ gate_id: gate.gate_id, base: gate.base, candidate: gate.candidate, diff: gate.diff, status: gate.status });
+});
+
+api.get("/gate/:id", (req, res) => {
+  const g = getGate(req.params.id as string);
+  if (!g) return res.status(404).json({ error: "no such gate" });
+  res.json(g);
 });
 
 api.get("/events", sseHandler);

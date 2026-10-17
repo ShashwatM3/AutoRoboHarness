@@ -1,6 +1,6 @@
 // Crusoe model calls: one OpenAI client, a per-model rate limiter, retries on 429/503,
 // a response cache keyed by the request, and an `llm` event per call.
-// Live limits seen on our key (Oct 17): about 15-20 requests per minute per model, temperature 0 not deterministic.
+// Temperature 0 is not deterministic on Crusoe, so the cache is what makes re-runs repeatable.
 
 import crypto from "node:crypto";
 import fs from "node:fs";
@@ -28,9 +28,27 @@ function getClient() {
   return client;
 }
 
-// ---------- rate limiter: a sliding one-minute window per model ----------
+// ---------- rate limiter: requests in flight per model, plus a sliding one-minute window ----------
+// Measured on our key (Oct 17, 1:45-1:50 PM): a bucket of roughly 48 requests that refills at about 15-20 per
+// minute (429 max_requests_limit). A burst drains it, and then a gate-sized run fails. So: a per-minute window
+// (LLM_RPM, default 18) and a small concurrency cap (LLM_CONCURRENCY, default 4).
 
-const rpm = () => Number(process.env.LLM_RPM ?? 15);
+const maxInFlight = () => Number(process.env.LLM_CONCURRENCY ?? 4);
+const inFlight = new Map<string, number>();
+const waiters = new Map<string, (() => void)[]>();
+
+async function enter(model: string) {
+  while ((inFlight.get(model) ?? 0) >= maxInFlight()) await new Promise<void>((r) => waiters.set(model, [...(waiters.get(model) ?? []), r]));
+  inFlight.set(model, (inFlight.get(model) ?? 0) + 1);
+}
+
+function leave(model: string) {
+  inFlight.set(model, (inFlight.get(model) ?? 1) - 1);
+  const q = waiters.get(model);
+  q?.shift()?.();
+}
+
+const rpm = () => Number(process.env.LLM_RPM ?? 18);
 const windows = new Map<string, number[]>();
 const chains = new Map<string, Promise<unknown>>();
 
@@ -94,10 +112,12 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
 
   let delay = 2000;
   for (let attempt = 1; ; attempt++) {
-    await acquire(String(body.model));
+    const model = String(body.model);
+    await acquire(model);
+    await enter(model);
     const t0 = Date.now();
     try {
-      const res = (await getClient().chat.completions.create(body as any)) as ChatCompletion;
+      const res = (await getClient().chat.completions.create(body as any).finally(() => leave(model))) as ChatCompletion;
       const latency_s = +((Date.now() - t0) / 1000).toFixed(2);
       emit("llm", { role: opts.role, model: body.model, cached: false, latency_s, ...usage(res), ...opts.meta });
       if (useCache) {
