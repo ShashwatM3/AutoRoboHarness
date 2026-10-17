@@ -9,6 +9,7 @@ import { BrainStore } from "./brain.ts";
 import { emit, sseHandler } from "./events.ts";
 import type { BrainOp } from "./types.ts";
 import { getShift, listShifts, startShift, type TaskSpec } from "./worker.ts";
+import { getReview, startReview } from "./supervisor.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(ROOT, ".env"), quiet: true });
@@ -90,8 +91,26 @@ api.get(["/shift/:id/trajectory", "/shifts/:id/trajectory"], (req, res) => {
   res.json(robot ? s.trajectory.filter((st) => st.robot === robot) : s.trajectory);
 });
 
+// ---------- review (B5) ----------
+
+// POST /review/:shiftId starts the supervisor (?refresh=1 to redo a finished one).
+// GET  /review/:shiftId returns the review; it starts one if none exists yet.
+api.post("/review/:shiftId", (req, res) => {
+  const id = req.params.shiftId as string;
+  const old = getReview(id);
+  if (old && old.status !== "error" && !req.query.refresh) return res.json(old);
+  res.json(startReview(brain, id));
+});
+api.get("/review/:shiftId", (req, res) => {
+  const id = req.params.shiftId as string;
+  res.json(getReview(id) ?? startReview(brain, id));
+});
+
 api.get("/events", sseHandler);
 api.get("/health", (_req, res) => res.json({ ok: true, live_brain: brain.index().live }));
+
+// clip frames and contact sheets for the review screen, e.g. /ground_truth/frames/<clip>/sheet.jpg
+app.use("/ground_truth", express.static(path.join(ROOT, "ground_truth")));
 
 // the same routes answer at / and at /api
 app.use("/api", api);

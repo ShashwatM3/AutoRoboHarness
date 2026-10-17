@@ -32,6 +32,23 @@ Events on `GET /events` during a shift: each engine step as a plain message (`{ 
 
 RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied one). Seeds 101 to 110 are refused here; only the gate runs them. Each worker makes one Lightning call per action, about 0.5 s each.
 
+## Review (step 5)
+
+`GET /review/:shiftId` returns the supervisor's review, starting one if none exists (`POST /review/:shiftId?refresh=1` redoes it). It takes 1 to 3 minutes; poll until `status` is `done`, or listen for the `review_progress` and `review_done` events.
+
+```
+{ shift_id, status: "running" | "done" | "error", brain_version, model,
+  failures: [{ id: "F1", robot, task_id, step, check, nodes_in_effect, cause, verified }],
+  insights: [{ id: "I1", claim, addresses: ["F1"], verified,
+               grounding: [{ kind: "clip", clip_id, note, frames, sheet, description, verified }
+                         | { kind: "run_contrast", ok_run: "shift-x/robot-1", failed_run, note, verified }] }],
+  updates:  [{ id: "U1", summary, ops: [supervisor edits], compiled: [BrainOps], valid, errors, touches_guardrail }],
+  detected: { refused_steps, incomplete_tasks },   // the engine's facts, before any model
+  tool_calls: [{ name, args }] }
+```
+
+`step` matches the trajectory's `step` for that robot. Clip images are served at `/ground_truth/...`, so `frames` and `sheet` paths can be used as URLs directly (for example `http://localhost:8787/ground_truth/frames/d16_rank0_8264/sheet.jpg`).
+
 Scope ids: `store`, `zone:backroom`, `zone:packing`, `aisle:A`, `bay:A-3`, `level:A-3-4`, `slot:A-3-4-1`. A bare slot id such as `A-3-4-1` works too.
 
 ## The brain contract
