@@ -30,6 +30,14 @@ Person A is Shashwat; Person B is the teammate. Each version has two numbered li
 
 ---
 
+## Version 1 verification checkpoint (Person A)
+
+Person A steps 1 to 7 are implemented and verified. The browser launched a real Lightning shift (`shift-mvcvh66t`), which recorded an out-of-reach refusal at robot-1 step 2, recovered, and delivered the item. The Super VL supervisor returned the failure, RetailAction frame evidence, and valid torso-height updates. The review and failure replay work in the browser. The production build, engine tests, and engine/server type checks pass.
+
+The Update Brain interface is implemented and requests Lightning workers on all ten held-out seeds. Its real gate (`gate-mvcvkj5q`, candidate v2) stopped with HTTP 429 `max_requests_limit (orchestrator)` after 18 model calls, with only 1 of 20 task runs recorded in the saved result. No before-and-after scores were produced; candidate v2 was rejected and v1 stayed live. Steps 8 and 9 remain unchecked because the full LLM gate cannot yet be verified. Person B's gate/provider rate-limit handling is the remaining dependency. The UI does not substitute the compiled policy or claim a score improvement.
+
+---
+
 ## Version 2: Grounded, Verified, Governed
 
 ### Person A
