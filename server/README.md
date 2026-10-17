@@ -48,15 +48,20 @@ RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied 
   failures: [{ id: "F1", robot, task_id, step, check, nodes_in_effect, cause, verified, judge: { keep, why } }],
   insights: [{ id: "I1", claim, addresses: ["F1"], verified, judge: { keep, why },
                grounding: [{ kind: "clip", clip_id, note, frames, sheet, description, verified, judge_supports }
-                         | { kind: "run_contrast", ok_run: "shift-x/robot-1", failed_run, note, verified, judge_supports }] }],
+                         | { kind: "run_contrast", ok_run: "shift-x/robot-1", failed_run, note, verified, judge_supports }
+                         | { kind: "citation", source_id: "S1", note, url, title, snippet, verified, judge_supports }],
+               citations: [{ source_id, url, title, snippet, note, judge_supports }] }],   // the verified citation groundings
   updates:  [{ id: "U1", summary, ops: [supervisor edits], compiled: [BrainOps], valid, errors, touches_guardrail, judge_supported }],
   detected: { refused_steps, incomplete_tasks },   // the engine's facts, before any model
   judge: { model, kept: ["F1", "I1"], dropped: [{ id, why }], finished_at, error? },
   llm: { calls, ..., cache_share },   // supervisor, clip and judge calls (the token tally above)
+  research: [{ question, answer, sources: [{ id: "S1", url, title, snippet }] }],   // You.com questions asked
   tool_calls: [{ name, args }] }
 ```
 
 `step` matches the trajectory's `step` for that robot.
+
+**You.com research (Version 2).** The supervisor has a `research(question)` tool: one You.com Research call (`POST https://api.you.com/v1/research`, `research_effort: "lite"`, about 6 s, key `YDC_API_KEY`), at most 2 per review. Each source gets a review-wide id (S1, S2, ...), and an insight cites one as a `citation` grounding; the review checks the id and attaches the source's url, title and snippet, and lists them in `insight.citations`. A web source supports an insight but never grounds it alone: `verified` still needs a real clip or run contrast, and citations never become brain Evidence nodes. The judge reads each cited excerpt and sets `judge_supports`. Answers are cached by question in `server/.cache/youcom/`; `research` events carry `{ question, latency_s, sources }`.
 
 **Judge (Version 2).** After the supervisor answers, DeepSeek V4 Pro (`deepseek-ai/DeepSeek-V4-Pro`, thinking on, about 20 s, one call) checks every failure and insight against the evidence it cites: the cited step's facts, the clip's library entry, or both runs' items, results and steps. It keeps what that evidence shows and drops the rest, with a reason. A finding that cites a missing step, clip or run is dropped without a model call. `judge_supports: false` marks a citation that doesn't back its claim even when the insight is kept on other evidence, and `judge_supported: false` marks an update whose cited findings were all dropped. The judge never changes `valid` or the gate. If it fails, the review still finishes, with `judge.error` set. `JUDGE=0` turns it off; `POST /review/:shiftId/judge` re-runs it on a finished review (also for reviews made before the judge existed) and returns the review. `review_done` events carry `judge: { kept, dropped }` counts. Clip images are served at `/ground_truth/...`, so `frames` and `sheet` paths can be used as URLs directly (for example `http://localhost:8787/ground_truth/frames/d16_rank0_8264/sheet.jpg`).
 

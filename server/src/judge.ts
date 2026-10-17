@@ -38,7 +38,7 @@ const JUDGE_SCHEMA = {
 const SYSTEM = `You are an independent judge auditing another model's review of a robot shift in a simulated convenience store. The reviewer reported failures (F1, F2, ...) and insights (I1, I2, ...), each citing evidence. For each one you get the claim and the evidence it cites, taken straight from the logs and the footage library. Decide whether the evidence shows the claim.
 
 Keep a failure only if the cited step's facts (its action, its outcome, the refusal reason, the item weight, the shelf level, the torso level) agree with the stated check and cause. Drop it if the step did not fail the way it says, or the cause contradicts the facts.
-Keep an insight only if at least one cited evidence item actually shows what the claim says: a clip must show the behaviour the claim relies on; a run contrast must differ in the way the claim says (for example the run that went well really had the lighter item or the matching torso level). Plausible is not enough. Also list, in weak_grounding, the numbers of the evidence items that do not support the claim, even when you keep the insight.
+Keep an insight only if at least one cited clip or run contrast actually shows what the claim says: a clip must show the behaviour the claim relies on; a run contrast must differ in the way the claim says (for example the run that went well really had the lighter item or the matching torso level). A web source's excerpt can add support but cannot carry an insight alone, and it supports the claim only if the excerpt says so. Plausible is not enough. Also list, in weak_grounding, the numbers of the evidence items that do not support the claim, even when you keep the insight.
 
 Reply with JSON only: { "verdicts": [{ "id": "F1", "keep": true, "why": "...", "weak_grounding": [] }] }, one verdict per id, each "why" at most 25 words.`;
 
@@ -84,9 +84,9 @@ export async function judgeReview(_brain: BrainStore, shift: Shift, review: Revi
   }
 
   for (const ins of review.insights) {
-    const real = ins.grounding.filter((g: any) => g.verified);
+    const real = ins.grounding.filter((g: any) => g.verified && g.kind !== "citation");
     if (!real.length) {
-      auto[ins.id] = "every clip or run it cites is missing";
+      auto[ins.id] = "it cites no existing clip or run (a web source alone does not ground a lesson about these robots)";
       continue;
     }
     L.push(`${ins.id} (insight, addresses ${ins.addresses.join(", ") || "nothing"})`);
@@ -96,6 +96,8 @@ export async function judgeReview(_brain: BrainStore, shift: Shift, review: Revi
       if (g.kind === "clip") {
         const c = lib.get(g.clip_id);
         L.push(`  EVIDENCE ${n} clip ${g.clip_id}: ${c ? `${c.action}, hands ${c.hands}, ${c.shelf_height} shelf, ${c.item_size} item, looked or touched first: ${c.looked_or_touched_first}. ${c.description}` : "no such clip"}`);
+      } else if (g.kind === "citation") {
+        L.push(`  EVIDENCE ${n} web source ${g.source_id}: ${g.verified ? `"${g.title}" (${g.url}): ${g.snippet || "no excerpt"}` : "no such source"}`);
       } else {
         L.push(`  EVIDENCE ${n} run contrast, run that went well vs run that failed:`);
         L.push(describeRun(g.ok_run).replace(/^/gm, "    "));
@@ -150,6 +152,7 @@ export async function judgeReview(_brain: BrainStore, shift: Shift, review: Revi
     ins.judge = verdict(ins.id);
     const weak = new Set(verdicts.get(ins.id)?.weak_grounding ?? []);
     ins.grounding.forEach((g: any, i: number) => (g.judge_supports = !!g.verified && !weak.has(i + 1)));
+    for (const c of ins.citations ?? []) c.judge_supports = ins.grounding.some((g: any) => g.kind === "citation" && g.source_id === c.source_id && g.judge_supports);
   }
   const kept = [...review.failures, ...review.insights].filter((x) => x.judge!.keep).map((x) => x.id);
   // an update stays supported while at least one finding it cites survives the judge
