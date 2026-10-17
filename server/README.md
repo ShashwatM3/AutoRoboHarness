@@ -19,6 +19,19 @@ Keys come from the repo-root `.env` (see `.env.example`). Every route answers bo
 | `POST /brain/apply` | body `{ base: "live" \| n, ops, note? }`; writes `brain/v(N+1).json` as a candidate and returns `{ candidate, diff }` |
 | `GET /events` | server-sent events. Trajectory steps arrive as plain messages (`onmessage`), in the trajectory-step shape plus `type: "step"`. Other events are named: `brain_read`, `brain_version` |
 
+## Shifts (step 3)
+
+| Route | Returns |
+|---|---|
+| `POST /shift` | body `{ seed: 1-20, tasks: [{ type: "PICK" \| "RESTOCK", slot: "A-2-3-1", robot? }], brain?: "live" \| n }`; returns `{ shift_id, brain_version, tasks }` at once, then the robots work in parallel |
+| `GET /shift/:id` | `{ status: "running" \| "done" \| "error", seed, brain_version, tasks, scores, llm: { calls, prompt_tokens, completion_tokens }, steps }`; `scores` is the engine's `score()` once done |
+| `GET /shift/:id/trajectory?robot=` | the engine's trajectory steps |
+| `GET /shifts` | every shift (finished shifts are saved in `server/data/shifts/`) |
+
+Events on `GET /events` during a shift: each engine step as a plain message (`{ type: "step", ...TrajectoryStep, shift_id, seed, brain_version }`), and named events `brain_read { shift_id, robot, version, node_ids }`, `llm { role, model, latency_s, robot }`, `task_done { shift_id, robot, task_id, score }`, `shift_done { shift_id, status, scores }`.
+
+RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied one). Seeds 101 to 110 are refused here; only the gate runs them. Each worker makes one Lightning call per action, about 0.5 s each.
+
 Scope ids: `store`, `zone:backroom`, `zone:packing`, `aisle:A`, `bay:A-3`, `level:A-3-4`, `slot:A-3-4-1`. A bare slot id such as `A-3-4-1` works too.
 
 ## The brain contract

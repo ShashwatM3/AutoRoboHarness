@@ -29,6 +29,9 @@ const SLOT_RE = /^([A-Z])-(\d+)-(\d+)-(\d+)$/;
 /** The scope path from the deepest scope to the store, for a slot id, a waypoint/zone name, or a scope id. */
 export function scopePath(scope: string): string[] {
   const [prefix, bare] = scope.includes(":") ? scope.split(":", 2) : [null, scope];
+  // engine locations: backroom stock "backroom:A-3-4-1", reserve "reserve:A-3-4-1", the packing tote "tote"
+  if (prefix === "backroom" || prefix === "reserve" || scope === "backroom") return ["zone:backroom", "store"];
+  if (scope === "tote" || scope === "packing") return ["zone:packing", "store"];
   const m = SLOT_RE.exec(bare);
   if (m && (!prefix || prefix === "slot")) {
     const [, a, b, l] = m;

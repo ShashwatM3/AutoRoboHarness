@@ -28,8 +28,9 @@ edge("zone:packing", "PART_OF", "store");
 for (const aisle of ["A", "B"]) {
   node(`aisle:${aisle}`, "Scope", `Aisle ${aisle}`, { kind: "aisle" });
   edge(`aisle:${aisle}`, "PART_OF", "store");
-  for (let bay = 1; bay <= 4; bay++) {
-    node(`bay:${aisle}-${bay}`, "Scope", `Aisle ${aisle}, bay ${bay} (shelf levels 1 to 4)`, { kind: "bay" });
+  for (let bay = 1; bay <= 8; bay++) {
+    const side = bay <= 4 ? "left" : "right";
+    node(`bay:${aisle}-${bay}`, "Scope", `Aisle ${aisle}, bay ${bay}, ${side} side (shelf levels 1 to 4)`, { kind: "bay" });
     edge(`bay:${aisle}-${bay}`, "PART_OF", `aisle:${aisle}`);
   }
 }
@@ -66,6 +67,7 @@ procedure("proc:restock", "RESTOCK", "Restock an item from the backroom tote int
   ["grasp", "grasp", { mode: "$rule.grasp.mode" }, "Close the gripper on the item"],
   ["retract", "retract", {}, "Pull the arm back in before driving"],
   ["go-to-slot", "navigate_to", { waypoint: "$task.target_waypoint" }, "Drive to the item's bay"],
+  ["reach-slot", "reach", { slot: "$task.target" }, "Reach into the empty slot"],
   ["place", "place", { target: "$task.target" }, "Put the item in its slot"],
 ]);
 
@@ -86,14 +88,6 @@ node("rule:backroom-torso", "Rule", "Backroom totes sit on the low rack; keep th
 edge("rule:backroom-torso", "APPLIES_TO", "zone:backroom");
 edge("rule:backroom-torso", "SUPPORTED_BY", "ev:onboarding");
 
-node("rule:packing-torso", "Rule", "The packing tote is at level 1; lower the torso to place into it", {
-  when: [],
-  then: { param: "torso.level", value: 1 },
-  priority: 0,
-});
-edge("rule:packing-torso", "APPLIES_TO", "zone:packing");
-edge("rule:packing-torso", "SUPPORTED_BY", "ev:onboarding");
-
 node("rule:retract-before-drive", "Rule", "Never drive with the arm extended", {
   when: [],
   then: { param: "arm.retract_before_drive", value: true },
@@ -103,10 +97,10 @@ edge("rule:retract-before-drive", "APPLIES_TO", "store");
 edge("rule:retract-before-drive", "SUPPORTED_BY", "ev:safety");
 
 // ---------- guardrail ----------
-node("guard:max-speed", "Guardrail", "Drive no faster than 1.0 m/s on the shop floor", {
+node("guard:max-speed", "Guardrail", "Drive no faster than 0.8 m/s on the shop floor", {
   param: "max_speed_mps",
   op: "<=",
-  value: 1.0,
+  value: 0.8,
   locked: true,
 });
 edge("guard:max-speed", "APPLIES_TO", "store");
@@ -121,13 +115,13 @@ node("proto:slot-mismatch", "Protocol", "If a slot holds the wrong item, report 
 edge("proto:slot-mismatch", "APPLIES_TO", "store");
 edge("proto:slot-mismatch", "SUPPORTED_BY", "ev:onboarding");
 
-node("proto:item-dropped", "Protocol", "If an item is dropped, report it so staff can clear the floor", {
-  trigger: "item_dropped",
-  response: [{ action: "report_issue", args: { kind: "item_dropped" } }],
+node("proto:slot-empty", "Protocol", "If the slot is empty, report it so staff can restock; do not wait", {
+  trigger: "slot_empty",
+  response: [{ action: "report_issue", args: { kind: "slot_empty" } }],
   then: "stop",
 });
-edge("proto:item-dropped", "APPLIES_TO", "store");
-edge("proto:item-dropped", "SUPPORTED_BY", "ev:safety");
+edge("proto:slot-empty", "APPLIES_TO", "store");
+edge("proto:slot-empty", "SUPPORTED_BY", "ev:onboarding");
 
 // ---------- evidence ----------
 node("ev:onboarding", "Evidence", "Store onboarding sheet, day one", { kind: "doc" });

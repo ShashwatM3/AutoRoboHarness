@@ -8,6 +8,7 @@ import cors from "cors";
 import { BrainStore } from "./brain.ts";
 import { emit, sseHandler } from "./events.ts";
 import type { BrainOp } from "./types.ts";
+import { getShift, listShifts, startShift, type TaskSpec } from "./worker.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(ROOT, ".env"), quiet: true });
@@ -56,6 +57,37 @@ api.post("/brain/apply", (req, res) => {
   const out = brain.apply(b, ops as BrainOp[], { note, created_by, promote: !!promote });
   emit("brain_version", { v: out.version, status: promote ? "live" : "candidate" });
   res.json({ candidate: out.version, diff: out.diff });
+});
+
+// ---------- shifts (B3) ----------
+
+// POST /shift { seed: 1-20, tasks: [{ robot?, type: "PICK" | "RESTOCK", slot: "A-3-4-1" }], brain?: "live" | n }
+// (also accepts robots: [{ robot_id, task: { type, slot } }]); returns { shift_id } and streams steps on /events
+api.post(["/shift", "/shifts"], (req, res) => {
+  const b = req.body ?? {};
+  const tasks: TaskSpec[] = Array.isArray(b.tasks)
+    ? b.tasks
+    : Array.isArray(b.robots)
+      ? b.robots.map((r: any) => ({ robot: r.robot_id ?? r.robot, type: r.task?.type, slot: r.task?.slot }))
+      : [];
+  const shift = startShift(brain, { seed: b.seed, tasks, brain: b.brain });
+  res.json({ shift_id: shift.shift_id, brain_version: shift.brain_version, tasks: shift.tasks });
+});
+
+api.get("/shifts", (_req, res) => res.json(listShifts()));
+
+api.get(["/shift/:id", "/shifts/:id"], (req, res) => {
+  const s = getShift(req.params.id as string);
+  if (!s) return res.status(404).json({ error: "no such shift" });
+  const { trajectory, ...rest } = s;
+  res.json({ ...rest, steps: trajectory.length });
+});
+
+api.get(["/shift/:id/trajectory", "/shifts/:id/trajectory"], (req, res) => {
+  const s = getShift(req.params.id as string);
+  if (!s) return res.status(404).json({ error: "no such shift" });
+  const robot = req.query.robot as string | undefined;
+  res.json(robot ? s.trajectory.filter((st) => st.robot === robot) : s.trajectory);
 });
 
 api.get("/events", sseHandler);

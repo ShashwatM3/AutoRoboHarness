@@ -1,7 +1,7 @@
 {
   "version": 1,
   "parent": null,
-  "created_at": "2026-10-17T20:23:23.221Z",
+  "created_at": "2026-10-17T20:33:35.364Z",
   "created_by": "seed",
   "note": "Day-one brain: no grasp-by-weight rule, no torso-by-shelf rule, no check-the-slot step",
   "ops": [],
@@ -41,7 +41,7 @@
     {
       "id": "bay:A-1",
       "type": "Scope",
-      "label": "Aisle A, bay 1 (shelf levels 1 to 4)",
+      "label": "Aisle A, bay 1, left side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -49,7 +49,7 @@
     {
       "id": "bay:A-2",
       "type": "Scope",
-      "label": "Aisle A, bay 2 (shelf levels 1 to 4)",
+      "label": "Aisle A, bay 2, left side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -57,7 +57,7 @@
     {
       "id": "bay:A-3",
       "type": "Scope",
-      "label": "Aisle A, bay 3 (shelf levels 1 to 4)",
+      "label": "Aisle A, bay 3, left side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -65,7 +65,39 @@
     {
       "id": "bay:A-4",
       "type": "Scope",
-      "label": "Aisle A, bay 4 (shelf levels 1 to 4)",
+      "label": "Aisle A, bay 4, left side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:A-5",
+      "type": "Scope",
+      "label": "Aisle A, bay 5, right side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:A-6",
+      "type": "Scope",
+      "label": "Aisle A, bay 6, right side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:A-7",
+      "type": "Scope",
+      "label": "Aisle A, bay 7, right side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:A-8",
+      "type": "Scope",
+      "label": "Aisle A, bay 8, right side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -81,7 +113,7 @@
     {
       "id": "bay:B-1",
       "type": "Scope",
-      "label": "Aisle B, bay 1 (shelf levels 1 to 4)",
+      "label": "Aisle B, bay 1, left side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -89,7 +121,7 @@
     {
       "id": "bay:B-2",
       "type": "Scope",
-      "label": "Aisle B, bay 2 (shelf levels 1 to 4)",
+      "label": "Aisle B, bay 2, left side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -97,7 +129,7 @@
     {
       "id": "bay:B-3",
       "type": "Scope",
-      "label": "Aisle B, bay 3 (shelf levels 1 to 4)",
+      "label": "Aisle B, bay 3, left side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -105,7 +137,39 @@
     {
       "id": "bay:B-4",
       "type": "Scope",
-      "label": "Aisle B, bay 4 (shelf levels 1 to 4)",
+      "label": "Aisle B, bay 4, left side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:B-5",
+      "type": "Scope",
+      "label": "Aisle B, bay 5, right side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:B-6",
+      "type": "Scope",
+      "label": "Aisle B, bay 6, right side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:B-7",
+      "type": "Scope",
+      "label": "Aisle B, bay 7, right side (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:B-8",
+      "type": "Scope",
+      "label": "Aisle B, bay 8, right side (shelf levels 1 to 4)",
       "props": {
         "kind": "bay"
       }
@@ -244,6 +308,17 @@
       }
     },
     {
+      "id": "step:restock:reach-slot",
+      "type": "Step",
+      "label": "Reach into the empty slot",
+      "props": {
+        "action": "reach",
+        "args": {
+          "slot": "$task.target"
+        }
+      }
+    },
+    {
       "id": "step:restock:place",
       "type": "Step",
       "label": "Put the item in its slot",
@@ -281,19 +356,6 @@
       }
     },
     {
-      "id": "rule:packing-torso",
-      "type": "Rule",
-      "label": "The packing tote is at level 1; lower the torso to place into it",
-      "props": {
-        "when": [],
-        "then": {
-          "param": "torso.level",
-          "value": 1
-        },
-        "priority": 0
-      }
-    },
-    {
       "id": "rule:retract-before-drive",
       "type": "Rule",
       "label": "Never drive with the arm extended",
@@ -309,11 +371,11 @@
     {
       "id": "guard:max-speed",
       "type": "Guardrail",
-      "label": "Drive no faster than 1.0 m/s on the shop floor",
+      "label": "Drive no faster than 0.8 m/s on the shop floor",
       "props": {
         "param": "max_speed_mps",
         "op": "<=",
-        "value": 1,
+        "value": 0.8,
         "locked": true
       }
     },
@@ -335,16 +397,16 @@
       }
     },
     {
-      "id": "proto:item-dropped",
+      "id": "proto:slot-empty",
       "type": "Protocol",
-      "label": "If an item is dropped, report it so staff can clear the floor",
+      "label": "If the slot is empty, report it so staff can restock; do not wait",
       "props": {
-        "trigger": "item_dropped",
+        "trigger": "slot_empty",
         "response": [
           {
             "action": "report_issue",
             "args": {
-              "kind": "item_dropped"
+              "kind": "slot_empty"
             }
           }
         ],
@@ -405,6 +467,26 @@
       "type": "PART_OF"
     },
     {
+      "from": "bay:A-5",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:A-6",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:A-7",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:A-8",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
       "from": "aisle:B",
       "to": "store",
       "type": "PART_OF"
@@ -426,6 +508,26 @@
     },
     {
       "from": "bay:B-4",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-5",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-6",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-7",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-8",
       "to": "aisle:B",
       "type": "PART_OF"
     },
@@ -550,12 +652,22 @@
       "type": "NEXT"
     },
     {
-      "from": "step:restock:place",
+      "from": "step:restock:reach-slot",
       "to": "proc:restock",
       "type": "STEP_OF"
     },
     {
       "from": "step:restock:go-to-slot",
+      "to": "step:restock:reach-slot",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:restock:place",
+      "to": "proc:restock",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:restock:reach-slot",
       "to": "step:restock:place",
       "type": "NEXT"
     },
@@ -580,16 +692,6 @@
       "type": "SUPPORTED_BY"
     },
     {
-      "from": "rule:packing-torso",
-      "to": "zone:packing",
-      "type": "APPLIES_TO"
-    },
-    {
-      "from": "rule:packing-torso",
-      "to": "ev:onboarding",
-      "type": "SUPPORTED_BY"
-    },
-    {
       "from": "rule:retract-before-drive",
       "to": "store",
       "type": "APPLIES_TO"
@@ -620,13 +722,13 @@
       "type": "SUPPORTED_BY"
     },
     {
-      "from": "proto:item-dropped",
+      "from": "proto:slot-empty",
       "to": "store",
       "type": "APPLIES_TO"
     },
     {
-      "from": "proto:item-dropped",
-      "to": "ev:safety",
+      "from": "proto:slot-empty",
+      "to": "ev:onboarding",
       "type": "SUPPORTED_BY"
     }
   ]
