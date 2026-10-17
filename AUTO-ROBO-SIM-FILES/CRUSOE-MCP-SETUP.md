@@ -1,6 +1,6 @@
 # Crusoe MCP setup on this Mac
 
-This lets Codex read your Crusoe projects, usage, and available quota information directly. The Cloud MCP is read-only. It cannot raise limits or add a payment method.
+The connection on this Mac has now been verified with authenticated MCP project and quota queries. These steps explain the setup so it can be repeated. Codex can read your Crusoe projects, usage, and available quota information directly. The Cloud MCP is read-only. It cannot raise limits or add a payment method.
 
 ## 1. Create the Cloud key pair
 
@@ -45,7 +45,7 @@ The first message can be:
 
 > Use Crusoe MCP to confirm my identity, list my projects, select the project used by AutoRoboHarness, and inspect its project and organization quotas and usage. Tell me whether the tools expose Lightning's serverless RPM and TPM limits. Keep credentials private.
 
-The relevant tools are `get_user_identity`, `list_available_projects`, `use_project`, `list_project_quotas`, `list_org_quotas`, and `get_usage_by_project`. Successful account and project responses confirm authentication. The quota tools may expose infrastructure limits without the specific serverless model limits; those still need the Foundry console or Crusoe support if absent.
+The relevant tools are `get_user_identity`, `list_available_projects`, `use_project`, `list_project_quotas`, `list_org_quotas`, and `get_usage_by_project`. Successful account and project responses confirm authentication. On this installation, `list_project_quotas` returned `serverless-requests-per-minute` and `serverless-tokens-per-minute`. These are configured per-model ceilings. The selected Cloud project still needs to match the project that owns the app's inference key; a quota response alone does not establish that match or the current remaining allowance.
 
 The MCP's own 60-query-per-minute limit applies to its Cloud API queries. It does not increase the separate serverless inference quota used by our robots.
 

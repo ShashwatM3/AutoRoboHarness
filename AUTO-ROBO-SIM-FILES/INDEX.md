@@ -10,6 +10,7 @@ Context and planning documents for the Recursive Agents Hackathon build (Crusoe 
 | [DECISIONS.md](DECISIONS.md) | Every locked decision: workspace, tasks, robot, ground truth, simulator, brain storage, seeds, and the exact Crusoe model IDs |
 | [BUILD-PLAN.md](BUILD-PLAN.md) | The feature sequence for each version, with Person A and Person B owners and time slots |
 | [CRUSOE-MCP-SETUP.md](CRUSOE-MCP-SETUP.md) | Simple local Cloud MCP authentication and Codex connection steps |
+| [verification/version-1-gate.json](verification/version-1-gate.json) | Verified 20-run Lightning gate, both scores, verdict, and graph diff |
 
 ## Per-version, per-person build plans
 
