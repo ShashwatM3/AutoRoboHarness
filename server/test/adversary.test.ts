@@ -11,7 +11,7 @@ import { attackCatalog, getAttack, recoverInterruptedAttacks, startAttack } from
 import { claimInference } from "../src/inference-lock.ts";
 import { getReview } from "../src/supervisor.ts";
 import { getTrial, prepareTrial } from "../src/trials.ts";
-import { getShift, listShifts, publishAdversarialShift } from "../src/worker.ts";
+import { getShift, listShifts, normalizeRunReference, publishAdversarialShift } from "../src/worker.ts";
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "adversary-test-"));
 process.env.AUTOROBO_DATA_DIR = path.join(tmp, "data");
@@ -41,6 +41,8 @@ test("only failed completed training attacks enter review; recordings preserve d
       assert.equal(shift.source?.adversary_id, attack.adversary_id);
       assert.equal(shift.trial_id, t.trial_id); assert.deepEqual(shift.trajectory, t.trajectory);
       assert.equal(getReview(shift.shift_id), undefined, 'reading the attack never starts a review');
+      assert.equal(normalizeRunReference(`${shift.shift_id}/robot-1 (failed attack)`), `${shift.shift_id}/robot-1`);
+      assert.equal(normalizeRunReference(shift.tasks[0].id), `${shift.shift_id}/robot-1`);
     } else assert.ok(!listShifts().some(s => s.trial_id === t.trial_id));
   }
   assert.throws(() => publishAdversarialShift({ ...getTrial(a.attempts[0].trial_id!)!, partition: 'heldout' }, a.adversary_id, {}));

@@ -44,7 +44,7 @@ Reply with JSON only: { "verdicts": [{ "id": "F1", "keep": true, "why": "...", "
 
 /** "shift-x/robot-1" -> that run's task, result and steps, from the saved shift. */
 function describeRun(runId: string): string {
-  const m = /^(shift-[a-z0-9]+)\/(robot-\d+)$/.exec(runId);
+  const m = /^(shift-[A-Za-z0-9_-]{1,75})\/(robot-[1-4])$/.exec(runId);
   const s = m && getShift(m[1]);
   const t = s?.tasks.find((x) => x.robot === m![2]);
   if (!s || !t) return `${runId}: no such run`;

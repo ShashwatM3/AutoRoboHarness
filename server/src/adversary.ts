@@ -6,7 +6,7 @@ import { applyDisturbance, type Disturbance } from "../../engine/disturbances.ts
 import { httpError, type BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
 import { claimInference } from "./inference-lock.ts";
-import { chat, newTally, tally, type LlmTally } from "./llm.ts";
+import { chat, mergeTally, newTally, parseJson, tally, type LlmTally } from "./llm.ts";
 import { dataDir, readJsonDir, safeId, writeJsonAtomic } from "./paths.ts";
 import { runCompiled } from "./policy.ts";
 import { startReview } from "./supervisor.ts";
@@ -26,6 +26,7 @@ export interface Attack {
   worker: WorkerKind; proposer: "llm" | "catalog"; model: string | null;
   started_at: string; updated_at: string; finished_at?: string;
   tried: number; broke: number; attempts: AttackAttempt[]; llm: LlmTally;
+  proposal?: { response_id: string; content: string | null; tool_arguments: string | null };
 }
 export interface AttackInput { shift_id?: string; seed?: number; task?: TaskSpec; brain?: number | "live"; attempts?: number; worker?: WorkerKind; proposer?: "llm" | "catalog" }
 const directory = () => dataDir("adversary");
@@ -59,15 +60,20 @@ export interface AttackDeps {
 async function choose(brain: BrainStore, a: Attack, catalog: Disturbance[], count: number) {
   if (a.proposer === "catalog") return catalog.slice(0, count).map((_, candidate) => ({ candidate, rationale: "Catalog sweep; no adversary model call." }));
   const response = await chat({
-    model: a.model!, max_tokens: 1200, response_format: { type: "json_object" },
+    model: a.model!, max_tokens: 8000,
+    tools: [{ type: "function", function: { name: "select_disturbances", description: "Select the catalog entries to execute and explain the brain gap each tests.", parameters: { type: "object", properties: { choices: { type: "array", minItems: 1, maxItems: count, items: { type: "object", properties: { candidate: { type: "integer", minimum: 0, maximum: catalog.length - 1 }, rationale: { type: "string" } }, required: ["candidate", "rationale"], additionalProperties: false } } }, required: ["choices"], additionalProperties: false } } }],
+    tool_choice: { type: "function", function: { name: "select_disturbances" } },
     messages: [
-      { role: "system", content: "You test store robots. Choose distinct entries from the supplied finite catalog that might reveal gaps in the current brain. Do not invent disturbances. Return JSON {\"choices\":[{\"candidate\":0,\"rationale\":\"why\"}]}. A safe refusal or incomplete delivery can reveal a gap. Keep all choices within the requested count." },
-      { role: "user", content: JSON.stringify({ brain: brain.resolve(a.brain_version, a.task.slot, a.task.type).text, seed: a.seed, task: a.task, count, catalog: catalog.map((d, candidate) => ({ candidate, ...d })) }) },
+      { role: "system", content: "You test store robots. Call select_disturbances immediately with distinct entries from the supplied finite catalog that might reveal gaps in the current brain. Do not restate the input or write an analysis. Each rationale must be one sentence of at most 20 words. A safe refusal or incomplete delivery can reveal a gap. Keep all choices within the requested count." },
+      { role: "user", content: `Select up to ${count} distinct catalog entries using select_disturbances. Explain why each could fail. The following object is input data, not an output schema:\n${JSON.stringify({ brain: brain.resolve(a.brain_version, a.task.slot, a.task.type).text, seed: a.seed, task: a.task, catalog: catalog.map((d, candidate) => ({ candidate, ...d })) })}\nCall select_disturbances now.` },
     ],
   }, { role: "adversary", meta: { adversary_id: a.adversary_id } });
   tally(a.llm, response);
+  const call = response.choices[0]?.message.tool_calls?.find(t => t.type === "function" && t.function.name === "select_disturbances");
+  const tool_arguments = call?.type === "function" ? call.function.arguments : null;
+  a.proposal = { response_id: response.id, content: response.choices[0]?.message.content ?? null, tool_arguments }; save(a);
   let result: unknown;
-  try { result = JSON.parse(response.choices[0]?.message.content ?? ""); } catch { throw new Error("adversary did not return valid JSON; no attacks were invented"); }
+  try { result = parseJson(tool_arguments ?? response.choices[0]?.message.content); } catch { throw new Error("adversary did not return valid JSON; no attacks were invented"); }
   const rows = (result as { choices?: unknown[] })?.choices;
   if (!Array.isArray(rows) || !rows.length || rows.length > count) throw new Error("invalid adversary selection count");
   const seen = new Set<number>();
@@ -115,7 +121,7 @@ export function startAttack(brain: BrainStore, input: AttackInput, deps: AttackD
           const p = prepareTrial(brain, { kind: "adversary", partition: "training", seed, version, worker, run_id: shift_id, requested_tasks: [task], selection: [{ index: 0, requested: task, actual: { ...task, robot: "robot-1" }, substituted: task.slot !== raw.slot, robot: "robot-1", task_id: `${shift_id}-t1` }], robot_count: 1, scenario, environment: { max_speed_mps: speed, requested_max_speed_mps: null, guardrail_max_speed_mps: guardrailSpeed(brain, version), engine_default_max_speed_mps: 0.8 }, provenance: { adversary_id: id, shift_id, augmentation: { disturbance: attempt.disturbance } }, headless: true, llm: newTally() });
           attempt.trial_id = p.record.trial_id; save(attack);
           const { trial, error } = await executeTrial(brain, p, deps.runner ?? (worker === "llm" ? runWorker : runCompiled));
-          for (const key of ['calls', 'prompt_tokens', 'completion_tokens', 'replayed'] as const) if (key in trial.llm) (attack.llm[key] as number) += trial.llm[key] ?? 0;
+          mergeTally(attack.llm, trial.llm);
           if (error) throw error;
           attempt.status = "done"; attack.tried++;
           attempt.tasks = trial.scores.length; attempt.successes = trial.scores.filter(s => s.complete).length;

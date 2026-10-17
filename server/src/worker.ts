@@ -73,6 +73,19 @@ export function listShifts(): Omit<Shift, "trajectory">[] {
   });
 }
 
+/** Canonical training-run references, including V3 attack ids; tolerate descriptive model suffixes. */
+export function normalizeRunReference(value: unknown): string {
+  const text = String(value ?? "");
+  const run = /\bshift-[A-Za-z0-9_-]+\/robot-[1-4]\b/.exec(text)?.[0];
+  if (run && run.split('/')[0].length <= 81) return run;
+  const task = /\b(shift-[A-Za-z0-9_-]+)-t[1-4]\b/.exec(text);
+  if (task && task[1].length <= 81) {
+    const robot = getShift(task[1])?.tasks.find(t => t.id === task[0])?.robot;
+    if (robot) return `${task[1]}/${robot}`;
+  }
+  return text;
+}
+
 /** Only a completed, failed training attack may enter the supervisor's ordinary shift pool. */
 export function publishAdversarialShift(trial: TrialRecord, adversary_id: string, disturbance: Record<string, unknown>): Shift {
   if (trial.kind !== "adversary" || trial.partition !== "training" || trial.seed < 1 || trial.seed > 20 || trial.status !== "done" || !trial.final || !trial.scores.length || trial.scores.every(s => s.complete))

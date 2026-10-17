@@ -14,7 +14,7 @@ import { chat, MODELS, newTally, parseJson, tally, type LlmTally } from "./llm.t
 import { MAX_RESEARCH_CALLS, research, type Research } from "./research.ts";
 import { compileUpdates, REVIEW_SCHEMA, type CompiledUpdate, type EvidenceById, type Update } from "./supervisor-ops.ts";
 import { dataDir, safeId } from "./paths.ts";
-import { getShift, listShifts, taskContext, type Shift } from "./worker.ts";
+import { getShift, listShifts, normalizeRunReference, taskContext, type Shift } from "./worker.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const reviewsDir = () => dataDir("reviews");
@@ -50,6 +50,7 @@ export interface Review {
   judge?: JudgeResult;
   llm?: LlmTally; // supervisor, clip and judge calls; reviews made before V2-2 have none
   research?: Research[]; // You.com questions asked during the review, with their numbered sources
+  source?: Shift["source"];
 }
 
 type Verdict = { keep: boolean; why: string };
@@ -241,6 +242,7 @@ function shiftDigest(brain: BrainStore, shift: Shift) {
   const det = detectFailures(shift);
   const L: string[] = [];
   L.push(`SHIFT ${shift.shift_id}: seed ${shift.seed}, brain v${shift.brain_version}`);
+  if (shift.source) L.push(`ORIGIN: found by adversary ${shift.source.adversary_id}; recorded initial disturbance ${JSON.stringify(shift.source.disturbance)}. Judge the actual actions and outcomes, not the adversary's hypothesis.`);
   for (const t of shift.tasks) {
     const sc = shift.scores.find((s) => s.task_id === t.id);
     L.push("");
@@ -276,6 +278,7 @@ export function startReview(brain: BrainStore, shiftId: string): Review {
     detected: detectFailures(shift),
     tool_calls: [],
     llm: newTally(),
+    ...(shift.source ? { source: shift.source } : {}),
   };
   reviews.set(shiftId, review);
   runReview(brain, shift, review)
@@ -429,13 +432,7 @@ function finalize(brain: BrainStore, shift: Shift, review: Review, j: any): Reco
       }
       // the model sometimes decorates run ids ("shift-x/robot-1 (PICK, ...)"); keep the id, move the rest to the note.
       // It also cites the reviewed shift's runs by task id ("shift-x-t1"), as the digest lists them; map those to their robot.
-      const runId = (s: unknown) => {
-        const run = /shift-[a-z0-9]+\/robot-\d+/.exec(String(s ?? ""))?.[0];
-        if (run) return run;
-        const task = /(shift-[a-z0-9]+)-t\d+/.exec(String(s ?? ""));
-        const robot = task && getShift(task[1])?.tasks.find((t) => t.id === task[0])?.robot;
-        return robot ? `${task![1]}/${robot}` : String(s ?? "");
-      };
+      const runId = normalizeRunReference;
       const ok_run = runId(g.ok_run);
       const failed_run = runId(g.failed_run);
       const extra = [g.ok_run, g.failed_run].filter((s) => s && !runs.has(s)).join("; ");

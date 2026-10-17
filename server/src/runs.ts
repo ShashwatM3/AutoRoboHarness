@@ -22,6 +22,7 @@ export interface RunSummary {
   replay_available: boolean;
   review_status: Review["status"] | null; // null: no review was ever made for this shift
   gate_ids: string[]; // gates whose shift_id is this shift, oldest first
+  source?: Shift["source"];
 }
 
 export interface RunDetail {
@@ -55,6 +56,7 @@ export function listRuns(): RunSummary[] {
       replay_available: !!s.trial_id,
       review_status: getReview(s.shift_id)?.status ?? null,
       gate_ids: (gates.get(s.shift_id) ?? []).map((g) => g.gate_id),
+      ...(s.source ? { source: s.source } : {}),
     }))
     .sort((a, b) => String(b.started_at).localeCompare(String(a.started_at)) || b.shift_id.localeCompare(a.shift_id));
 }
