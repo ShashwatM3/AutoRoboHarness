@@ -95,6 +95,25 @@ export class BrainStore {
     return idx;
   }
 
+  /** GET /brain/history (V2-3): every version, oldest first, with its latest held-out measurement and its size. */
+  history() {
+    const idx = this.index();
+    return {
+      live: idx.live,
+      versions: idx.versions.map((r) => {
+        const f = this.file(r.v);
+        return {
+          ...r,
+          created_by: f.created_by,
+          nodes: f.nodes.filter((n) => !isRetired(n)).length,
+          edges: f.edges.length,
+          heldout_score: r.heldout_score ?? null,
+          heldout: r.heldout ?? null,
+        };
+      }),
+    };
+  }
+
   private writeIndex(idx: BrainIndex) {
     fs.writeFileSync(path.join(this.dir, "index.json"), JSON.stringify(idx, null, 2) + "\n");
   }
@@ -126,7 +145,7 @@ export class BrainStore {
     return entry;
   }
 
-  setStatus(v: number, status: VersionStatus, extra: { heldout_score?: number } = {}) {
+  setStatus(v: number, status: VersionStatus, extra: Pick<BrainIndex["versions"][number], "heldout_score" | "heldout"> = {}) {
     const idx = this.index();
     const row = idx.versions.find((r) => r.v === v);
     if (!row) throw httpError(404, `brain version ${v} not in index`);

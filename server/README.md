@@ -21,6 +21,7 @@ A call retries 429s for up to `LLM_429_WAIT_S` seconds (default 600); 5xx and ne
 | `GET /brain` | live graph `{ version, parent, note, nodes, edges }`; `?v=2` for another version |
 | `GET /brain?scope=A-3-4-1&task=PICK` | the slot's context: `{ version, scope_path, procedure: { id, steps }, rules, guardrails, protocols, node_ids, text }`; also emits a `brain_read` event with `node_ids` |
 | `GET /brain/versions` | `{ live, versions: [{ v, parent, status, note, heldout_score? }] }` |
+| `GET /brain/history` | `{ live, versions: [{ v, parent, status, created_at, created_by, note, nodes, edges, heldout_score, heldout }] }`, oldest first. `heldout_score` (0 to 1) and `heldout: { gate_id, worker, seeds, tasks, complete, refused_per_task, measured_at }` are the version's latest gate measurement, or `null` if no gate has measured it. `worker` says how it was measured: compiled and Lightning scores are not comparable, so label them. `nodes` excludes retired nodes |
 | `GET /brain/diff?from=1&to=2` | `{ added_nodes, retired_nodes, changed: [{ id, key, from, to }], added_edges, removed_edges }` |
 | `POST /brain/apply` | body `{ base: "live" \| n, ops, note? }`; writes `brain/v(N+1).json` as a candidate and returns `{ candidate, diff }` |
 | `GET /events` | server-sent events. Trajectory steps arrive as plain messages (`onmessage`), in the trajectory-step shape plus `type: "step"`. Other events are named: `brain_read`, `brain_version` |

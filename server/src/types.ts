@@ -56,9 +56,20 @@ export interface BrainFile {
 
 export type VersionStatus = "live" | "candidate" | "rejected" | "superseded";
 
+/** The latest held-out measurement of a version: which gate, which worker, how many seeds and tasks. */
+export interface HeldoutRecord {
+  gate_id: string;
+  worker: "compiled" | "llm";
+  seeds: number;
+  tasks: number;
+  complete: number;
+  refused_per_task: number;
+  measured_at: string;
+}
+
 export interface BrainIndex {
   live: number;
-  versions: { v: number; parent: number | null; status: VersionStatus; created_at: string; note: string; heldout_score?: number }[];
+  versions: { v: number; parent: number | null; status: VersionStatus; created_at: string; note: string; heldout_score?: number; heldout?: HeldoutRecord }[];
 }
 
 export interface ResolvedContext {

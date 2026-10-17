@@ -229,8 +229,10 @@ async function runGate(brain: BrainStore, gate: Gate) {
     : `no gain on held-out seeds: completion ${pct(b.complete_rate)} -> ${pct(c.complete_rate)}, refused actions per task ${b.refused_per_task} -> ${c.refused_per_task}`;
 
   const statusOf = (v: number) => brain.index().versions.find((r) => r.v === v)?.status ?? "candidate";
-  brain.setStatus(gate.base, statusOf(gate.base), { heldout_score: b.complete_rate });
-  brain.setStatus(gate.candidate, rises ? "live" : "rejected", { heldout_score: c.complete_rate });
+  // record how each score was measured: compiled and Lightning scores are not comparable
+  const measured = (s: Score) => ({ gate_id: gate.gate_id, worker: gate.worker, seeds: gate.seeds.length, tasks: s.tasks, complete: s.complete, refused_per_task: s.refused_per_task, measured_at: new Date().toISOString() });
+  brain.setStatus(gate.base, statusOf(gate.base), { heldout_score: b.complete_rate, heldout: measured(b) });
+  brain.setStatus(gate.candidate, rises ? "live" : "rejected", { heldout_score: c.complete_rate, heldout: measured(c) });
   emit("brain_version", { v: gate.candidate, status: rises ? "live" : "rejected" });
 }
 

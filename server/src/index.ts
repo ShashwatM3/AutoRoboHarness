@@ -41,6 +41,7 @@ api.get("/brain", (req, res) => {
 });
 
 api.get("/brain/versions", (_req, res) => res.json(brain.index()));
+api.get("/brain/history", (_req, res) => res.json(brain.history()));
 
 // GET /brain/diff?from=1&to=2
 api.get("/brain/diff", (req, res) => {
