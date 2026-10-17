@@ -4,6 +4,15 @@ export interface TaskSpec {
   type: "PICK" | "RESTOCK";
   slot: string;
 }
+export interface LlmUsage {
+  calls: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cached_tokens?: number;
+  cache_share?: number | null;
+  replayed?: number;
+  crusoe_cache?: { calls_reporting: number; prompt_tokens: number; cached_tokens: number };
+}
 export interface ShiftInfo {
   shift_id: string;
   status: "running" | "done" | "error";
@@ -12,8 +21,8 @@ export interface ShiftInfo {
   brain_version: number;
   tasks: Task[];
   scores: TaskScore[];
-  cache_share?: number;
-  llm: { calls: number; prompt_tokens: number; completion_tokens: number; cached_tokens?: number; cache_share?: number };
+  cache_share?: number | null;
+  llm: LlmUsage;
 }
 export interface ShiftStep extends TrajectoryStep {
   shift_id: string;
@@ -68,8 +77,8 @@ export interface GateInfo {
   candidate_score?: GateScore;
   delta?: number;
   diff: BrainDiff;
-  cache_share?: number;
-  llm: { calls: number; prompt_tokens: number; completion_tokens: number; cached_tokens?: number; cache_share?: number };
+  cache_share?: number | null;
+  llm: LlmUsage;
 }
 export type Grounding =
   | {
@@ -80,6 +89,7 @@ export type Grounding =
       sheet?: string;
       description?: string;
       verified: boolean;
+      judge_supports?: boolean;
     }
   | {
       kind: "run_contrast";
@@ -87,10 +97,12 @@ export type Grounding =
       failed_run: string;
       note?: string;
       verified: boolean;
+      judge_supports?: boolean;
     };
 export interface JudgeVerdict { keep: boolean; why: string }
 export interface Citation { url: string; title?: string; snippet?: string }
 export interface ReviewInfo {
+  llm?: LlmUsage;
   judge?: { model: string; kept: string[]; dropped: { id: string; why: string }[]; error?: string };
   shift_id: string;
   status: "running" | "done" | "error";

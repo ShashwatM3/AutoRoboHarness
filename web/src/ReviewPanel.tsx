@@ -7,6 +7,7 @@ import {
   FileSearch,
   GitBranch,
   LoaderCircle,
+  Layers3,
   Play,
   ShieldCheck,
   Sparkles,
@@ -148,6 +149,17 @@ export default function ReviewPanel({
     "The supervisor is reading the shift.",
   );
   const [retry, setRetry] = useState(0);
+  const [rejudging, setRejudging] = useState(false);
+  const [judgeError, setJudgeError] = useState<string | null>(null);
+  const checkEvidence = async () => {
+    setRejudging(true);
+    setJudgeError(null);
+    try {
+      setReview(await api<ReviewInfo>(`/review/${encodeURIComponent(shiftId)}/judge`, { method: "POST" }));
+    } catch (e) {
+      setJudgeError(e instanceof Error ? e.message : "The evidence check could not finish.");
+    } finally { setRejudging(false); }
+  };
 
   useEffect(() => {
     let active = true,
@@ -261,6 +273,10 @@ export default function ReviewPanel({
               <GitBranch size={15} />
               Brain v{review.brain_version}
             </span>
+            {review.llm && <span title={`${review.llm.crusoe_cache?.cached_tokens ?? 0} cached / ${review.llm.crusoe_cache?.prompt_tokens ?? 0} reported prompt tokens; local response replays excluded`}>
+              <Layers3 size={15} />
+              {review.llm.cache_share == null ? "Review cache not reported" : `${(review.llm.cache_share * 100).toFixed(1)}% review prompt cache`}
+            </span>}
           </div>
           <section className="judge-summary" aria-label="Independent judge">
             <ShieldCheck size={19} />
@@ -269,6 +285,8 @@ export default function ReviewPanel({
                 : review.judge ? <p>{review.judge.kept.length} kept · {review.judge.dropped.length} dropped <small>{review.judge.model}</small></p>
                 : <p>{review.status === "running" ? "Waiting for the independent judge." : "This earlier review has no judge verdict."}</p>}
             </div>
+            {review.status === "done" && (!review.judge || review.judge.error) && <button className="check-evidence" disabled={rejudging} onClick={() => void checkEvidence()}>{rejudging ? "Checking evidence…" : "Check evidence"}</button>}
+            {judgeError && <p role="alert">{judgeError}</p>}
             {!!review.judge?.dropped.length && <details><summary>Excluded findings</summary><ul>{review.judge.dropped.map(item => <li key={item.id}><strong>{item.id}</strong> {item.why}</li>)}</ul></details>}
           </section>
           <div className="review-columns">
@@ -360,7 +378,7 @@ export default function ReviewPanel({
                       The evidence references could not be confirmed.
                     </p>
                   )}
-                  {insight.grounding.map((grounding, i) => (
+                  {insight.grounding.filter(g => g.judge_supports !== false).map((grounding, i) => (
                     <Evidence key={i} grounding={grounding} />
                   ))}
                 </article>

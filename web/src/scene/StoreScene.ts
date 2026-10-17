@@ -417,7 +417,8 @@ export class StoreScene {
       if (this.disposed) return;
       this.assetSources.push(gltf.scene);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
-      const model = this.fit(gltf.scene, new THREE.Vector3(0.6, 1.65, 0.6), true);
+      // Match the store's metre scale while leaving room within the aisle walking paths.
+      const model = this.fit(gltf.scene, new THREE.Vector3(0.6, 1.6, 0.6));
       model.name = id;
       this.shoppers.set(id, model);
       this.scene.add(model);
