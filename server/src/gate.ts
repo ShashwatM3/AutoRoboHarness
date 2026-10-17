@@ -141,37 +141,17 @@ export function updateBrain(brain: BrainStore, input: UpdateBrainInput): { gate:
   const worker = input.worker === "llm" ? "llm" : "compiled";
   // claimed before the candidate is written, so a busy refusal (409) leaves the brain untouched
   const release = worker === "llm" ? claimInference("gate", gate_id) : () => {};
-  let candidate: number, diff: BrainDiff;
+  let gate: Gate;
   try {
-    ({ version: candidate, diff } = brain.apply(base, ops, { created_by: "supervisor", note }));
+    // any setup failure (writing the candidate, guardrail, file hashes) gives the Lightning claim back
+    const { version: candidate, diff } = brain.apply(base, ops, { created_by: "supervisor", note });
+    emit("brain_version", { v: candidate, status: "candidate" });
+    gate = newGate(brain, input, { gate_id, worker, judge_policy, base, candidate, diff, chosen, shift_id: input.shift_id, tasks: shift.tasks.map((t) => ({ type: t.type, slot: t.type === "PICK" ? t.source : t.target })) });
   } catch (e) {
     release();
     throw e;
   }
-  emit("brain_version", { v: candidate, status: "candidate" });
-
-  const guard = guardrailSpeed(brain, base);
-  const tasks: TaskSpec[] = shift.tasks.map((t) => ({ type: t.type, slot: t.type === "PICK" ? t.source : t.target }));
-  const gate: Gate = {
-    gate_id,
-    status: "running",
-    shift_id: input.shift_id,
-    update_ids: chosen.map((u) => u.id),
-    judge_policy,
-    base,
-    candidate,
-    seeds: HELDOUT_SEEDS.slice(0, Math.min(10, Math.max(1, Number(input.seeds ?? 10)))),
-    tasks,
-    worker,
-    progress: { done: 0, total: 0 },
-    per_seed: [],
-    diff,
-    llm: newTally(),
-    started_at: new Date().toISOString(),
-    brain_sha256: { base: brain.fileSha256(base), candidate: brain.fileSha256(candidate) },
-    // the base brain's guardrail, applied to both brains so they face the same world
-    environment: { max_speed_mps: Math.min(guard ?? ENGINE_DEFAULT_MAX_SPEED, ENGINE_DEFAULT_MAX_SPEED), requested_max_speed_mps: null, guardrail_max_speed_mps: guard, engine_default_max_speed_mps: ENGINE_DEFAULT_MAX_SPEED },
-  };
+  const candidate = gate.candidate;
   gates.set(gate.gate_id, gate);
   const done = runGate(brain, gate)
     .then(() => {
@@ -192,6 +172,34 @@ export function updateBrain(brain: BrainStore, input: UpdateBrainInput): { gate:
       return gate;
     });
   return { gate, done };
+}
+
+function newGate(
+  brain: BrainStore,
+  input: UpdateBrainInput,
+  g: { gate_id: string; worker: Gate["worker"]; judge_policy: JudgePolicy; base: number; candidate: number; diff: BrainDiff; chosen: { id: string }[]; shift_id: string; tasks: TaskSpec[] },
+): Gate {
+  const guard = guardrailSpeed(brain, g.base);
+  return {
+    gate_id: g.gate_id,
+    status: "running",
+    shift_id: g.shift_id,
+    update_ids: g.chosen.map((u) => u.id),
+    judge_policy: g.judge_policy,
+    base: g.base,
+    candidate: g.candidate,
+    seeds: HELDOUT_SEEDS.slice(0, Math.min(10, Math.max(1, Number(input.seeds ?? 10)))),
+    tasks: g.tasks,
+    worker: g.worker,
+    progress: { done: 0, total: 0 },
+    per_seed: [],
+    diff: g.diff,
+    llm: newTally(),
+    started_at: new Date().toISOString(),
+    brain_sha256: { base: brain.fileSha256(g.base), candidate: brain.fileSha256(g.candidate) },
+    // the base brain's guardrail, applied to both brains so they face the same world
+    environment: { max_speed_mps: Math.min(guard ?? ENGINE_DEFAULT_MAX_SPEED, ENGINE_DEFAULT_MAX_SPEED), requested_max_speed_mps: null, guardrail_max_speed_mps: guard, engine_default_max_speed_mps: ENGINE_DEFAULT_MAX_SPEED },
+  };
 }
 
 async function runGate(brain: BrainStore, gate: Gate) {

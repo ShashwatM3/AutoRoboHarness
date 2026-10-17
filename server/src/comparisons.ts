@@ -217,7 +217,21 @@ export function startComparison(brain: BrainStore, body: unknown): { comparison:
   const req = validateComparison(brain, body);
   const comparison_id = `cmp-${Date.now().toString(36)}-${(++idCounter).toString(36)}`;
   const release = req.worker === "llm" ? claimInference("comparison", comparison_id) : () => {};
+  let c: Comparison;
+  try {
+    // anything that fails while setting up (guardrails, file hashes, task selection, the first save) gives the
+    // Lightning claim back before the error leaves, so a failed request never blocks later runs
+    c = buildComparison(brain, req, comparison_id);
+    persist(c);
+  } catch (e) {
+    release();
+    throw e;
+  }
+  const done = runComparison(brain, c).finally(release);
+  return { comparison: c, done };
+}
 
+function buildComparison(brain: BrainStore, req: ReturnType<typeof validateComparison>, comparison_id: string): Comparison {
   const [va, vb] = req.versions;
   const guards = { [va]: guardrailSpeed(brain, va), [vb]: guardrailSpeed(brain, vb) } as Record<string, number | null>;
   const known = Object.values(guards).filter((g): g is number => g !== null);
@@ -262,14 +276,7 @@ export function startComparison(brain: BrainStore, body: unknown): { comparison:
     updated_at: t0,
   };
   c.aggregates = aggregate(c);
-  try {
-    persist(c);
-  } catch (e) {
-    release();
-    throw e;
-  }
-  const done = runComparison(brain, c).finally(release);
-  return { comparison: c, done };
+  return c;
 }
 
 async function runComparison(brain: BrainStore, c: Comparison): Promise<Comparison> {
