@@ -230,3 +230,9 @@ Rules:
 New gate task IDs are version-independent (`<gate_id>-s<seed>-t<i>`), so both starting scenes hash identically. A requested robot stays present and idle if its task is infeasible. Gate model totals update after each recorded trial. The shared Lightning limiter and 600-second 429 recovery behavior remain in effect.
 
 New trajectory steps also contain `item_state`, the affected physical item snapshot. This differs from the intended task item when products are misplaced and allows replay to restore the actual item correctly.
+
+## Dynamic version catalog
+
+`GET /brain/versions` returns `{ live: number | null, indexed: boolean, versions: CatalogEntry[] }`. It combines index metadata with every `vN.json` on disk without writing either. Each row includes `indexed`, `available`, and an optional `unavailable_reason`. A valid file without an index row has status `unregistered`; an indexed file that is missing or unreadable has `available: false`. `created_at` and `created_by` can be null for unreadable files. The live value is null only when there is no index.
+
+History and evaluations use the same catalog; unavailable snapshots have no current attributable evaluations. A legacy candidate evaluation is recognized only when the full saved diff matches its actual diff, including labels, properties and changed values. New evaluations use the saved snapshot hashes.

@@ -18,10 +18,12 @@ function ReplayView({
   trial,
   time,
   view,
+  onSeek,
 }: {
   trial: SavedTrial;
   time: number;
   view: "workers" | "perspective" | "overhead";
+  onSeek: (time: number) => void;
 }) {
   const host = useRef<HTMLDivElement>(null),
     scene = useRef<StoreScene | null>(null);
@@ -80,6 +82,10 @@ function ReplayView({
     [shown],
   );
   const score = trial.scores.filter((s) => s.complete).length;
+  const refusals = trial.trajectory.filter((s) => !s.ok);
+  const delivered = trial.scores.filter(
+    (s) => s.item_location === s.target_location,
+  ).length;
   return (
     <section
       className="replay-view"
@@ -101,6 +107,19 @@ function ReplayView({
           ` · evaluation ${trial.provenance.evaluation_id}`}
         {trial.provenance.shift_id && ` · shift ${trial.provenance.shift_id}`}
       </small>
+      <div className="trial-outcome-facts">
+        <strong>
+          {delivered}/{trial.requested_tasks.length} delivered
+        </strong>
+        <span className={refusals.length ? "diff-removed" : "diff-added"}>
+          {refusals.length} refused action{refusals.length === 1 ? "" : "s"}
+        </span>
+        <span>
+          {trial.status === "done"
+            ? `${score}/${trial.requested_tasks.length} strict successes`
+            : "Partial recording"}
+        </span>
+      </div>
       <div
         className={`viewport-wrap trial-viewport ${view === "workers" ? "worker-mode" : ""}`}
         data-robots={Object.keys(trial.initial.robots).length}
@@ -125,6 +144,23 @@ function ReplayView({
             ? `v${trial.brain_version} · ${shown.at(-1)!.robot} · ${shown.at(-1)!.action}: ${shown.at(-1)!.reason}`
             : "Recorded starting scene"}
       </p>
+      {refusals.length > 0 && (
+        <details className="recorded-refusals">
+          <summary>
+            {refusals.length} recorded refusal{refusals.length === 1 ? "" : "s"}{" "}
+            · jump to evidence
+          </summary>
+          {refusals.map((s) => (
+            <button
+              key={`${s.robot}-${s.step}`}
+              className="text-button"
+              onClick={() => onSeek(s.t)}
+            >
+              v{trial.brain_version} · {s.robot} · step {s.step}: {s.reason}
+            </button>
+          ))}
+        </details>
+      )}
       <details>
         <summary>Recorded tasks, environment and outcomes</summary>
         <pre>
@@ -282,7 +318,13 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
       />
       <div className={`replay-grid ${trials.length > 1 ? "paired" : ""}`}>
         {trials.map((t) => (
-          <ReplayView key={t.trial_id} trial={t} time={time} view={view} />
+          <ReplayView
+            key={t.trial_id}
+            trial={t}
+            time={time}
+            view={view}
+            onSeek={seek}
+          />
         ))}
       </div>
     </section>

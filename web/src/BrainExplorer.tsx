@@ -12,7 +12,10 @@ export interface VersionRow {
   parent: number | null;
   status: string;
   note: string;
-  created_at: string;
+  created_at: string | null;
+  available?: boolean;
+  indexed?: boolean;
+  unavailable_reason?: string;
   heldout_score?: number | null;
   heldout?: {
     gate_id: string;
@@ -22,7 +25,7 @@ export interface VersionRow {
   } | null;
 }
 export interface VersionIndex {
-  live: number;
+  live: number | null;
   versions: VersionRow[];
 }
 export interface Evaluation {
@@ -161,9 +164,14 @@ export default function BrainExplorer() {
   }, []);
   useEffect(() => {
     if (!index) return;
-    if (!index.versions.some((v) => v.v === left))
-      setLeft(index.versions[0]?.v ?? index.live);
-    if (!index.versions.some((v) => v.v === right)) setRight(index.live);
+    const available = index.versions.filter((v) => v.available !== false);
+    if (!available.some((v) => v.v === left)) setLeft(available[0]?.v ?? left);
+    if (!available.some((v) => v.v === right))
+      setRight(
+        available.find((v) => v.v === index.live)?.v ??
+          available.at(-1)?.v ??
+          right,
+      );
   }, [index, left, right]);
   useEffect(() => {
     let active = true;
@@ -240,7 +248,7 @@ export default function BrainExplorer() {
         onChange={(e) => setter(Number(e.target.value))}
       >
         {index?.versions.map((v) => (
-          <option key={v.v} value={v.v}>
+          <option key={v.v} value={v.v} disabled={v.available === false}>
             v{v.v}
             {v.v === index.live ? " · live" : ""} · {v.status}
           </option>
@@ -289,6 +297,7 @@ export default function BrainExplorer() {
                   <tr key={v.v}>
                     <td>
                       <button
+                        disabled={v.available === false}
                         className="text-button"
                         onClick={() => setLeft(v.v)}
                       >
@@ -302,6 +311,11 @@ export default function BrainExplorer() {
                     </td>
                     <td>
                       {v.note || "No reason recorded"}
+                      {v.available === false && (
+                        <small className="diff-removed">
+                          Snapshot unavailable: {v.unavailable_reason}
+                        </small>
+                      )}
                       <small>{v.created_at}</small>
                     </td>
                     <td>
@@ -321,7 +335,7 @@ export default function BrainExplorer() {
                             </small>
                           </div>
                         ))
-                      ) : v.heldout ? (
+                      ) : v.heldout && v.available !== false ? (
                         <>
                           {v.heldout.complete}/{v.heldout.tasks} tasks ·{" "}
                           {((v.heldout_score ?? 0) * 100).toFixed(0)}%

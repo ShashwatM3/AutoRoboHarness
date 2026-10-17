@@ -119,6 +119,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
 
   const loadBrain = async () => {
     try {
+      const requestedVersion = activeBrain.current;
       const [graph, index] = await Promise.all([
         api<BrainGraphData>(
           activeBrain.current == null
@@ -127,7 +128,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
         ),
         api<VersionIndex>("/brain/versions"),
       ]);
-      setBrain(graph);
+      if (requestedVersion === activeBrain.current) setBrain(graph);
       setVersions(index);
       setBrainError(null);
     } catch (e) {
@@ -750,7 +751,11 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                         Live brain{versions ? ` · v${versions.live}` : ""}
                       </option>
                       {versions?.versions.map((v) => (
-                        <option key={v.v} value={v.v}>
+                        <option
+                          key={v.v}
+                          value={v.v}
+                          disabled={v.available === false}
+                        >
                           v{v.v} · {v.status}
                         </option>
                       ))}

@@ -2904,3 +2904,5 @@ footer .tiny-dot {
 .graph-comparison .brain-body svg { min-height: 360px; }
 .trial-viewport.worker-mode { height: calc(var(--worker-rows, 1) * 400px); }
 .trial-viewport:not(.worker-mode) { height: 460px; }
+.trial-outcome-facts { display: flex; gap: 12px; padding: 9px 14px; font-size: 10px; border-top: 1px solid #e1e7d7; background: #f4f7ed; flex-wrap: wrap; }
+.recorded-refusals button { display: block; text-align: left; font-size: 11px; line-height: 1.6; padding: 8px 0; color: #a8523a; }

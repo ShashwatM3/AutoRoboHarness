@@ -69,6 +69,12 @@ The [original gate record](AUTO-ROBO-SIM-FILES/verification/version-2-gate.json)
 
 The earlier Version 1 gate used another task specification and measured 40% versus 40%, with fewer refusals after the update. It is a separate experiment. History connects measurements only within the same evaluation; different task sets do not form one improvement curve.
 
+### Fresh recorded comparison
+
+A separate Lightning run, **`cmp-mvd0u3kl-2`**, completed all **20/20 trials** and saved **144 physical action records**. It measured **v4: 6/10 (60%)** and **v5: 9/10 (90%)**, with **147 model responses and zero local response replays**. Refusals per task were **0.5 → 0.1**, and steps per task were **7.5 → 6.9**.
+
+This fresh run used the same requested PICK task and ten held-out seeds, and happened to reproduce the original success percentages. It remains a separate experiment. Its [complete result](AUTO-ROBO-SIM-FILES/verification/version-2-fresh-comparison.json) includes every task outcome; its saved recordings can be opened under **Saved trials & comparisons**. The original gate still has no replay. [The explorer verification](AUTO-ROBO-SIM-FILES/verification/version-2-explorer-verification.json) records unchanged brain/evidence hashes, restart durability and the zero-inference replay audit.
+
 ## How the brain works
 
 Each saved version is a complete JSON knowledge graph. A scope tree lets a worker retrieve knowledge for its task's shelf slot and its ancestors. Procedures specify action order; rules fill parameters; protocols handle conditions; guardrails constrain behavior; evidence records why a lesson exists.
@@ -87,7 +93,7 @@ flowchart TD
     Rule -->|SUPPORTED_BY| Evidence[Verified run evidence]
 ```
 
-The diagram shows the concepts; the explorer displays the actual saved nodes, directed edges and properties. Retired knowledge stays visible in its snapshot. Version files are immutable; promotion changes which version the index marks live. Selecting an earlier version for a shift or comparison never promotes it or edits a snapshot.
+The diagram shows the concepts; the explorer displays the actual saved nodes, directed edges and properties. Retired knowledge stays visible in its snapshot. Saved files outside the live index appear as unregistered; missing or unreadable snapshots are labeled unavailable. Browsing never repairs or rewrites them. Version files are immutable; promotion changes which version the index marks live. Selecting an earlier version for a shift or comparison never promotes it or edits a snapshot.
 
 ## Recording, replay and evaluation isolation
 

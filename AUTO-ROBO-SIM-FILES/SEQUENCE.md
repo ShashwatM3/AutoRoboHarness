@@ -100,7 +100,7 @@ Nine engine tests, fourteen server tests, two camera/grid tests, engine/server/w
 - [ ] 7. **Final steps, with Person A.** Same as Person A step 4.
 
 
-## Version 2 extension: brain explorer and saved-trial playback (in progress)
+## Version 2 extension: brain explorer and saved-trial playback (complete)
 
 The user reopened V2 to finish version browsing and durable replay before any V3 work. The original verified gate remains 6/10 for v4 and 9/10 for v5 (`gate-mvcynupn`); those score-only records have no replay and must remain unchanged. Fresh comparisons have their own evaluation IDs, full denominators and actual results.
 
@@ -109,15 +109,15 @@ The user reopened V2 to finish version browsing and durable replay before any V3
 - [x] 1. Dynamic version explorer, actual graph details and full node/edge/property comparison, with zoom, pan, search, focus and neighbor highlighting.
 - [x] 2. Historical brain selector and matched comparison controls, default v4 versus v5.
 - [x] 3. Saved-trial browser and synchronized recorded playback with camera views, action logs and timeline controls.
-- [ ] 4. Run a fresh complete ten-seed Lightning comparison after backend integration. Person A owns inference quota; Person B runs offline tests only.
-- [ ] 5. Verify restart durability, zero-inference replay, exact recorded scene restoration, unchanged live brain/snapshots and finished dashboard. Publish the explanatory README with pipeline diagrams.
+- [x] 4. Run a fresh complete ten-seed Lightning comparison after backend integration. Person A owns inference quota; Person B runs offline tests only.
+- [x] 5. Verify restart durability, zero-inference replay, exact recorded scene restoration, unchanged live brain/snapshots and finished dashboard. Publish the explanatory README with pipeline diagrams.
 
 ### Person B
 
 - [x] 1. Atomically persist explicit initial scene, actions, shoppers, outcomes and final state for new shifts and gate runs. Keep held-out records isolated from supervisor inputs.
 - [x] 2. Read-only trial APIs and historical matched-comparison runner, with identical settings and no brain/index mutation.
-- [ ] 3. Complete evaluation metadata and meaningful storage, matching, isolation and immutability tests.
-- [ ] 4. Push isolated backend branch for Person A integration; jointly verify complete V2 extension.
+- [x] 3. Complete evaluation metadata and meaningful storage, matching, isolation and immutability tests.
+- [x] 4. Push isolated backend branch for Person A integration; jointly verify complete V2 extension.
 
 Person B received the backend scope through the authorized Forge Claude session. Existing brain and evidence file hashes were captured before edits. No V3 work has begun.
 
@@ -126,3 +126,15 @@ Extension checkpoint: the frontend compiles and its five tests pass, including e
 Integration checkpoint: Person B commit `82bd302` was integrated as `b86ecab`. Engine and web compile; the six web tests include exact forward/back restoration, misplaced products, shared clock, graph property diffs and robot cameras. The server type check and existing 14 tests pass. A local compiled comparison (`cmp-mvd0tvv7-1`) completed all twenty recordings, with identical initial worlds per seed and zero model calls. A historical v4 training shift (`shift-mvd0tw41`) also produced a durable recording. Held-out trial IDs return 404 from shift/review inputs. Every baseline brain, live-index, gate and original verification-file hash remains unchanged.
 
 The fresh Lightning comparison is now running as **`cmp-mvd0u3kl-2`**, ten held-out seeds 101–110, one PICK A-1-3-1 request per seed, v4 versus v5, maximum speed 0.8 m/s. Person A exclusively owns its inference quota; Person B remains on offline regression tests. No backend edits or restart while it runs. Fresh results remain pending and separate from the original gate. Graph zoom, focus and edge inspection were exercised in Orca; actual recorded camera coordinates are being checked before final restart verification. The explanatory README and frontend are already pushed to `person-a/v2-explorer`; integrated main publication follows verification.
+
+### V2 extension completion
+
+All extension items are complete. Person B's implementation and follow-up tests (`82bd302`, `22b8d9e`, `9da16a1`) are integrated. The dynamic catalog includes every saved file, marks unregistered or unavailable versions honestly, and never changes the live index while browsing. Graph navigation supports zoom, pan, search, focus, neighbor highlighting and node/edge details; two actual snapshots can be compared at full property detail. Historical launches and matched comparisons leave the live brain and every snapshot unchanged.
+
+**Fresh recorded Lightning comparison:** `cmp-mvd0u3kl-2`, all twenty trials completed on seeds 101–110 with v4 and v5, one requested PICK A-1-3-1 per seed, identical starting-world hashes and effective environment. Actual results: **v4 6/10 (60%) → v5 9/10 (90%)**, **147 model responses**, **zero local response replays**, **144 physical action records**. Refusals/task: **0.5 → 0.1**; steps/task: **7.5 → 6.9**. This is a separate experiment from original `gate-mvcynupn`, whose immutable result remains **6/10 → 9/10**, 150 responses, score-only and **no replay**. No trial was fabricated for that original gate. Selecting clips never changes aggregates.
+
+**Verification:** all twenty fresh trajectories reconstruct their exact initial and final worlds, including products, robots, shoppers and issue records. An actual API restart left all twenty recordings and the comparison file byte-identical. Saved playback was then exercised with external fetches blocked and counted in the server process: **zero outbound inference attempts** and only browser GET requests. Play/pause, speed controls, timeline, forward/backward steps and refusal jumps work. Four-robot paired playback showed all eight labeled cameras; each final pose, held item, item location and shopper position matched recorded data. The production dashboard was inspected at desktop and 390-pixel widths with no page overflow or UI errors. Every original brain, live-index, gate and verification-file hash is unchanged; v5 remains live. All twenty held-out IDs return 404 from shift/review inputs.
+
+**Checks:** engine 9/9, server 29/29, web 6/6; all three type checks and the web production build pass. The README explains setup, the learning loop, knowledge graph, recording isolation and architecture with four Mermaid diagrams. Detailed API documentation is in `server/TRIALS.md`. Original evidence remains unchanged, while the new comparison, verification packet and two UI PDFs have separate filenames in `verification/`.
+
+Person B ran only offline tests while Person A exclusively used the shared inference quota. The completed runtime recordings were copied to Person B with a 47-file hash manifest, preserving existing data. Main publication and the final peer service refresh are being confirmed. **V3 has not started.**

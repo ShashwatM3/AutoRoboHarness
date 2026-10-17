@@ -1,0 +1,736 @@
+{
+  "comparison_id": "cmp-mvd0u3kl-2",
+  "evaluation_id": "cmp-mvd0u3kl-2",
+  "status": "done",
+  "request": {
+    "versions": [
+      4,
+      5
+    ],
+    "seeds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110
+    ],
+    "tasks": [
+      {
+        "type": "PICK",
+        "slot": "A-1-3-1",
+        "robot": "robot-1"
+      }
+    ],
+    "worker": "llm",
+    "environment": {
+      "max_speed_mps": 0.8
+    }
+  },
+  "versions": [
+    4,
+    5
+  ],
+  "brain_sha256": {
+    "4": "9690b6af97278a53d98b1804f24fdf08484fabdd4ba5e4a70b2fcc408dd0f36e",
+    "5": "fa595a4ada8ee4d6c11ad36adb1504028c58b240f8583c7dfeb52f3ef90636c7"
+  },
+  "partition": "heldout",
+  "seeds": [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110
+  ],
+  "tasks": [
+    {
+      "type": "PICK",
+      "slot": "A-1-3-1",
+      "robot": "robot-1"
+    }
+  ],
+  "worker": "llm",
+  "environment": {
+    "max_speed_mps": 0.8,
+    "requested_max_speed_mps": 0.8,
+    "guardrail_max_speed_mps": 0.8,
+    "engine_default_max_speed_mps": 0.8,
+    "guardrail_max_speed_mps_by_version": {
+      "4": 0.8,
+      "5": 0.8
+    }
+  },
+  "set_id": "2aecc66c5ca7",
+  "per_seed": [
+    {
+      "seed": 101,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s101-t1"
+        }
+      ],
+      "initial_sha256": "3b9782342356adb48e5f02071188f9c8a88e9bd08f3fd1c39bd4aec8aad7d9af",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd0u3kr-m",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s101-t1",
+              "complete": false,
+              "refused_actions": 2,
+              "steps": 9,
+              "item_location": "A-1-3-2",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd0utvq-n",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s101-t1",
+              "complete": false,
+              "refused_actions": 1,
+              "steps": 6,
+              "item_location": "A-1-3-2",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 102,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s102-t1"
+        }
+      ],
+      "initial_sha256": "c7d54f18e2276ce282800def1399ee74a9460608e8474f024f736be82c451a01",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd0vbsk-o",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s102-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd0vtm6-p",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s102-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 103,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s103-t1"
+        }
+      ],
+      "initial_sha256": "de32079a61df6c1f9ebaf5161a4823c97f327b4f21ee7eec69a6984e06a0b5f6",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd0wboy-q",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s103-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd0wtnh-r",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s103-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 104,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s104-t1"
+        }
+      ],
+      "initial_sha256": "042f668bc4262b40364eb79d0e1accb27f9f942c1f354db42f76c0216f454668",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd0xblk-s",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s104-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd0xtmz-t",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s104-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 105,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s105-t1"
+        }
+      ],
+      "initial_sha256": "a4460a80b5152297ddfd61a806ef3aadf426e942b34872c0794772b36248811c",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd0ybmk-u",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s105-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd0ytqe-v",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s105-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 106,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s106-t1"
+        }
+      ],
+      "initial_sha256": "be8fca9586ee9e7b6ca60bf47bedd9da8e95faf7889308f2e00ef55ac38e6748",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd0zbox-w",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s106-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd0zu2h-x",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s106-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 107,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s107-t1"
+        }
+      ],
+      "initial_sha256": "8d006716cd366c00e17502fc0ce3782589e1ce660462ffcc6ef7598075091aed",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd10bt3-y",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s107-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd10tpw-11",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s107-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 108,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s108-t1"
+        }
+      ],
+      "initial_sha256": "a770f53c94c66a96dcae54eba8a7a390eb3c51ae7192e813bafe3e015042acf2",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd11btj-12",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s108-t1",
+              "complete": false,
+              "refused_actions": 1,
+              "steps": 8,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd11we3-13",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s108-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 109,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s109-t1"
+        }
+      ],
+      "initial_sha256": "612e152fb221441fc16e34cc3386bdf0d076261debc24990952f4731448749bf",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd12edz-14",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s109-t1",
+              "complete": false,
+              "refused_actions": 1,
+              "steps": 8,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd12z07-15",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s109-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "seed": 110,
+      "robot_count": 1,
+      "task_selection": [
+        {
+          "index": 0,
+          "requested": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "actual": {
+            "type": "PICK",
+            "slot": "A-1-3-1",
+            "robot": "robot-1"
+          },
+          "substituted": false,
+          "robot": "robot-1",
+          "task_id": "cmp-mvd0u3kl-2-s110-t1"
+        }
+      ],
+      "initial_sha256": "85da1a6cc2756eba40e28bbd5a78ca91b27f0e3e3dfb451f2b38567e2075578d",
+      "pairs": [
+        {
+          "version": 4,
+          "role": "a",
+          "status": "done",
+          "trial_id": "trial-mvd13h79-16",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s110-t1",
+              "complete": false,
+              "refused_actions": 1,
+              "steps": 8,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "version": 5,
+          "role": "b",
+          "status": "done",
+          "trial_id": "trial-mvd141ox-17",
+          "task_scores": [
+            {
+              "task_id": "cmp-mvd0u3kl-2-s110-t1",
+              "complete": true,
+              "refused_actions": 0,
+              "steps": 7,
+              "item_location": "tote",
+              "target_location": "tote",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "progress": {
+    "pairs_done": 20,
+    "pairs_total": 20
+  },
+  "aggregates": [
+    {
+      "version": 4,
+      "role": "a",
+      "expected_tasks": 10,
+      "evaluated_tasks": 10,
+      "infeasible_tasks": 0,
+      "successes": 6,
+      "success_rate": 0.6,
+      "refused_per_evaluated_task": 0.5,
+      "steps_per_evaluated_task": 7.5,
+      "complete": true,
+      "trial_ids": [
+        "trial-mvd0u3kr-m",
+        "trial-mvd0vbsk-o",
+        "trial-mvd0wboy-q",
+        "trial-mvd0xblk-s",
+        "trial-mvd0ybmk-u",
+        "trial-mvd0zbox-w",
+        "trial-mvd10bt3-y",
+        "trial-mvd11btj-12",
+        "trial-mvd12edz-14",
+        "trial-mvd13h79-16"
+      ]
+    },
+    {
+      "version": 5,
+      "role": "b",
+      "expected_tasks": 10,
+      "evaluated_tasks": 10,
+      "infeasible_tasks": 0,
+      "successes": 9,
+      "success_rate": 0.9,
+      "refused_per_evaluated_task": 0.1,
+      "steps_per_evaluated_task": 6.9,
+      "complete": true,
+      "trial_ids": [
+        "trial-mvd0utvq-n",
+        "trial-mvd0vtm6-p",
+        "trial-mvd0wtnh-r",
+        "trial-mvd0xtmz-t",
+        "trial-mvd0ytqe-v",
+        "trial-mvd0zu2h-x",
+        "trial-mvd10tpw-11",
+        "trial-mvd11we3-13",
+        "trial-mvd12z07-15",
+        "trial-mvd141ox-17"
+      ]
+    }
+  ],
+  "llm": {
+    "calls": 147,
+    "prompt_tokens": 365317,
+    "completion_tokens": 4016,
+    "replayed": 0,
+    "crusoe_cache": {
+      "calls_reporting": 0,
+      "prompt_tokens": 0,
+      "cached_tokens": 0
+    },
+    "cache_share": null
+  },
+  "created_at": "2026-10-17T23:22:07.125Z",
+  "started_at": "2026-10-17T23:22:07.125Z",
+  "updated_at": "2026-10-17T23:30:14.360Z",
+  "finished_at": "2026-10-17T23:30:14.360Z"
+}

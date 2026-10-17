@@ -16,6 +16,17 @@ Context and planning documents for the Recursive Agents Hackathon build (Crusoe 
 | [verification/version-2-verification.json](verification/version-2-verification.json) | Training, judge, citations, cache, history, hashes and peer verification |
 | [verification/version-2-ui.pdf](verification/version-2-ui.pdf) | Actual production review, final gate and history UI |
 
+## V2 brain explorer and recorded comparisons
+
+The dashboard now has a [brain explorer](http://127.0.0.1:5173/#brains) and [saved trials](http://127.0.0.1:5173/#trials).
+
+- [Fresh Lightning comparison](verification/version-2-fresh-comparison.json): separate evaluation `cmp-mvd0u3kl-2`, 20/20 trials, v4 6/10 and v5 9/10, 147 responses and zero local response replays.
+- [Explorer verification](verification/version-2-explorer-verification.json): restart durability, exact recorded state, unchanged original snapshots/evidence, held-out isolation and zero-inference playback.
+- [Brain explorer UI](verification/version-2-brain-explorer-ui.pdf): actual graphs, reasons, parents and distinct evaluation records.
+- [Saved-trial UI](verification/version-2-saved-trials-ui.pdf): full aggregate results, labeled cameras and recorded refusal replay.
+
+The original `gate-mvcynupn` remains score-only and has no replay. The fresh recordings are persisted separately.
+
 ## Per-version, per-person build plans
 
 | Version | Overview | Person A | Person B |

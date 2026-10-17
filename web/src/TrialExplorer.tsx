@@ -29,8 +29,15 @@ export default function TrialExplorer() {
   useEffect(() => {
     if (!versions) return;
     if (!versions.versions.some((v) => v.v === left))
-      setLeft(versions.versions[0]?.v ?? versions.live);
-    if (!versions.versions.some((v) => v.v === right)) setRight(versions.live);
+      setLeft(versions.versions.find((v) => v.available !== false)?.v ?? left);
+    if (!versions.versions.some((v) => v.v === right))
+      setRight(
+        versions.versions.find(
+          (v) => v.v === versions.live && v.available !== false,
+        )?.v ??
+          versions.versions.filter((v) => v.available !== false).at(-1)?.v ??
+          right,
+      );
   }, [versions, left, right]);
   const refresh = async () => {
     const [t, c] = await Promise.all([
@@ -168,7 +175,7 @@ export default function TrialExplorer() {
         onChange={(e) => change(Number(e.target.value))}
       >
         {versions?.versions.map((v) => (
-          <option key={v.v} value={v.v}>
+          <option key={v.v} value={v.v} disabled={v.available === false}>
             v{v.v}
             {versions.live === v.v ? " · live" : ""}
           </option>
@@ -361,6 +368,7 @@ export default function TrialExplorer() {
               {comparison.progress.pairs_done}/{comparison.progress.pairs_total}{" "}
               world runs ·{" "}
               {comparison.worker === "llm" ? "Lightning" : "Compiled policy"}
+              {` · ${comparison.llm.calls} model responses · ${comparison.llm.replayed ?? 0} local response replays`}
             </p>
             {comparison.error && <p role="alert">{comparison.error}</p>}
             <div className="comparison-scores">
@@ -381,7 +389,7 @@ export default function TrialExplorer() {
                       tasks
                     </span>
                     <small>
-                      {comparison.status === "done"
+                      {comparison.status === "done" && s?.complete
                         ? "Complete comparison"
                         : "Partial results · pending tasks remain in denominator"}
                     </small>
@@ -478,7 +486,7 @@ export default function TrialExplorer() {
             >
               <option value="all">All versions</option>
               {versions?.versions.map((v) => (
-                <option key={v.v} value={v.v}>
+                <option key={v.v} value={v.v} disabled={v.available === false}>
                   v{v.v}
                 </option>
               ))}
