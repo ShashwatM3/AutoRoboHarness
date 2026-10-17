@@ -20,7 +20,7 @@ Person A is Shashwat; Person B is the teammate. Each version has two numbered li
 
 ### Person B
 
-- [ ] 1. **Brain server** (`server/brain.ts`). The server uses Express and `graphology`, and offers `GET /brain`, `GET /brain?scope=<slot>` (the slot's nodes plus everything above it), `POST /brain/apply` (writes the next version file), and `GET /brain/diff`. **Waits for:** nothing.
+- [x] ~~1. **Brain server** (`server/brain.ts`). The server uses Express and `graphology`, and offers `GET /brain`, `GET /brain?scope=<slot>` (the slot's nodes plus everything above it), `POST /brain/apply` (writes the next version file), and `GET /brain/diff`. **Waits for:** nothing.~~
 - [ ] 2. **Day-one brain** (`brain/v1.json`). About 40 nodes: the scope tree, PICK and RESTOCK procedures made of linked steps, one speed guardrail, and a few rules, deliberately without a grasp-by-weight rule, a torso-height-by-shelf rule, or a check-the-slot step. **Waits for:** nothing.
 - [ ] 3. **Worker agents and shift runner** (`server/worker.ts`). `POST /shift` creates the engine scenario and runs one worker per robot on Lightning; each worker reads its brain scope, puts the brain text at the very start of its system prompt, calls the engine actions as tools, and every step streams out on `GET /events`. **Waits for:** Person A step 1 (the store engine).
 - [ ] 4. **Footage library** (`ground_truth/`). The library holds about 20 RetailAction clips from the `Voxel51/RetailAction` dataset, four frames from each action extracted with `ffmpeg`, `library.json` with a description of each clip from the supervisor model, and the Standard AI license and notice. **Waits for:** nothing.
