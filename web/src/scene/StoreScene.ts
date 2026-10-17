@@ -21,6 +21,8 @@ export class StoreScene {
   private controls: OrbitControls;
   private observer: ResizeObserver;
   private frame = 0;
+  private heartbeat: ReturnType<typeof setInterval>;
+  private lastFrame = 0;
   private motions = new Map<string, Motion>();
   private disposed = false;
   private grid: THREE.GridHelper;
@@ -67,6 +69,14 @@ export class StoreScene {
     this.observer.observe(host);
     this.ready = this.loadAssets();
     this.tick();
+    // Embedded or background tabs may suspend animation frames while events keep arriving.
+    // Keep the presentation clock moving so the event queue cannot stall behind an invisible frame.
+    this.heartbeat = setInterval(() => {
+      if (!this.disposed && performance.now() - this.lastFrame > 750) {
+        this.advanceMotions(performance.now());
+        this.renderer.render(this.scene, this.camera);
+      }
+    }, 250);
   }
 
   setView(view: View) {
@@ -77,6 +87,50 @@ export class StoreScene {
   focusRobot(id: string) {
     const rig = this.robots.get(id);
     if (rig) { this.controls.target.copy(rig.root.position).add(new THREE.Vector3(0, 0.8, 0)); this.camera.position.copy(rig.root.position).add(new THREE.Vector3(5, 4, 6)); this.controls.update(); }
+  }
+
+  /** Reconstruct a trajectory prefix from the initial world; no engine actions are rerun. */
+  seekToStep(steps: TrajectoryStep[], index: number) {
+    for (const motion of this.motions.values()) motion.complete();
+    this.motions.clear();
+    for (const [id, mesh] of this.items) {
+      this.scene.attach(mesh);
+      mesh.position.copy(this.locationPosition(this.initial.items[id].slot, id));
+      mesh.rotation.set(0, 0, 0);
+    }
+    for (const [id, rig] of this.robots) {
+      const r = this.initial.robots[id];
+      rig.root.position.set(r.x, 0, r.y); rig.root.rotation.y = 0;
+      rig.lift.position.y = SHELF_HEIGHTS[r.torso_level] + 0.06;
+      setExtension(rig, 0); setAperture(rig, 1);
+    }
+    for (const step of steps.slice(0, index + 1)) {
+      const rig = this.robots.get(step.robot);
+      if (!rig) continue;
+      rig.root.position.set(step.position.x, 0, step.position.y);
+      rig.lift.position.y = SHELF_HEIGHTS[step.torso_level] + 0.06;
+      setExtension(rig, step.robot_state.arm_out ? 1 : 0);
+      if (!step.ok) continue;
+      if (step.action === 'navigate_to' && step.path && step.path.length > 1) {
+        const a = step.path.at(-2)!, b = step.path.at(-1)!;
+        rig.root.rotation.y = Math.atan2(b.x - a.x, b.y - a.y);
+      }
+      if (step.action === 'reach' && typeof step.args.slot === 'string') {
+        const slot = this.initial.layout.slots[step.args.slot];
+        if (slot) rig.root.rotation.y = Math.atan2(slot.x - step.position.x, slot.y - step.position.y);
+      }
+      if (step.action === 'grasp' && step.holding) {
+        const item = this.items.get(step.holding);
+        if (item) { rig.gripper.add(item); item.position.set(0, -0.06, 0.1); item.rotation.set(0, 0, 0); }
+        setAperture(rig, 0);
+      }
+      if (step.action === 'place' && step.item_id) {
+        const item = this.items.get(step.item_id);
+        if (item) { this.scene.attach(item); item.position.copy(this.locationPosition(String(step.args.target), step.item_id)); item.rotation.set(0, 0, 0); }
+        setAperture(rig, 1);
+      }
+    }
+    this.renderer.render(this.scene, this.camera);
   }
 
   async playStep(step: TrajectoryStep, speed = 1): Promise<void> {
@@ -271,16 +325,20 @@ export class StoreScene {
   private tick = () => {
     if (this.disposed) return;
     const now = performance.now();
+    this.lastFrame = now;
+    this.advanceMotions(now);
+    this.controls.update(); this.renderer.render(this.scene, this.camera);
+    this.frame = requestAnimationFrame(this.tick);
+  };
+  private advanceMotions(now: number) {
     for (const [id, motion] of this.motions) {
       const p = Math.min(1, (now - motion.started) / motion.duration);
       motion.update(p);
       if (p === 1) { this.motions.delete(id); motion.complete(); }
     }
-    this.controls.update(); this.renderer.render(this.scene, this.camera);
-    this.frame = requestAnimationFrame(this.tick);
-  };
+  }
   dispose() {
-    this.disposed = true; cancelAnimationFrame(this.frame); this.observer.disconnect(); this.controls.dispose();
+    this.disposed = true; cancelAnimationFrame(this.frame); clearInterval(this.heartbeat); this.observer.disconnect(); this.controls.dispose();
     for (const motion of this.motions.values()) motion.complete(); this.motions.clear();
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>(), textures = new Set<THREE.Texture>();
     const collect = (o: THREE.Object3D) => {

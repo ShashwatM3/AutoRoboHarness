@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowUpRight, Box, Check, ChevronDown, CircleDot, Compass, Cuboid, Focus, Grip, Layers3, LoaderCircle, Maximize2, Navigation, Play, Radio, RotateCcw, ScanLine, Settings2, Square, Store, Terminal, WandSparkles } from 'lucide-react';
 import { ACTIONS, createEngine, type Action, type Scenario, type TrajectoryStep } from '../../engine/store.ts';
 import { StoreScene } from './scene/StoreScene.ts';
+import ShiftLab from './ShiftLab.tsx';
 
 type Preview = { initial: Scenario; steps: TrajectoryStep[] };
 const ACTION_LABELS: Record<Action, string> = { navigate_to: 'Drive', set_torso: 'Lift torso', scan_slot: 'Scan slot', reach: 'Reach', grasp: 'Grasp', retract: 'Retract', place: 'Place', report_issue: 'Report' };
@@ -39,6 +40,11 @@ function buildPreview(seed: number): Preview {
 declare global { interface Window { __AUTO_ROBO_PREVIEW__?: { scene: StoreScene; preview: Preview; cursor: number; run: () => Promise<void> } } }
 
 export default function App() {
+  const [previewMode, setPreviewMode] = useState(false);
+  return previewMode ? <PreviewLab onLaunch={() => setPreviewMode(false)} /> : <ShiftLab onPreview={() => setPreviewMode(true)} />;
+}
+
+function PreviewLab({ onLaunch }: { onLaunch: () => void }) {
   const [seed, setSeed] = useState(1);
   const [preview, setPreview] = useState<Preview>(() => buildPreview(1));
   const [generation, setGeneration] = useState(0);
@@ -116,7 +122,7 @@ export default function App() {
       <header className="topbar">
         <div className="wordmark">auto<span>robo</span><span className="wordmark-divider">/</span><small>HARNESS</small></div>
         <div className="topbar-middle"><span className="status-dot" /> STORE LAB <span className="slash">/</span> CONVENIENCE STORE</div>
-        <div className="topbar-right"><span className="outline-tag">ENGINE PREVIEW</span><span className="tiny-dot" /> LOCAL</div>
+        <div className="topbar-right"><button className="outline-tag" onClick={onLaunch}>LIVE SHIFTS ↗</button><span className="outline-tag">ENGINE PREVIEW</span><span className="tiny-dot" /> LOCAL</div>
       </header>
       <main>
         <section className="page-heading">

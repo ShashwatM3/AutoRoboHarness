@@ -26,7 +26,11 @@ npm ci
 npm run dev
 ```
 
-The browser app runs at http://127.0.0.1:5173. Its local action preview shows a PICK and a RESTOCK using actual engine results, with drive, torso, arm, gripper, carrying and placement animations. It is labelled as a local preview and makes no model calls. It does not claim to be an agent-driven shift or a measured brain improvement. Live shift integration follows Person B's worker runner in the sequence.
+The browser app runs at http://127.0.0.1:5173. Its launch screen selects one or two robots, a PICK or RESTOCK task per robot, and a training seed. Launch starts Person B's real Crusoe workers. The view animates the engine's event stream, shows each robot's task and action results, and pulses the brain nodes recorded in each step. Both the web app and the server must be running for live shifts.
+
+The Motion Preview button opens a separate local preview of PICK and RESTOCK using actual engine results. It makes no model calls and does not claim to be an agent-driven shift or a measured brain improvement.
+
+After a finished shift, Review Shift opens the supervisor's failures, insights and proposed graph edits. A failure replays its recorded step in the 3D store; insights show real RetailAction frames or the two referenced trajectories. Update Brain remains unavailable until the held-out gate is connected.
 
 The brain server has its own setup in [server/README.md](server/README.md). The web dev server forwards `/api` requests to port 8787. Credentials remain on the server and are never bundled into the web app.
 
