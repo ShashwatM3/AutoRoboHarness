@@ -1,0 +1,633 @@
+{
+  "version": 1,
+  "parent": null,
+  "created_at": "2026-10-17T20:23:23.221Z",
+  "created_by": "seed",
+  "note": "Day-one brain: no grasp-by-weight rule, no torso-by-shelf rule, no check-the-slot step",
+  "ops": [],
+  "nodes": [
+    {
+      "id": "store",
+      "type": "Scope",
+      "label": "Convenience store, east wing",
+      "props": {
+        "kind": "store"
+      }
+    },
+    {
+      "id": "zone:backroom",
+      "type": "Scope",
+      "label": "Backroom (stock arrives in totes)",
+      "props": {
+        "kind": "zone"
+      }
+    },
+    {
+      "id": "zone:packing",
+      "type": "Scope",
+      "label": "Packing station (order totes)",
+      "props": {
+        "kind": "zone"
+      }
+    },
+    {
+      "id": "aisle:A",
+      "type": "Scope",
+      "label": "Aisle A",
+      "props": {
+        "kind": "aisle"
+      }
+    },
+    {
+      "id": "bay:A-1",
+      "type": "Scope",
+      "label": "Aisle A, bay 1 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:A-2",
+      "type": "Scope",
+      "label": "Aisle A, bay 2 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:A-3",
+      "type": "Scope",
+      "label": "Aisle A, bay 3 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:A-4",
+      "type": "Scope",
+      "label": "Aisle A, bay 4 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "aisle:B",
+      "type": "Scope",
+      "label": "Aisle B",
+      "props": {
+        "kind": "aisle"
+      }
+    },
+    {
+      "id": "bay:B-1",
+      "type": "Scope",
+      "label": "Aisle B, bay 1 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:B-2",
+      "type": "Scope",
+      "label": "Aisle B, bay 2 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:B-3",
+      "type": "Scope",
+      "label": "Aisle B, bay 3 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "bay:B-4",
+      "type": "Scope",
+      "label": "Aisle B, bay 4 (shelf levels 1 to 4)",
+      "props": {
+        "kind": "bay"
+      }
+    },
+    {
+      "id": "proc:pick",
+      "type": "Procedure",
+      "label": "Pick an order item from its shelf slot into the packing tote",
+      "props": {
+        "task": "PICK"
+      }
+    },
+    {
+      "id": "step:pick:go-to-item",
+      "type": "Step",
+      "label": "Drive to the bay that holds the item",
+      "props": {
+        "action": "navigate_to",
+        "args": {
+          "waypoint": "$task.source_waypoint"
+        }
+      }
+    },
+    {
+      "id": "step:pick:reach",
+      "type": "Step",
+      "label": "Reach into the item's slot",
+      "props": {
+        "action": "reach",
+        "args": {
+          "slot": "$task.source"
+        }
+      }
+    },
+    {
+      "id": "step:pick:grasp",
+      "type": "Step",
+      "label": "Close the gripper on the item",
+      "props": {
+        "action": "grasp",
+        "args": {
+          "mode": "$rule.grasp.mode"
+        }
+      }
+    },
+    {
+      "id": "step:pick:retract",
+      "type": "Step",
+      "label": "Pull the arm back in before driving",
+      "props": {
+        "action": "retract",
+        "args": {}
+      }
+    },
+    {
+      "id": "step:pick:go-to-tote",
+      "type": "Step",
+      "label": "Drive to the packing tote",
+      "props": {
+        "action": "navigate_to",
+        "args": {
+          "waypoint": "$task.target_waypoint"
+        }
+      }
+    },
+    {
+      "id": "step:pick:place",
+      "type": "Step",
+      "label": "Put the item in the tote",
+      "props": {
+        "action": "place",
+        "args": {
+          "target": "$task.target"
+        }
+      }
+    },
+    {
+      "id": "proc:restock",
+      "type": "Procedure",
+      "label": "Restock an item from the backroom tote into its shelf slot",
+      "props": {
+        "task": "RESTOCK"
+      }
+    },
+    {
+      "id": "step:restock:go-to-backroom",
+      "type": "Step",
+      "label": "Drive to the backroom tote",
+      "props": {
+        "action": "navigate_to",
+        "args": {
+          "waypoint": "$task.source_waypoint"
+        }
+      }
+    },
+    {
+      "id": "step:restock:reach",
+      "type": "Step",
+      "label": "Reach into the tote",
+      "props": {
+        "action": "reach",
+        "args": {
+          "slot": "$task.source"
+        }
+      }
+    },
+    {
+      "id": "step:restock:grasp",
+      "type": "Step",
+      "label": "Close the gripper on the item",
+      "props": {
+        "action": "grasp",
+        "args": {
+          "mode": "$rule.grasp.mode"
+        }
+      }
+    },
+    {
+      "id": "step:restock:retract",
+      "type": "Step",
+      "label": "Pull the arm back in before driving",
+      "props": {
+        "action": "retract",
+        "args": {}
+      }
+    },
+    {
+      "id": "step:restock:go-to-slot",
+      "type": "Step",
+      "label": "Drive to the item's bay",
+      "props": {
+        "action": "navigate_to",
+        "args": {
+          "waypoint": "$task.target_waypoint"
+        }
+      }
+    },
+    {
+      "id": "step:restock:place",
+      "type": "Step",
+      "label": "Put the item in its slot",
+      "props": {
+        "action": "place",
+        "args": {
+          "target": "$task.target"
+        }
+      }
+    },
+    {
+      "id": "rule:grasp-default",
+      "type": "Rule",
+      "label": "Use a one-hand grasp; it is the fastest way to pick",
+      "props": {
+        "when": [],
+        "then": {
+          "param": "grasp.mode",
+          "value": "one_hand"
+        },
+        "priority": 0
+      }
+    },
+    {
+      "id": "rule:backroom-torso",
+      "type": "Rule",
+      "label": "Backroom totes sit on the low rack; keep the torso at level 1 there",
+      "props": {
+        "when": [],
+        "then": {
+          "param": "torso.level",
+          "value": 1
+        },
+        "priority": 0
+      }
+    },
+    {
+      "id": "rule:packing-torso",
+      "type": "Rule",
+      "label": "The packing tote is at level 1; lower the torso to place into it",
+      "props": {
+        "when": [],
+        "then": {
+          "param": "torso.level",
+          "value": 1
+        },
+        "priority": 0
+      }
+    },
+    {
+      "id": "rule:retract-before-drive",
+      "type": "Rule",
+      "label": "Never drive with the arm extended",
+      "props": {
+        "when": [],
+        "then": {
+          "param": "arm.retract_before_drive",
+          "value": true
+        },
+        "priority": 0
+      }
+    },
+    {
+      "id": "guard:max-speed",
+      "type": "Guardrail",
+      "label": "Drive no faster than 1.0 m/s on the shop floor",
+      "props": {
+        "param": "max_speed_mps",
+        "op": "<=",
+        "value": 1,
+        "locked": true
+      }
+    },
+    {
+      "id": "proto:slot-mismatch",
+      "type": "Protocol",
+      "label": "If a slot holds the wrong item, report it and do not take it",
+      "props": {
+        "trigger": "slot_mismatch",
+        "response": [
+          {
+            "action": "report_issue",
+            "args": {
+              "kind": "slot_mismatch"
+            }
+          }
+        ],
+        "then": "stop"
+      }
+    },
+    {
+      "id": "proto:item-dropped",
+      "type": "Protocol",
+      "label": "If an item is dropped, report it so staff can clear the floor",
+      "props": {
+        "trigger": "item_dropped",
+        "response": [
+          {
+            "action": "report_issue",
+            "args": {
+              "kind": "item_dropped"
+            }
+          }
+        ],
+        "then": "stop"
+      }
+    },
+    {
+      "id": "ev:onboarding",
+      "type": "Evidence",
+      "label": "Store onboarding sheet, day one",
+      "props": {
+        "kind": "doc"
+      }
+    },
+    {
+      "id": "ev:safety",
+      "type": "Evidence",
+      "label": "Fleet safety policy",
+      "props": {
+        "kind": "doc"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "zone:backroom",
+      "to": "store",
+      "type": "PART_OF"
+    },
+    {
+      "from": "zone:packing",
+      "to": "store",
+      "type": "PART_OF"
+    },
+    {
+      "from": "aisle:A",
+      "to": "store",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:A-1",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:A-2",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:A-3",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:A-4",
+      "to": "aisle:A",
+      "type": "PART_OF"
+    },
+    {
+      "from": "aisle:B",
+      "to": "store",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-1",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-2",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-3",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "bay:B-4",
+      "to": "aisle:B",
+      "type": "PART_OF"
+    },
+    {
+      "from": "proc:pick",
+      "to": "store",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "proc:pick",
+      "to": "ev:onboarding",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "step:pick:go-to-item",
+      "to": "proc:pick",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:pick:reach",
+      "to": "proc:pick",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:pick:go-to-item",
+      "to": "step:pick:reach",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:pick:grasp",
+      "to": "proc:pick",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:pick:reach",
+      "to": "step:pick:grasp",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:pick:retract",
+      "to": "proc:pick",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:pick:grasp",
+      "to": "step:pick:retract",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:pick:go-to-tote",
+      "to": "proc:pick",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:pick:retract",
+      "to": "step:pick:go-to-tote",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:pick:place",
+      "to": "proc:pick",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:pick:go-to-tote",
+      "to": "step:pick:place",
+      "type": "NEXT"
+    },
+    {
+      "from": "proc:restock",
+      "to": "store",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "proc:restock",
+      "to": "ev:onboarding",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "step:restock:go-to-backroom",
+      "to": "proc:restock",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:restock:reach",
+      "to": "proc:restock",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:restock:go-to-backroom",
+      "to": "step:restock:reach",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:restock:grasp",
+      "to": "proc:restock",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:restock:reach",
+      "to": "step:restock:grasp",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:restock:retract",
+      "to": "proc:restock",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:restock:grasp",
+      "to": "step:restock:retract",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:restock:go-to-slot",
+      "to": "proc:restock",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:restock:retract",
+      "to": "step:restock:go-to-slot",
+      "type": "NEXT"
+    },
+    {
+      "from": "step:restock:place",
+      "to": "proc:restock",
+      "type": "STEP_OF"
+    },
+    {
+      "from": "step:restock:go-to-slot",
+      "to": "step:restock:place",
+      "type": "NEXT"
+    },
+    {
+      "from": "rule:grasp-default",
+      "to": "store",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "rule:grasp-default",
+      "to": "ev:onboarding",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "rule:backroom-torso",
+      "to": "zone:backroom",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "rule:backroom-torso",
+      "to": "ev:onboarding",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "rule:packing-torso",
+      "to": "zone:packing",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "rule:packing-torso",
+      "to": "ev:onboarding",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "rule:retract-before-drive",
+      "to": "store",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "rule:retract-before-drive",
+      "to": "ev:safety",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "guard:max-speed",
+      "to": "store",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "guard:max-speed",
+      "to": "ev:safety",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "proto:slot-mismatch",
+      "to": "store",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "proto:slot-mismatch",
+      "to": "ev:onboarding",
+      "type": "SUPPORTED_BY"
+    },
+    {
+      "from": "proto:item-dropped",
+      "to": "store",
+      "type": "APPLIES_TO"
+    },
+    {
+      "from": "proto:item-dropped",
+      "to": "ev:safety",
+      "type": "SUPPORTED_BY"
+    }
+  ]
+}
