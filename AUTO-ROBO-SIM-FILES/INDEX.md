@@ -11,6 +11,10 @@ Context and planning documents for the Recursive Agents Hackathon build (Crusoe 
 | [BUILD-PLAN.md](BUILD-PLAN.md) | The feature sequence for each version, with Person A and Person B owners and time slots |
 | [CRUSOE-MCP-SETUP.md](CRUSOE-MCP-SETUP.md) | Simple local Cloud MCP authentication and Codex connection steps |
 | [verification/version-1-gate.json](verification/version-1-gate.json) | Verified 20-run Lightning gate, both scores, verdict, and graph diff |
+| [verification/version-2-four-robots.json](verification/version-2-four-robots.json) | Real four-robot shift, 34 action records and shopper distances |
+| [verification/version-2-gate.json](verification/version-2-gate.json) | Full 20-run Lightning check: 60% → 90%, promoted v5 |
+| [verification/version-2-verification.json](verification/version-2-verification.json) | Training, judge, citations, cache, history, hashes and peer verification |
+| [verification/version-2-ui.pdf](verification/version-2-ui.pdf) | Actual production review, final gate and history UI |
 
 ## Per-version, per-person build plans
 
