@@ -4,16 +4,18 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/resources/chat/completions";
-import { createScenario, StoreEngine, type ActionResult, type Task, type TaskScore, type TrajectoryStep } from "../../engine/store.ts";
+import type { ActionResult, StoreEngine, Task, TaskScore, TrajectoryStep } from "../../engine/store.ts";
 import type { BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
+import { claimInference } from "./inference-lock.ts";
 import { chat, MODELS, newTally, tally, type LlmTally } from "./llm.ts";
+import { dataDir, safeId } from "./paths.ts";
 import { runCompiled } from "./policy.ts";
+import { ENGINE_DEFAULT_MAX_SPEED, exactSelection, executeTrial, guardrailSpeed, prepareTrial, type PreparedTrial } from "./trials.ts";
 import type { ResolvedContext } from "./types.ts";
 
-const DATA_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../data/shifts");
+const shiftsDir = () => dataDir("shifts");
 const MAX_STEPS = 30;
 
 export interface TaskSpec {
@@ -35,26 +37,37 @@ export interface Shift {
   scores: TaskScore[];
   llm: LlmTally;
   trajectory: TrajectoryStep[];
+  trial_id?: string; // its full recording (V2 extension); shifts made before it have none
 }
 
 const shifts = new Map<string, Shift>();
 
 export function getShift(id: string): Shift | undefined {
-  if (shifts.has(id)) return shifts.get(id);
-  const f = path.join(DATA_DIR, `${id}.json`);
+  const sid = safeId(id, "shift_id");
+  if (shifts.has(sid)) return shifts.get(sid);
+  const f = path.join(shiftsDir(), `${sid}.json`);
   if (fs.existsSync(f)) {
     const s = JSON.parse(fs.readFileSync(f, "utf8")) as Shift;
-    shifts.set(id, s);
+    shifts.set(sid, s);
     return s;
   }
   return undefined;
 }
 
+/** Training shifts only: held-out and comparison runs are trials, never shifts, so they never appear here. */
 export function listShifts(): Omit<Shift, "trajectory">[] {
-  const ids = new Set([...shifts.keys(), ...(fs.existsSync(DATA_DIR) ? fs.readdirSync(DATA_DIR).map((f) => f.replace(/\.json$/, "")) : [])]);
-  return [...ids].map((id) => {
-    const { trajectory, ...rest } = getShift(id)!;
-    return rest;
+  const onDisk = fs.existsSync(shiftsDir()) ? fs.readdirSync(shiftsDir()).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5)) : [];
+  const ids = new Set([...shifts.keys(), ...onDisk]);
+  return [...ids].flatMap((id) => {
+    let s: Shift | undefined;
+    try {
+      s = getShift(id);
+    } catch {
+      return []; // a stray file name that is not a valid id
+    }
+    if (!s) return [];
+    const { trajectory, ...rest } = s;
+    return [rest];
   });
 }
 
@@ -158,51 +171,65 @@ export function startShift(brain: BrainStore, input: StartShiftInput): Shift {
   if (!Array.isArray(input.tasks) || input.tasks.length < 1 || input.tasks.length > 4) throw Object.assign(new Error("tasks: 1 to 4 tasks, one per robot"), { status: 400 });
   const v = brain.resolveVersion(input.brain as any);
   const shift_id = `shift-${Date.now().toString(36)}`;
+  const worker = input.worker === "compiled" ? "compiled" : "llm";
 
-  const guard = brain.resolve(v, "store").guardrails.find((g) => g.props.param === "max_speed_mps");
-  const engine = new StoreEngine(createScenario(seed, input.tasks.length), {
-    maxSpeed: guard ? Math.min(Number(guard.props.value), 0.8) : undefined, // the guardrail is enforced by the engine
-    onStep: (step) => emit("step", { ...step, shift_id, seed, brain_version: v }),
-  });
-  const tasks = input.tasks.map((t, i) => {
-    const robot = t.robot ?? `robot-${i + 1}`;
-    try {
-      const task = engine.createTask(robot, t.type, t.slot, `${shift_id}-t${i + 1}`);
-      return { ...task, card: taskCard(engine, task) };
-    } catch (e: any) {
-      throw Object.assign(new Error(`task ${i + 1}: ${e.message}`), { status: 400 });
-    }
-  });
+  // the guardrail is enforced by the engine
+  const guard = guardrailSpeed(brain, v);
+  const environment = { max_speed_mps: Math.min(guard ?? ENGINE_DEFAULT_MAX_SPEED, ENGINE_DEFAULT_MAX_SPEED), requested_max_speed_mps: null, guardrail_max_speed_mps: guard, engine_default_max_speed_mps: ENGINE_DEFAULT_MAX_SPEED };
+  const release = worker === "llm" ? claimInference("shift", shift_id) : () => {};
+  const llm = newTally();
+  let prepared: PreparedTrial;
+  try {
+    prepared = prepareTrial(brain, {
+      kind: "shift",
+      partition: "training",
+      seed,
+      version: v,
+      worker,
+      run_id: shift_id,
+      requested_tasks: input.tasks,
+      selection: exactSelection(input.tasks, shift_id),
+      robot_count: input.tasks.length,
+      environment,
+      provenance: { shift_id },
+      headless: false,
+      llm,
+      onStep: (step) => emit("step", { ...step, shift_id, seed, brain_version: v }),
+    });
+  } catch (e: any) {
+    release();
+    throw Object.assign(new Error(`tasks: ${e.message}`), { status: 400 });
+  }
 
   const shift: Shift = {
     shift_id,
     seed,
     brain_version: v,
-    worker: input.worker === "compiled" ? "compiled" : "llm",
+    worker,
     status: "running",
     started_at: new Date().toISOString(),
-    tasks,
+    tasks: prepared.tasks,
     scores: [],
-    llm: newTally(),
+    llm,
     trajectory: [],
+    trial_id: prepared.record.trial_id,
   };
   shifts.set(shift_id, shift);
 
-  const run = shift.worker === "compiled" ? runCompiled : runWorker;
-  Promise.all(tasks.map((task) => run(brain, engine, shift, task)))
-    .then(() => (shift.status = "done"))
-    .catch((e) => {
-      console.error(e);
-      shift.status = "error";
-      shift.error = String(e?.message ?? e);
+  executeTrial(brain, prepared, worker === "compiled" ? runCompiled : runWorker)
+    .then(({ trial, error }) => {
+      if (error) console.error(error);
+      shift.status = error ? "error" : "done";
+      if (error) shift.error = trial.error;
+      shift.trajectory = trial.trajectory;
+      shift.scores = trial.scores;
     })
     .finally(() => {
+      release();
       shift.finished_at = new Date().toISOString();
-      shift.trajectory = engine.snapshot().trajectory;
-      shift.scores = engine.score();
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-      fs.writeFileSync(path.join(DATA_DIR, `${shift_id}.json`), JSON.stringify(shift, null, 2));
-      emit("shift_done", { shift_id, status: shift.status, scores: shift.scores, llm: shift.llm });
+      fs.mkdirSync(shiftsDir(), { recursive: true });
+      fs.writeFileSync(path.join(shiftsDir(), `${shift_id}.json`), JSON.stringify(shift, null, 2));
+      emit("shift_done", { shift_id, status: shift.status, scores: shift.scores, llm: shift.llm, trial_id: shift.trial_id });
     });
   return shift;
 }
