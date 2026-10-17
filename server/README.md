@@ -63,20 +63,20 @@ RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied 
 
 **You.com research (Version 2).** The supervisor has a `research(question)` tool: one You.com Research call (`POST https://api.you.com/v1/research`, `research_effort: "lite"`, about 6 s, key `YDC_API_KEY`), at most 2 per review. Each source gets a review-wide id (S1, S2, ...), and an insight cites one as a `citation` grounding; the review checks the id and attaches the source's url, title and snippet, and lists them in `insight.citations`. A web source supports an insight but never grounds it alone: `verified` still needs a real clip or run contrast, and citations never become brain Evidence nodes. The judge reads each cited excerpt and sets `judge_supports`. Answers are cached by question in `server/.cache/youcom/`; `research` events carry `{ question, latency_s, sources }`.
 
-**Judge (Version 2).** After the supervisor answers, DeepSeek V4 Pro (`deepseek-ai/DeepSeek-V4-Pro`, thinking on, about 20 s, one call) checks every failure and insight against the evidence it cites: the cited step's facts, the clip's library entry, or both runs' items, results and steps. It keeps what that evidence shows and drops the rest, with a reason. A finding that cites a missing step, clip or run is dropped without a model call. `judge_supports: false` marks a citation that doesn't back its claim even when the insight is kept on other evidence, and `judge_supported: false` marks an update whose cited findings were all dropped. The judge never changes `valid` or the gate. If it fails, the review still finishes, with `judge.error` set. `JUDGE=0` turns it off; `POST /review/:shiftId/judge` re-runs it on a finished review (also for reviews made before the judge existed) and returns the review. `review_done` events carry `judge: { kept, dropped }` counts. Clip images are served at `/ground_truth/...`, so `frames` and `sheet` paths can be used as URLs directly (for example `http://localhost:8787/ground_truth/frames/d16_rank0_8264/sheet.jpg`).
+**Judge (Version 2).** After the supervisor answers, DeepSeek V4 Pro (`deepseek-ai/DeepSeek-V4-Pro`, thinking on, about 20 s, one call) checks every failure and insight against the evidence it cites: the cited step's facts, the clip's library entry, or both runs' items, results and steps. It keeps what that evidence shows and drops the rest, with a reason. A finding that cites a missing step, clip or run is dropped without a model call. `judge_supports: false` marks a citation that doesn't back its claim even when the insight is kept on other evidence, and `judge_supported: false` marks an update whose cited findings were all dropped. The judge never changes `valid`, but the gate only takes updates it supports (see the gate below). If it fails, the review still finishes, with `judge.error` set. `JUDGE=0` turns it off; `POST /review/:shiftId/judge` re-runs it on a finished review (also for reviews made before the judge existed) and returns the review. `review_done` events carry `judge: { kept, dropped }` counts. Clip images are served at `/ground_truth/...`, so `frames` and `sheet` paths can be used as URLs directly (for example `http://localhost:8787/ground_truth/frames/d16_rank0_8264/sheet.jpg`).
 
 ## Update Brain and the gate (step 6)
 
 `POST /brain/update` with `{ shift_id, update_ids?: ["U1", "U2"], approve_guardrails?: false, wait?: false, worker?: "compiled" | "llm", seeds?: 10 }`:
 
-1. applies the chosen updates from that shift's review (default: every valid one) to the live brain as candidate `brain/v(N+1).json`;
+1. applies the chosen updates from that shift's review (default: every valid one the judge supported) to the live brain as candidate `brain/v(N+1).json`;
 2. re-runs the shift's tasks on held-out seeds 101 to 110 with the live and the candidate brain, headless;
 3. makes the candidate live only if the score rises (more tasks complete, or as many with fewer refused actions); otherwise marks it rejected.
 
 It returns `{ gate_id, base, candidate, diff, status }` at once (or the whole result with `wait: true`; the compiled gate takes well under a second). `GET /gate/:id` returns:
 
 ```
-{ gate_id, status, verdict: "promoted" | "rejected", reason, base, candidate, seeds, worker,
+{ gate_id, status, verdict: "promoted" | "rejected", reason, base, candidate, seeds, worker, update_ids, judge_policy,
   base_score:      { tasks, complete, complete_rate, refused_per_task, steps_per_task },
   candidate_score: { ...same },  delta,
   per_seed: [{ seed, base: [TaskScore], candidate: [TaskScore], skipped: [notes] }],
@@ -88,6 +88,16 @@ Events: `gate_progress { gate_id, done, total }`, `gate_done { gate_id, verdict,
 - **Worker.** The gate defaults to the compiled policy (`server/src/policy.ts`), which runs the brain exactly as written, with no model calls. `worker: "llm"` uses the Lightning workers instead. That's about 9 calls per task, and our key allows roughly 15 to 20 calls a minute, so a full LLM gate takes about 20 minutes; use `seeds: 1` for a spot check. `POST /shift` also accepts `worker: "compiled"` for a fast run with no model calls.
 - **Substitutes.** When a task can't be done in a held-out seed (a RESTOCK slot already stocked, or a PICK item in reserve), the gate uses the nearest slot of the same type on the same aisle and level. Both brains get the same substitute, and `skipped` lists each one.
 - **Guardrails.** An update that touches a guardrail is refused with 403 unless `approve_guardrails: true`, which is the human's click.
+- **The judge (Version 2).** The server enforces the judge's verdicts itself, not just the review screen. A refused request is stopped before anything is compiled, applied or run, so no brain version is written and no model is called. The judge is checked before the guardrail. Errors are `{ error, code, update_ids? }`:
+  - 400 `bad_update_ids`: `update_ids` is `[]` or not an array. An empty list no longer means every update; leave the field out for that.
+  - 400 `unknown_updates`: a named id isn't in the review.
+  - 400 `invalid_updates`: a named update isn't `valid`.
+  - 400 `no_updates`: nothing is left to take.
+  - 409 `judge_failed`: the review has `judge.error`. Re-run `POST /review/:shiftId/judge`; `JUDGE=0` doesn't waive this.
+  - 409 `judge_missing`: a Version 2 review (one with an `llm` tally) has no judge verdicts. Run `POST /review/:shiftId/judge`, or turn the judge off deliberately with `JUDGE=0`.
+  - 409 `judge_unsupported`: a named update isn't `judge_supported: true`. The whole request is refused, even if the other named updates are supported.
+
+  Leaving `update_ids` out takes every update that is `valid` and `judge_supported: true`. A Version 1 review (made before the judge, so it has neither `judge` nor `llm`) still gates on `valid` alone, as in Version 1; once `POST /review/:shiftId/judge` has judged it, the rules above apply. `judge_policy` records which rule was used: `"enforced"`, `"disabled"` (`JUDGE=0` and no verdicts) or `"v1_review"`.
 
 Scope ids: `store`, `zone:backroom`, `zone:packing`, `aisle:A`, `bay:A-3`, `level:A-3-4`, `slot:A-3-4-1`. A bare slot id such as `A-3-4-1` works too.
 
