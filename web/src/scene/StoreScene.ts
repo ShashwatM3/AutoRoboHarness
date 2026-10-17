@@ -55,7 +55,7 @@ export class StoreScene {
   private labels: THREE.Sprite[] = [];
   private assetSources: THREE.Object3D[] = [];
 
-  constructor(host: HTMLElement, initial: Scenario) {
+  constructor(private host: HTMLElement, initial: Scenario) {
     this.initial = structuredClone(initial);
     this.scene.background = new THREE.Color("#eaece2");
     this.scene.fog = new THREE.Fog("#eaece2", 35, 70);
@@ -117,18 +117,7 @@ export class StoreScene {
         0.6,
       );
     });
-    this.observer = new ResizeObserver(() => {
-      const width = host.clientWidth,
-        height = host.clientHeight;
-      if (width && height) {
-        const columns = width < 640 ? 1 : Math.min(this.robots.size, 2);
-        host.parentElement?.style.setProperty("--worker-columns", String(columns));
-        host.parentElement?.style.setProperty("--worker-rows", String(Math.ceil(this.robots.size / columns)));
-        this.renderer.setSize(width, height);
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
-      }
-    });
+    this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(host);
     this.ready = Promise.all([this.loadAssets(), this.loadShoppers()]).then(() => {});
     this.tick();
@@ -367,7 +356,23 @@ export class StoreScene {
     });
   }
 
+  private resize() {
+    const { host, renderer } = this;
+    const width = host.clientWidth, height = host.clientHeight;
+    if (!width || !height) return;
+    const columns = width < 640 ? 1 : Math.min(this.robots.size, 2);
+    host.parentElement?.style.setProperty("--worker-columns", String(columns));
+    host.parentElement?.style.setProperty("--worker-rows", String(Math.ceil(this.robots.size / columns)));
+    const current = renderer.getSize(new THREE.Vector2());
+    if (current.x !== width || current.y !== height) {
+      renderer.setSize(width, height);
+      this.camera.aspect = width / height;
+      this.camera.updateProjectionMatrix();
+    }
+  }
+
   private render() {
+    this.resize();
     const renderer = this.renderer;
     renderer.setScissorTest(false);
     if (this.view !== "workers") {

@@ -14,6 +14,7 @@ import {
 import type { TrajectoryStep } from "../../engine/store.ts";
 import { api, type Grounding, type ReviewInfo } from "./api.ts";
 import GatePanel from "./GatePanel.tsx";
+import BrainHistory from "./BrainHistory.tsx";
 
 function assetURL(path: string): string {
   const clean = path.replace(/^\//, "");
@@ -261,20 +262,29 @@ export default function ReviewPanel({
               Brain v{review.brain_version}
             </span>
           </div>
+          <section className="judge-summary" aria-label="Independent judge">
+            <ShieldCheck size={19} />
+            <div><strong>Independent evidence check</strong>
+              {review.judge?.error ? <p role="alert">Judge unavailable: {review.judge.error}. Findings are awaiting verification.</p>
+                : review.judge ? <p>{review.judge.kept.length} kept · {review.judge.dropped.length} dropped <small>{review.judge.model}</small></p>
+                : <p>{review.status === "running" ? "Waiting for the independent judge." : "This earlier review has no judge verdict."}</p>}
+            </div>
+            {!!review.judge?.dropped.length && <details><summary>Excluded findings</summary><ul>{review.judge.dropped.map(item => <li key={item.id}><strong>{item.id}</strong> {item.why}</li>)}</ul></details>}
+          </section>
           <div className="review-columns">
             <section className="review-section failures-section">
               <div className="review-section-title">
                 <span>01</span>
                 <h3>Failures</h3>
                 <small>
-                  {review.failures.length.toString().padStart(2, "0")}
+                  {review.failures.filter(f => f.judge?.keep !== false).length.toString().padStart(2, "0")}
                 </small>
               </div>
               <p className="section-intro">
                 The moment it went wrong. Each failure opens its recorded action
                 in the store.
               </p>
-              {review.failures.map((failure) => (
+              {review.failures.filter(failure => failure.judge?.keep !== false).map((failure) => (
                 <button
                   key={failure.id}
                   className="failure-card"
@@ -291,6 +301,7 @@ export default function ReviewPanel({
                   </div>
                   <h4>{failure.check.replaceAll("_", " ")}</h4>
                   <p>{failure.cause}</p>
+                  {failure.judge && <small className="judge-verdict">Judge confirmed: {failure.judge.why}</small>}
                   <span className="reference-state">
                     {failure.verified ? <Check size={10} /> : "!"}
                     {failure.verified
@@ -300,9 +311,9 @@ export default function ReviewPanel({
                   </span>
                 </button>
               ))}
-              {review.status === "done" && !review.failures.length && (
+              {review.status === "done" && !review.failures.some(f => f.judge?.keep !== false) && (
                 <p className="empty-review">
-                  The supervisor reported no failures.
+                  No failures survived this review.
                 </p>
               )}
               {review.status === "running" &&
@@ -326,14 +337,14 @@ export default function ReviewPanel({
                 <span>02</span>
                 <h3>Insights</h3>
                 <small>
-                  {review.insights.length.toString().padStart(2, "0")}
+                  {review.insights.filter(i => i.judge?.keep !== false).length.toString().padStart(2, "0")}
                 </small>
               </div>
               <p className="section-intro">
                 What better behavior looks like, with the footage or runs behind
                 each claim.
               </p>
-              {review.insights.map((insight) => (
+              {review.insights.filter(insight => insight.judge?.keep !== false).map((insight) => (
                 <article className="insight-card" key={insight.id}>
                   <div className="insight-label">
                     <Sparkles size={12} />
@@ -342,6 +353,8 @@ export default function ReviewPanel({
                     </span>
                   </div>
                   <h4>{insight.claim}</h4>
+                  {insight.judge && <p className="judge-verdict">Judge confirmed: {insight.judge.why}</p>}
+                  {!!insight.citations?.length && <div className="research-citations"><strong>Research sources</strong><ol>{insight.citations.filter(c => /^https?:\/\//i.test(c.url)).map((citation, i) => <li key={`${citation.url}-${i}`}><a href={citation.url} target="_blank" rel="noreferrer">{citation.title || citation.url}</a>{citation.snippet && <p>{citation.snippet}</p>}</li>)}</ol></div>}
                   {!insight.verified && (
                     <p className="unverified-note">
                       The evidence references could not be confirmed.
@@ -352,9 +365,9 @@ export default function ReviewPanel({
                   ))}
                 </article>
               ))}
-              {review.status === "done" && !review.insights.length && (
+              {review.status === "done" && !review.insights.some(i => i.judge?.keep !== false) && (
                 <p className="empty-review">
-                  The supervisor reported no insights.
+                  No insights survived this review.
                 </p>
               )}
             </section>
@@ -380,6 +393,7 @@ export default function ReviewPanel({
                     </span>
                   </div>
                   <h4>{update.summary}</h4>
+                  {update.judge_supported === false && <p className="unverified-note">Excluded: its supporting findings did not pass the judge.</p>}
                   {update.touches_guardrail && (
                     <p className="unverified-note">
                       This update changes a guardrail and needs approval.
@@ -423,7 +437,7 @@ export default function ReviewPanel({
             </section>
           </div>
           {review.status === "done" && (
-            <GatePanel review={review} onBrainUpdated={onBrainUpdated} />
+            <><GatePanel review={review} onBrainUpdated={onBrainUpdated} /><BrainHistory /></>
           )}
         </>
       )}

@@ -1,0 +1,2933 @@
+{
+  "shift": {
+    "shift_id": "shift-mvcxwrms",
+    "seed": 1,
+    "brain_version": 4,
+    "worker": "llm",
+    "status": "done",
+    "started_at": "2026-10-17T22:00:12.784Z",
+    "tasks": [
+      {
+        "id": "shift-mvcxwrms-t1",
+        "robot": "robot-1",
+        "type": "PICK",
+        "item_id": "item:A-1-1-1",
+        "source": "A-1-1-1",
+        "target": "tote",
+        "card": {
+          "task_id": "shift-mvcxwrms-t1",
+          "type": "PICK",
+          "item": {
+            "id": "item:A-1-1-1",
+            "name": "Bread",
+            "weight_kg": 0.21
+          },
+          "source": "A-1-1-1",
+          "source_waypoint": "A-1",
+          "source_level": 1,
+          "target": "tote",
+          "target_waypoint": "tote",
+          "target_level": null
+        }
+      },
+      {
+        "id": "shift-mvcxwrms-t2",
+        "robot": "robot-2",
+        "type": "PICK",
+        "item_id": "item:A-2-1-1",
+        "source": "A-2-1-1",
+        "target": "tote",
+        "card": {
+          "task_id": "shift-mvcxwrms-t2",
+          "type": "PICK",
+          "item": {
+            "id": "item:A-2-1-1",
+            "name": "Orange",
+            "weight_kg": 0.46
+          },
+          "source": "A-2-1-1",
+          "source_waypoint": "A-2",
+          "source_level": 1,
+          "target": "tote",
+          "target_waypoint": "tote",
+          "target_level": null
+        }
+      },
+      {
+        "id": "shift-mvcxwrms-t3",
+        "robot": "robot-3",
+        "type": "PICK",
+        "item_id": "item:B-1-1-1",
+        "source": "B-1-1-1",
+        "target": "tote",
+        "card": {
+          "task_id": "shift-mvcxwrms-t3",
+          "type": "PICK",
+          "item": {
+            "id": "item:B-1-1-1",
+            "name": "Coffee",
+            "weight_kg": 1.39
+          },
+          "source": "B-1-1-1",
+          "source_waypoint": "B-1",
+          "source_level": 1,
+          "target": "tote",
+          "target_waypoint": "tote",
+          "target_level": null
+        }
+      },
+      {
+        "id": "shift-mvcxwrms-t4",
+        "robot": "robot-4",
+        "type": "PICK",
+        "item_id": "item:B-2-1-2",
+        "source": "B-2-1-2",
+        "target": "tote",
+        "card": {
+          "task_id": "shift-mvcxwrms-t4",
+          "type": "PICK",
+          "item": {
+            "id": "item:B-2-1-2",
+            "name": "Orange",
+            "weight_kg": 1.13
+          },
+          "source": "B-2-1-2",
+          "source_waypoint": "B-2",
+          "source_level": 1,
+          "target": "tote",
+          "target_waypoint": "tote",
+          "target_level": null
+        }
+      }
+    ],
+    "scores": [
+      {
+        "task_id": "shift-mvcxwrms-t1",
+        "complete": true,
+        "refused_actions": 0,
+        "steps": 7,
+        "item_location": "tote",
+        "target_location": "tote"
+      },
+      {
+        "task_id": "shift-mvcxwrms-t2",
+        "complete": false,
+        "refused_actions": 1,
+        "steps": 9,
+        "item_location": "tote",
+        "target_location": "tote"
+      },
+      {
+        "task_id": "shift-mvcxwrms-t3",
+        "complete": false,
+        "refused_actions": 1,
+        "steps": 9,
+        "item_location": "tote",
+        "target_location": "tote"
+      },
+      {
+        "task_id": "shift-mvcxwrms-t4",
+        "complete": false,
+        "refused_actions": 1,
+        "steps": 9,
+        "item_location": "tote",
+        "target_location": "tote"
+      }
+    ],
+    "llm": {
+      "calls": 34,
+      "prompt_tokens": 85221,
+      "completion_tokens": 891
+    },
+    "finished_at": "2026-10-17T22:04:03.664Z",
+    "steps": 34
+  },
+  "trajectory": [
+    {
+      "t": 9.746,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 1,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "A-2"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": -3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "A-2-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": -3.2,
+        "y": 2.3,
+        "waypoint": "A-2",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": null,
+      "duration": 9.745639937671454,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 7.554307272000525
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.3426132753519666,
+          "y": -1.2
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 5.822784583619565
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 6.408395677505829
+        }
+      ],
+      "nearest_shopper_distance_m": 3.5401287014157647,
+      "path": [
+        {
+          "x": -0.425,
+          "y": -3.2
+        },
+        {
+          "x": 0,
+          "y": -3.2
+        },
+        {
+          "x": -3.2,
+          "y": -1.4
+        },
+        {
+          "x": -3.2,
+          "y": 0.3
+        },
+        {
+          "x": -3.2,
+          "y": 2.3
+        }
+      ]
+    },
+    {
+      "t": 16.992,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 1,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "B-1"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": 3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "B-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 3.2,
+        "y": 0.3,
+        "waypoint": "B-1",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": null,
+      "duration": 7.245639937671455,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 4.738872622767843
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 1.4851253851079094
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": 7.6238889655472235
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.5500000000000003,
+          "y": 6.850103606172535
+        }
+      ],
+      "nearest_shopper_distance_m": 1.2357273883940465,
+      "path": [
+        {
+          "x": 0.425,
+          "y": -3.2
+        },
+        {
+          "x": 0,
+          "y": -3.2
+        },
+        {
+          "x": 3.2,
+          "y": -1.4
+        },
+        {
+          "x": 3.2,
+          "y": 0.3
+        }
+      ]
+    },
+    {
+      "t": 27.8,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 1,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "B-2"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": 3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "B-2-1-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 3.2,
+        "y": 2.3,
+        "waypoint": "B-2",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": null,
+      "duration": 10.808139937671454,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 0.5394222102772517
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 6.224981780671015
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": 3.666236152877431
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.5500000000000003,
+          "y": 2.61177352861192
+        }
+      ],
+      "nearest_shopper_distance_m": 0.4687245813301536,
+      "path": [
+        {
+          "x": 1.275,
+          "y": -3.2
+        },
+        {
+          "x": 0,
+          "y": -3.2
+        },
+        {
+          "x": 3.2,
+          "y": -1.4
+        },
+        {
+          "x": 3.2,
+          "y": 0.3
+        },
+        {
+          "x": 3.2,
+          "y": 2.3
+        }
+      ]
+    },
+    {
+      "t": 36.108,
+      "robot": "robot-1",
+      "task_id": "shift-mvcxwrms-t1",
+      "step": 1,
+      "brain_nodes_read": [
+        "bay:A-1",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "A-1"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": -3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "A-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-1",
+        "x": -3.2,
+        "y": 0.3,
+        "waypoint": "A-1",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t1"
+      },
+      "item_id": null,
+      "duration": 8.308139937671456,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": -0.4113472632961439
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 6.231538673220697
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": 0.624028568896982
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.5500000000000003,
+          "y": -0.6461878226439657
+        }
+      ],
+      "nearest_shopper_distance_m": 0.476963849218603,
+      "path": [
+        {
+          "x": -1.275,
+          "y": -3.2
+        },
+        {
+          "x": 0,
+          "y": -3.2
+        },
+        {
+          "x": -3.2,
+          "y": -1.4
+        },
+        {
+          "x": -3.2,
+          "y": 0.3
+        }
+      ]
+    },
+    {
+      "t": 36.908,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 2,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "set_torso",
+      "args": {
+        "level": 2
+      },
+      "ok": true,
+      "reason": "torso positioned",
+      "position": {
+        "x": 3.2,
+        "y": 0.3
+      },
+      "torso_level": 2,
+      "holding": null,
+      "item_location": "B-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 3.2,
+        "y": 0.3,
+        "waypoint": "B-1",
+        "torso_level": 2,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": null,
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": -0.10050711433310577
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 5.880698081395156
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": 0.3310860957163868
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.5500000000000003,
+          "y": -0.9599058150614885
+        }
+      ],
+      "nearest_shopper_distance_m": 1.3076171698267631
+    },
+    {
+      "t": 37.708,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 2,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "set_torso",
+      "args": {
+        "level": 2
+      },
+      "ok": true,
+      "reason": "torso positioned",
+      "position": {
+        "x": 3.2,
+        "y": 2.3
+      },
+      "torso_level": 2,
+      "holding": null,
+      "item_location": "B-2-1-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 3.2,
+        "y": 2.3,
+        "waypoint": "B-2",
+        "torso_level": 2,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": null,
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 0.21033303462992525
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 5.529857489569611
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": 0.03814362253579873
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.4763761925210033,
+          "y": -1.2
+        }
+      ],
+      "nearest_shopper_distance_m": 3.2487658276534663
+    },
+    {
+      "t": 37.908,
+      "robot": "robot-1",
+      "task_id": "shift-mvcxwrms-t1",
+      "step": 2,
+      "brain_nodes_read": [
+        "bay:A-1",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "set_torso",
+      "args": {
+        "level": 1
+      },
+      "ok": true,
+      "reason": "torso positioned",
+      "position": {
+        "x": -3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "A-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-1",
+        "x": -3.2,
+        "y": 0.3,
+        "waypoint": "A-1",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t1"
+      },
+      "item_id": null,
+      "duration": 0.2,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 0.2880430718706848
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 5.442147341613225
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": -0.035091995759351846
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.397946694416619,
+          "y": -1.2
+        }
+      ],
+      "nearest_shopper_distance_m": 0.3502041806293718
+    },
+    {
+      "t": 38.708,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 2,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "set_torso",
+      "args": {
+        "level": 2
+      },
+      "ok": true,
+      "reason": "torso positioned",
+      "position": {
+        "x": -3.2,
+        "y": 2.3
+      },
+      "torso_level": 2,
+      "holding": null,
+      "item_location": "A-2-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": -3.2,
+        "y": 2.3,
+        "waypoint": "A-2",
+        "torso_level": 2,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": null,
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 0.5988832208337194
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 5.09130674978768
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": -0.32803446893994614
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.0842287019991104,
+          "y": -1.2
+        }
+      ],
+      "nearest_shopper_distance_m": 1.7367493475919489
+    },
+    {
+      "t": 38.908,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 3,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "reach",
+      "args": {
+        "slot": "B-1-1-1"
+      },
+      "ok": false,
+      "reason": "torso is above slot",
+      "position": {
+        "x": 3.2,
+        "y": 0.3
+      },
+      "torso_level": 2,
+      "holding": null,
+      "item_location": "B-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 3.2,
+        "y": 0.3,
+        "waypoint": "B-1",
+        "torso_level": 2,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": "item:B-1-1-1",
+      "duration": 0.2,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 0.6765932580744789
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 5.003596601831294
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": -0.4012700872350896
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.005799203894726,
+          "y": -1.2
+        }
+      ],
+      "nearest_shopper_distance_m": 1.5125190739980514
+    },
+    {
+      "t": 39.108,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 3,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "reach",
+      "args": {
+        "slot": "B-2-1-2"
+      },
+      "ok": false,
+      "reason": "torso is above slot",
+      "position": {
+        "x": 3.2,
+        "y": 2.3
+      },
+      "torso_level": 2,
+      "holding": null,
+      "item_location": "B-2-1-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 3.2,
+        "y": 2.3,
+        "waypoint": "B-2",
+        "torso_level": 2,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": "item:B-2-1-2",
+      "duration": 0.2,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 0.7543032953152351
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 4.915886453874904
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": -0.4745057055302402
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.927369705790356,
+          "y": -1.2
+        }
+      ],
+      "nearest_shopper_distance_m": 2.639197214981522
+    },
+    {
+      "t": 39.908,
+      "robot": "robot-1",
+      "task_id": "shift-mvcxwrms-t1",
+      "step": 3,
+      "brain_nodes_read": [
+        "bay:A-1",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "reach",
+      "args": {
+        "slot": "A-1-1-1"
+      },
+      "ok": true,
+      "reason": "arm extended",
+      "position": {
+        "x": -3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "A-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-1",
+        "x": -3.2,
+        "y": 0.3,
+        "waypoint": "A-1",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "A-1-1-1",
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t1"
+      },
+      "item_id": "item:A-1-1-1",
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 1.0651434442782695
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 4.565045862049363
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": -0.7674481787108354
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": -0.963651713372834
+        }
+      ],
+      "nearest_shopper_distance_m": 0.8413943726469848
+    },
+    {
+      "t": 40.108,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 3,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "reach",
+      "args": {
+        "slot": "A-2-1-1"
+      },
+      "ok": false,
+      "reason": "torso is above slot",
+      "position": {
+        "x": -3.2,
+        "y": 2.3
+      },
+      "torso_level": 2,
+      "holding": null,
+      "item_location": "A-2-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": -3.2,
+        "y": 2.3,
+        "waypoint": "A-2",
+        "torso_level": 2,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": "item:A-2-1-1",
+      "duration": 0.2,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 1.142853481519029
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 4.477335714092973
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": -0.8406837970059788
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": -0.8852222152684568
+        }
+      ],
+      "nearest_shopper_distance_m": 1.2089202063133164
+    },
+    {
+      "t": 40.908,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 4,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "set_torso",
+      "args": {
+        "level": 1
+      },
+      "ok": true,
+      "reason": "torso positioned",
+      "position": {
+        "x": 3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "B-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 3.2,
+        "y": 0.3,
+        "waypoint": "B-1",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": null,
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 1.4536936304820636
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 4.126495122267428
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": -1.133626270186574
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": -0.571504222850941
+        }
+      ],
+      "nearest_shopper_distance_m": 0.9391589910377385
+    },
+    {
+      "t": 41.708,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 4,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "set_torso",
+      "args": {
+        "level": 1
+      },
+      "ok": true,
+      "reason": "torso positioned",
+      "position": {
+        "x": 3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "B-2-1-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 3.2,
+        "y": 2.3,
+        "waypoint": "B-2",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": null,
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 1.7645337794450942
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 3.7756545304418836
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.076568743367162,
+          "y": -1.2
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": -0.25778623043342874
+        }
+      ],
+      "nearest_shopper_distance_m": 1.516593648019685
+    },
+    {
+      "t": 42.308,
+      "robot": "robot-1",
+      "task_id": "shift-mvcxwrms-t1",
+      "step": 4,
+      "brain_nodes_read": [
+        "bay:A-1",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "grasp",
+      "args": {
+        "mode": "one_hand"
+      },
+      "ok": true,
+      "reason": "item secured",
+      "position": {
+        "x": -3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": "item:A-1-1-1",
+      "item_location": "holding:robot-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-1",
+        "x": -3.2,
+        "y": 0.3,
+        "waypoint": "A-1",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "A-1-1-1",
+        "holding": "item:A-1-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t1"
+      },
+      "item_id": "item:A-1-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 1.9976638911673732
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 3.512524086572732
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.2962755982526066,
+          "y": -1.2
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": -0.0224977361202936
+        }
+      ],
+      "nearest_shopper_distance_m": 1.5030864881366264
+    },
+    {
+      "t": 43.108,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 4,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "set_torso",
+      "args": {
+        "level": 1
+      },
+      "ok": true,
+      "reason": "torso positioned",
+      "position": {
+        "x": -3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "A-2-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": -3.2,
+        "y": 2.3,
+        "waypoint": "A-2",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": null,
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 2.308504040130404
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 3.16168349474718
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": -1.1607819285667993
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 0.2912202562972219
+        }
+      ],
+      "nearest_shopper_distance_m": 0.3501032971831879
+    },
+    {
+      "t": 43.908,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 5,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "reach",
+      "args": {
+        "slot": "B-1-1-1"
+      },
+      "ok": true,
+      "reason": "arm extended",
+      "position": {
+        "x": 3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "B-1-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 3.2,
+        "y": 0.3,
+        "waypoint": "B-1",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "B-1-1-1",
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": "item:B-1-1-1",
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 2.619344189093442
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 2.8108429029216353
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": -0.8678394553862041
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 0.6049382487147377
+        }
+      ],
+      "nearest_shopper_distance_m": 0.4642061347388801
+    },
+    {
+      "t": 44.708,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 5,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "reach",
+      "args": {
+        "slot": "B-2-1-2"
+      },
+      "ok": true,
+      "reason": "arm extended",
+      "position": {
+        "x": 3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "B-2-1-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 3.2,
+        "y": 2.3,
+        "waypoint": "B-2",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "B-2-1-2",
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": "item:B-2-1-2",
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 2.930184338056473
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 2.4600023110960905
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": -0.5748969822056125
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 0.9186562411322499
+        }
+      ],
+      "nearest_shopper_distance_m": 0.3848385889643738
+    },
+    {
+      "t": 45.308,
+      "robot": "robot-1",
+      "task_id": "shift-mvcxwrms-t1",
+      "step": 5,
+      "brain_nodes_read": [
+        "bay:A-1",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "retract",
+      "args": {},
+      "ok": true,
+      "reason": "arm retracted",
+      "position": {
+        "x": -3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": "item:A-1-1-1",
+      "item_location": "holding:robot-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-1",
+        "x": -3.2,
+        "y": 0.3,
+        "waypoint": "A-1",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:A-1-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t1"
+      },
+      "item_id": "item:A-1-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 3.1633144497787518
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 2.196871867226939
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": -0.35519012732016786
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 1.153944735445385
+        }
+      ],
+      "nearest_shopper_distance_m": 0.742814985671276
+    },
+    {
+      "t": 46.108,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 5,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "reach",
+      "args": {
+        "slot": "A-2-1-1"
+      },
+      "ok": true,
+      "reason": "arm extended",
+      "position": {
+        "x": -3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "A-2-1-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": -3.2,
+        "y": 2.3,
+        "waypoint": "A-2",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "A-2-1-1",
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": "item:A-2-1-1",
+      "duration": 0.8,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 3.474154598741783
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 1.846031275401387
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": -0.06224765413957978
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 1.4676627278629002
+        }
+      ],
+      "nearest_shopper_distance_m": 1.2252097868310052
+    },
+    {
+      "t": 46.708,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 6,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "grasp",
+      "args": {
+        "mode": "one_hand"
+      },
+      "ok": true,
+      "reason": "item secured",
+      "position": {
+        "x": 3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": "item:B-1-1-1",
+      "item_location": "holding:robot-3",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 3.2,
+        "y": 0.3,
+        "waypoint": "B-1",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "B-1-1-1",
+        "holding": "item:B-1-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": "item:B-1-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 3.707284710464058
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 1.5829008315322284
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 0.15745920074586484
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 1.7029512221760357
+        }
+      ],
+      "nearest_shopper_distance_m": 1.3297874053945926
+    },
+    {
+      "t": 47.308,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 6,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "grasp",
+      "args": {
+        "mode": "one_hand"
+      },
+      "ok": true,
+      "reason": "item secured",
+      "position": {
+        "x": 3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": "item:B-2-1-2",
+      "item_location": "holding:robot-4",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 3.2,
+        "y": 2.3,
+        "waypoint": "B-2",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "B-2-1-2",
+        "holding": "item:B-2-1-2",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": "item:B-2-1-2",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 3.9404148221863364
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 1.3197703876630769
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 0.3771660556313092
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 1.9382397164891707
+        }
+      ],
+      "nearest_shopper_distance_m": 0.5033592183777263
+    },
+    {
+      "t": 61.299,
+      "robot": "robot-1",
+      "task_id": "shift-mvcxwrms-t1",
+      "step": 6,
+      "brain_nodes_read": [
+        "bay:A-1",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "tote"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": "item:A-1-1-1",
+      "item_location": "holding:robot-1",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-1",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:A-1-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t1"
+      },
+      "item_id": "item:A-1-1-1",
+      "duration": 13.991062299143247,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 6.7233795226363995
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 1.7159930126259326
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 5.500363733468394
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 7.424775256380978
+        }
+      ],
+      "nearest_shopper_distance_m": 3.4675658303491272,
+      "path": [
+        {
+          "x": -3.2,
+          "y": 0.3
+        },
+        {
+          "x": -3.2,
+          "y": 2.3
+        },
+        {
+          "x": -3.2,
+          "y": 4.3
+        },
+        {
+          "x": -3.2,
+          "y": 6.3
+        },
+        {
+          "x": -3.2,
+          "y": 8
+        },
+        {
+          "x": 0,
+          "y": 9.4
+        }
+      ]
+    },
+    {
+      "t": 61.899,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 6,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "grasp",
+      "args": {
+        "mode": "one_hand"
+      },
+      "ok": true,
+      "reason": "item secured",
+      "position": {
+        "x": -3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": "item:A-2-1-1",
+      "item_location": "holding:robot-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": -3.2,
+        "y": 2.3,
+        "waypoint": "A-2",
+        "torso_level": 1,
+        "arm_out": true,
+        "reaching": "A-2-1-1",
+        "holding": "item:A-2-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": "item:A-2-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 6.490249410914124
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 1.9791234564950841
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 5.720070588353834
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 7.66006375069411
+        }
+      ],
+      "nearest_shopper_distance_m": 3.4379329297301515
+    },
+    {
+      "t": 62.499,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 7,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "retract",
+      "args": {},
+      "ok": true,
+      "reason": "arm retracted",
+      "position": {
+        "x": 3.2,
+        "y": 0.3
+      },
+      "torso_level": 1,
+      "holding": "item:B-1-1-1",
+      "item_location": "holding:robot-3",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 3.2,
+        "y": 0.3,
+        "waypoint": "B-1",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:B-1-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": "item:B-1-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 6.257119299191853
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 2.2422539003642425
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 5.939777443239275
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.0453522450072446,
+          "y": 7.7
+        }
+      ],
+      "nearest_shopper_distance_m": 1.973537487224429
+    },
+    {
+      "t": 63.099,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 7,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "retract",
+      "args": {},
+      "ok": true,
+      "reason": "arm retracted",
+      "position": {
+        "x": 3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": "item:B-2-1-2",
+      "item_location": "holding:robot-4",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 3.2,
+        "y": 2.3,
+        "waypoint": "B-2",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:B-2-1-2",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": "item:B-2-1-2",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 6.023989187469578
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 2.505384344233394
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 6.159484298124716
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.2806407393203796,
+          "y": 7.7
+        }
+      ],
+      "nearest_shopper_distance_m": 0.4058111985347145
+    },
+    {
+      "t": 63.699,
+      "robot": "robot-1",
+      "task_id": "shift-mvcxwrms-t1",
+      "step": 7,
+      "brain_nodes_read": [
+        "bay:A-1",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "place",
+      "args": {
+        "target": "tote"
+      },
+      "ok": true,
+      "reason": "item placed",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "tote",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-1",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t1"
+      },
+      "item_id": "item:A-1-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 5.790859075747299
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 2.76851478810256
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 6.379191153010164
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.515929233633518,
+          "y": 7.7
+        }
+      ],
+      "nearest_shopper_distance_m": 3.90534996843033
+    },
+    {
+      "t": 64.299,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 7,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "retract",
+      "args": {},
+      "ok": true,
+      "reason": "arm retracted",
+      "position": {
+        "x": -3.2,
+        "y": 2.3
+      },
+      "torso_level": 1,
+      "holding": "item:A-2-1-1",
+      "item_location": "holding:robot-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": -3.2,
+        "y": 2.3,
+        "waypoint": "A-2",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:A-2-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": "item:A-2-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 5.557728964025021
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 3.0316452319717255
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 6.598898007895612
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.5500000000000003,
+          "y": 7.498782272053344
+        }
+      ],
+      "nearest_shopper_distance_m": 3.2764764615433357
+    },
+    {
+      "t": 78.29,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 8,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "tote"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": "item:B-1-1-1",
+      "item_location": "holding:robot-3",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:B-1-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": "item:B-1-1-1",
+      "duration": 13.991062299143247,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -2.85,
+          "y": 0.12152330884775608
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 6.932591367739281
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": 4.377904314267312
+        },
+        {
+          "id": "shopper-4",
+          "x": 3.5500000000000003,
+          "y": 2.012246732161543
+        }
+      ],
+      "nearest_shopper_distance_m": 4.3232632765718435,
+      "path": [
+        {
+          "x": 3.2,
+          "y": 0.3
+        },
+        {
+          "x": 3.2,
+          "y": 2.3
+        },
+        {
+          "x": 3.2,
+          "y": 4.3
+        },
+        {
+          "x": 3.2,
+          "y": 6.3
+        },
+        {
+          "x": 3.2,
+          "y": 8
+        },
+        {
+          "x": 0,
+          "y": 9.4
+        }
+      ]
+    },
+    {
+      "t": 89.781,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 8,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "tote"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": "item:B-2-1-2",
+      "item_location": "holding:robot-4",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:B-2-1-2",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": "item:B-2-1-2",
+      "duration": 11.491062299143247,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 1.2433068808200247
+        },
+        {
+          "id": "shopper-2",
+          "x": 3.5500000000000003,
+          "y": 1.8932048169051114
+        },
+        {
+          "id": "shopper-3",
+          "x": -2.85,
+          "y": 0.17015186511957836
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": -0.6060799185744699
+        }
+      ],
+      "nearest_shopper_distance_m": 8.303883062816855,
+      "path": [
+        {
+          "x": 3.2,
+          "y": 2.3
+        },
+        {
+          "x": 3.2,
+          "y": 4.3
+        },
+        {
+          "x": 3.2,
+          "y": 6.3
+        },
+        {
+          "x": 3.2,
+          "y": 8
+        },
+        {
+          "x": 0,
+          "y": 9.4
+        }
+      ]
+    },
+    {
+      "t": 101.272,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 8,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "navigate_to",
+      "args": {
+        "waypoint": "tote"
+      },
+      "ok": true,
+      "reason": "arrived",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": "item:A-2-1-1",
+      "item_location": "holding:robot-2",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": "item:A-2-1-1",
+        "grasp_mode": "one_hand",
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": "item:A-2-1-1",
+      "duration": 11.491062299143247,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 5.708137070487804
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 0.04618173392905267
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 0.9376005840281494
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 3.9000868950126018
+        }
+      ],
+      "nearest_shopper_distance_m": 5.12175281425279,
+      "path": [
+        {
+          "x": -3.2,
+          "y": 2.3
+        },
+        {
+          "x": -3.2,
+          "y": 4.3
+        },
+        {
+          "x": -3.2,
+          "y": 6.3
+        },
+        {
+          "x": -3.2,
+          "y": 8
+        },
+        {
+          "x": 0,
+          "y": 9.4
+        }
+      ]
+    },
+    {
+      "t": 101.872,
+      "robot": "robot-3",
+      "task_id": "shift-mvcxwrms-t3",
+      "step": 9,
+      "brain_nodes_read": [
+        "bay:B-1",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "place",
+      "args": {
+        "target": "tote"
+      },
+      "ok": true,
+      "reason": "item placed",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "tote",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-3",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t3"
+      },
+      "item_id": "item:B-1-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 5.941267182210079
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 0.3093121777982184
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 1.1573074389135936
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 4.135375389325733
+        }
+      ],
+      "nearest_shopper_distance_m": 4.9563426742767716
+    },
+    {
+      "t": 102.472,
+      "robot": "robot-4",
+      "task_id": "shift-mvcxwrms-t4",
+      "step": 9,
+      "brain_nodes_read": [
+        "bay:B-2",
+        "aisle:B",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "place",
+      "args": {
+        "target": "tote"
+      },
+      "ok": true,
+      "reason": "item placed",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "tote",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-4",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t4"
+      },
+      "item_id": "item:B-2-1-2",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 6.174397293932354
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 0.5724426216673628
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 1.3770142937990315
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 4.370663883638872
+        }
+      ],
+      "nearest_shopper_distance_m": 4.796562604343961
+    },
+    {
+      "t": 103.072,
+      "robot": "robot-2",
+      "task_id": "shift-mvcxwrms-t2",
+      "step": 9,
+      "brain_nodes_read": [
+        "bay:A-2",
+        "aisle:A",
+        "store",
+        "proc:pick",
+        "step:pick:go-to-item",
+        "step:pick:set-torso-to-the-slot-s-shelf-level-befo",
+        "step:pick:reach",
+        "step:pick:grasp",
+        "step:pick:retract",
+        "step:pick:go-to-tote",
+        "step:pick:place",
+        "rule:set-torso-to-the-slot-s-shelf-level-befo",
+        "rule:grasp-default",
+        "rule:retract-before-drive",
+        "guard:max-speed",
+        "proto:slot-empty",
+        "proto:slot-mismatch",
+        "zone:packing"
+      ],
+      "action": "place",
+      "args": {
+        "target": "tote"
+      },
+      "ok": true,
+      "reason": "item placed",
+      "position": {
+        "x": 0,
+        "y": 9.4
+      },
+      "torso_level": 1,
+      "holding": null,
+      "item_location": "tote",
+      "target_location": "tote",
+      "robot_state": {
+        "id": "robot-2",
+        "x": 0,
+        "y": 9.4,
+        "waypoint": "tote",
+        "torso_level": 1,
+        "arm_out": false,
+        "reaching": null,
+        "holding": null,
+        "grasp_mode": null,
+        "task_id": "shift-mvcxwrms-t2"
+      },
+      "item_id": "item:A-2-1-1",
+      "duration": 0.6,
+      "shoppers": [
+        {
+          "id": "shopper-1",
+          "x": -3.5500000000000003,
+          "y": 6.407527405654629
+        },
+        {
+          "id": "shopper-2",
+          "x": 2.85,
+          "y": 0.8355730655365357
+        },
+        {
+          "id": "shopper-3",
+          "x": -3.5500000000000003,
+          "y": 1.5967211486844832
+        },
+        {
+          "id": "shopper-4",
+          "x": 2.85,
+          "y": 4.60595237795201
+        }
+      ],
+      "nearest_shopper_distance_m": 4.642993886266503
+    }
+  ]
+}

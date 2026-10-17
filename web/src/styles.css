@@ -2756,3 +2756,24 @@ footer .tiny-dot {
   .store-card > .card-toolbar { flex-wrap: wrap; gap: 10px; }
   .worker-info { padding: 9px; }
 }
+
+.judge-summary { display:flex; align-items:flex-start; gap:12px; border:1px solid #b9d3c6; background:#edf5ef; padding:18px; margin:20px 0; border-radius:12px; color:#265b43; flex-wrap:wrap; }
+.judge-summary p { margin:5px 0 0; font-size:13px; }
+.judge-summary small { display:block; opacity:.7; margin-top:5px; }
+.judge-summary details { margin-left:auto; max-width:560px; font-size:12px; }
+.judge-summary li { margin:8px 0; }
+.judge-verdict { display:block; font-size:11px; color:#45715b; margin:10px 0; }
+.research-citations { background:#f3f5f0; padding:12px; border-radius:7px; font-size:12px; margin:12px 0; }
+.research-citations a { color:#2c6649; overflow-wrap:anywhere; }
+.research-citations p { font-size:11px; }
+.cache-share { font-variant-numeric:tabular-nums; }
+
+.brain-history { margin-top:24px; padding:24px; background:#f7f8f2; border:1px solid #dce2d7; border-radius:14px; }
+.history-heading { display:flex; gap:12px; align-items:flex-start; color:#315943; }
+.history-heading h3 { margin:0 0 7px; font-size:20px; }
+.history-heading p { margin:0; font-size:12px; color:#758475; }
+.brain-history svg { display:block; width:100%; max-height:280px; margin:25px auto 10px; overflow:visible; }
+.brain-history svg text { font:11px sans-serif; fill:#627360; }
+.history-versions { display:flex; flex-wrap:wrap; gap:12px; }
+.history-versions > span { display:grid; gap:4px; min-width:100px; border-left:2px solid #ccd8c8; padding:7px 12px; font-size:13px; }
+.history-versions small { color:#7c8777; font-size:10px; }

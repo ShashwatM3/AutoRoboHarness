@@ -46,9 +46,9 @@ The requested [Crusoe MCP setup guide](CRUSOE-MCP-SETUP.md) is complete. The loc
 
 ### Person A
 
-- [ ] 1. **Worker views.** Each robot gets a camera on its head; a switch toggles between the 3D view and a grid of camera tiles, each with the robot's task and scrolling step list. **Waits for:** nothing.
-- [ ] 2. **Shoppers.** Shoppers are added to the engine on seeded walking paths, each step records the distance to the nearest shopper, and Kenney's Mini Characters walk them in the 3D view. **Waits for:** nothing. Tell Person B about the new trajectory field.
-- [ ] 3. **More robots.** The launch screen allows 3 or 4 robots. **Waits for:** nothing.
+- [x] 1. **Worker views.** Each robot gets a camera on its head; a switch toggles between the 3D view and a grid of camera tiles, each with the robot's task and scrolling step list. **Waits for:** nothing.
+- [x] 2. **Shoppers.** Shoppers are added to the engine on seeded walking paths, each step records the distance to the nearest shopper, and Kenney's Mini Characters walk them in the 3D view. **Waits for:** nothing. Tell Person B about the new trajectory field.
+- [x] 3. **More robots.** The launch screen allows 3 or 4 robots. **Waits for:** nothing.
 - [ ] 4. **Judge, cache, and citation displays.** The review screen shows the judge's kept and dropped counts and each insight's citations; the live view shows the share of brain tokens served from Crusoe's cache. **Waits for:** Person B steps 1, 2, and 4. Until then, each display uses sample values.
 - [ ] 5. **History chart.** The review screen shows the held-out score for every brain version. **Waits for:** Person B step 3 (`GET /brain/history`).
 - [ ] 6. **Version 2 check, with Person B.** The Version 1 loop still works end to end with every Version 2 addition switched on.
@@ -66,7 +66,7 @@ The requested [Crusoe MCP setup guide](CRUSOE-MCP-SETUP.md) is complete. The loc
 
 ## Version 2 coordination checkpoint (3:04 PM Pacific)
 
-Person A has implemented head cameras and the four-tile worker grid, four seeded Kenney Mini Characters, and launch support for one to four robots. Engine tests cover immutable shopper snapshots and exact nearest distances; web tests cover camera attachment and grid layout. Engine and web tests, server type checking, and the web production build pass. Browser checks confirm four independent head views and four loaded characters. Live four-robot streaming and final joint verification remain in progress, so the Version 2 boxes stay open.
+Person A has verified head cameras and the four-tile worker grid, four seeded Kenney Mini Characters, and launch support for one to four robots. Engine tests cover immutable shopper snapshots and exact nearest distances; web tests cover camera attachment and grid layout. Engine and web tests, server type checking, and the web production build pass. Browser checks confirm four independent head views and four loaded characters. A real Lightning shift `shift-mvcxwrms` finished 34 actions across four robots. All four items reached the tote; three robots recovered from physical refusals, so the strict gate completion score is 1/4. Every action records four shopper positions and its exact nearest distance. Browser logs contain all 34 actions, with 7/9/9/9 per robot. Three-robot launch rendering and a 390px one-column camera grid also pass. Person A steps 1 to 3 are complete. The judge/cache/citation displays and history chart are implemented; their live integration and the final shared check remain open. The [saved four-robot run](verification/version-2-four-robots.json) records the actual shift and trajectory.
 
 The new optional trajectory fields are `shoppers: { id, x, y }[]` and `nearest_shopper_distance_m: number | null`. They record shopper positions and the nearest distance from the robot at action-end time `step.t`; older Version 1 trajectories remain readable. Person B owns server work and has pushed the independent judge in `aaefb8c`. Person A owns engine/web work and will integrate the judge, cache, citations, and history as their endpoints land. Only Person A runs the shared held-out gate. A private SSH coordination inbox on Person B's machine carries progress and quota locks; credentials stay outside the repository.
 

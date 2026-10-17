@@ -12,7 +12,8 @@ export interface ShiftInfo {
   brain_version: number;
   tasks: Task[];
   scores: TaskScore[];
-  llm: { calls: number; prompt_tokens: number; completion_tokens: number };
+  cache_share?: number;
+  llm: { calls: number; prompt_tokens: number; completion_tokens: number; cached_tokens?: number; cache_share?: number };
 }
 export interface ShiftStep extends TrajectoryStep {
   shift_id: string;
@@ -67,7 +68,8 @@ export interface GateInfo {
   candidate_score?: GateScore;
   delta?: number;
   diff: BrainDiff;
-  llm: { calls: number; prompt_tokens: number; completion_tokens: number };
+  cache_share?: number;
+  llm: { calls: number; prompt_tokens: number; completion_tokens: number; cached_tokens?: number; cache_share?: number };
 }
 export type Grounding =
   | {
@@ -86,7 +88,10 @@ export type Grounding =
       note?: string;
       verified: boolean;
     };
+export interface JudgeVerdict { keep: boolean; why: string }
+export interface Citation { url: string; title?: string; snippet?: string }
 export interface ReviewInfo {
+  judge?: { model: string; kept: string[]; dropped: { id: string; why: string }[]; error?: string };
   shift_id: string;
   status: "running" | "done" | "error";
   error?: string;
@@ -101,6 +106,7 @@ export interface ReviewInfo {
     nodes_in_effect: string[];
     cause: string;
     verified: boolean;
+    judge?: JudgeVerdict;
   }[];
   insights: {
     id: string;
@@ -108,6 +114,8 @@ export interface ReviewInfo {
     addresses: string[];
     grounding: Grounding[];
     verified: boolean;
+    judge?: JudgeVerdict;
+    citations?: Citation[];
   }[];
   updates: {
     id: string;
@@ -117,6 +125,7 @@ export interface ReviewInfo {
     valid: boolean;
     errors: string[];
     touches_guardrail: boolean;
+    judge_supported?: boolean;
   }[];
   detected: {
     refused_steps: {

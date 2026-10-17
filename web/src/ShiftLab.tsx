@@ -642,8 +642,8 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                       </button>
                     )}
                   </div>
-                  <span>
-                    {shift ? `${shift.llm.calls} MODEL CALLS` : "KENNEY · CC0"}
+                  <span className="cache-share" title="Provider-reported cached prompt tokens divided by total prompt tokens across worker calls">
+                    {shift ? `${shift.llm.calls} calls · ${shift.cache_share != null || shift.llm.cache_share != null ? `${((shift.cache_share ?? shift.llm.cache_share ?? 0) * 100).toFixed(1)}% cache` : "Cache awaiting usage"}` : "KENNEY · CC0"}
                   </span>
                 </div>
               </section>

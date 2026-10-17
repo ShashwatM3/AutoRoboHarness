@@ -40,7 +40,7 @@ export default function GatePanel({
   useEffect(() => {
     setSelected(
       review.updates
-        .filter((u) => u.valid && !u.touches_guardrail)
+        .filter((u) => u.valid && !u.touches_guardrail && u.judge_supported !== false && !review.judge?.error)
         .map((u) => u.id),
     );
   }, [review.updates]);
@@ -177,7 +177,7 @@ export default function GatePanel({
                 <input
                   type="checkbox"
                   checked={selected.includes(u.id)}
-                  disabled={!u.valid || busy}
+                  disabled={!u.valid || busy || u.judge_supported === false || !!review.judge?.error}
                   onChange={(e) =>
                     setSelected((ids) =>
                       e.target.checked
@@ -191,7 +191,9 @@ export default function GatePanel({
                     {u.id} · {u.summary}
                   </strong>
                   <small>
-                    {u.valid
+                    {u.judge_supported === false
+                      ? "Excluded by the independent judge."
+                      : review.judge?.error ? "Waiting for a successful judge check." : u.valid
                       ? u.touches_guardrail
                         ? "Changes a guardrail; explicit approval is required."
                         : `${u.compiled.length} graph operations`
