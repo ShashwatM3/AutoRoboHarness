@@ -1,0 +1,48 @@
+{
+ "id": "chatcmpl-94428c5fec315710",
+ "object": "chat.completion",
+ "created": 1792268609,
+ "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+ "choices": [
+  {
+   "index": 0,
+   "message": {
+    "role": "assistant",
+    "content": "{\"description\": \"The shopper stands upright with their right arm extended upward, reaching to the top shelf of the refrigerator to place an item back. They use a single hand to grasp and position the product on the shelf.\", \"hands\": \"one\", \"shelf_height\": \"top\", \"looked_or_touched_first\": false, \"item_size\": \"small\"}",
+    "refusal": null,
+    "annotations": null,
+    "audio": null,
+    "function_call": null,
+    "reasoning": null
+   },
+   "logprobs": null,
+   "finish_reason": "stop",
+   "stop_reason": null,
+   "token_ids": null,
+   "routed_experts": null
+  }
+ ],
+ "service_tier": null,
+ "system_fingerprint": null,
+ "usage": {
+  "prompt_tokens": 1276,
+  "total_tokens": 1354,
+  "completion_tokens": 78,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "created_cache_tokens": 0,
+   "multimodal_tokens": {
+    "image": 963
+   }
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0
+  }
+ },
+ "prompt_logprobs": null,
+ "prompt_token_ids": null,
+ "prompt_text": null,
+ "kv_transfer_params": null,
+ "ec_transfer_params": null,
+ "metrics": null
+}

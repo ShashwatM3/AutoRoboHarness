@@ -1,0 +1,737 @@
+[
+ {
+  "clip_id": "d16_rank0_8264",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d16_rank0_8264/f1.jpg",
+   "ground_truth/frames/d16_rank0_8264/f2.jpg",
+   "ground_truth/frames/d16_rank0_8264/f3.jpg",
+   "ground_truth/frames/d16_rank0_8264/f4.jpg"
+  ],
+  "frame_indices": [
+   17,
+   20,
+   23,
+   26
+  ],
+  "sheet": "ground_truth/frames/d16_rank0_8264/sheet.jpg",
+  "clip": "ground_truth/clips/d16_rank0_8264.mp4",
+  "frame_range": [
+   17,
+   26
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_16/rank0_video-8264.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_16/rank0_video-8264.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 008263); store not given",
+   "sample_id": "008263",
+   "split": "train",
+   "segment_duration_s": 5.0,
+   "interaction_point_xy": [
+    0.6443,
+    0.2418
+   ]
+  }
+ },
+ {
+  "clip_id": "d14_rank0_7334",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d14_rank0_7334/f1.jpg",
+   "ground_truth/frames/d14_rank0_7334/f2.jpg",
+   "ground_truth/frames/d14_rank0_7334/f3.jpg",
+   "ground_truth/frames/d14_rank0_7334/f4.jpg"
+  ],
+  "frame_indices": [
+   21,
+   23,
+   24,
+   26
+  ],
+  "sheet": "ground_truth/frames/d14_rank0_7334/sheet.jpg",
+  "clip": "ground_truth/clips/d14_rank0_7334.mp4",
+  "frame_range": [
+   21,
+   26
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_14/rank0_video-7334.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_14/rank0_video-7334.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 007333); store not given",
+   "sample_id": "007333",
+   "split": "train",
+   "segment_duration_s": 7.8,
+   "interaction_point_xy": [
+    0.4409,
+    0.2984
+   ]
+  }
+ },
+ {
+  "clip_id": "d17_rank1_8921",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d17_rank1_8921/f1.jpg",
+   "ground_truth/frames/d17_rank1_8921/f2.jpg",
+   "ground_truth/frames/d17_rank1_8921/f3.jpg",
+   "ground_truth/frames/d17_rank1_8921/f4.jpg"
+  ],
+  "frame_indices": [
+   11,
+   15,
+   18,
+   22
+  ],
+  "sheet": "ground_truth/frames/d17_rank1_8921/sheet.jpg",
+  "clip": "ground_truth/clips/d17_rank1_8921.mp4",
+  "frame_range": [
+   11,
+   22
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_17/rank1_video-8921.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_17/rank1_video-8921.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 008920); store not given",
+   "sample_id": "008920",
+   "split": "train",
+   "segment_duration_s": 7.933832,
+   "interaction_point_xy": [
+    0.3384,
+    0.6364
+   ]
+  }
+ },
+ {
+  "clip_id": "d6_rank0_3443",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d6_rank0_3443/f1.jpg",
+   "ground_truth/frames/d6_rank0_3443/f2.jpg",
+   "ground_truth/frames/d6_rank0_3443/f3.jpg",
+   "ground_truth/frames/d6_rank0_3443/f4.jpg"
+  ],
+  "frame_indices": [
+   6,
+   11,
+   15,
+   20
+  ],
+  "sheet": "ground_truth/frames/d6_rank0_3443/sheet.jpg",
+  "clip": "ground_truth/clips/d6_rank0_3443.mp4",
+  "frame_range": [
+   6,
+   20
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_6/rank0_video-3443.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_6/rank0_video-3443.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 003442); store not given",
+   "sample_id": "003442",
+   "split": "train",
+   "segment_duration_s": 9.8,
+   "interaction_point_xy": [
+    0.6331,
+    0.7945
+   ]
+  }
+ },
+ {
+  "clip_id": "d22_rank0_11436",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d22_rank0_11436/f1.jpg",
+   "ground_truth/frames/d22_rank0_11436/f2.jpg",
+   "ground_truth/frames/d22_rank0_11436/f3.jpg",
+   "ground_truth/frames/d22_rank0_11436/f4.jpg"
+  ],
+  "frame_indices": [
+   19,
+   20,
+   22,
+   23
+  ],
+  "sheet": "ground_truth/frames/d22_rank0_11436/sheet.jpg",
+  "clip": "ground_truth/clips/d22_rank0_11436.mp4",
+  "frame_range": [
+   19,
+   23
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_22/rank0_video-11436.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_22/rank0_video-11436.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 011435); store not given",
+   "sample_id": "011435",
+   "split": "train",
+   "segment_duration_s": 7.224746,
+   "interaction_point_xy": [
+    0.4906,
+    0.2158
+   ]
+  }
+ },
+ {
+  "clip_id": "d37_rank1_18583",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d37_rank1_18583/f1.jpg",
+   "ground_truth/frames/d37_rank1_18583/f2.jpg",
+   "ground_truth/frames/d37_rank1_18583/f3.jpg",
+   "ground_truth/frames/d37_rank1_18583/f4.jpg"
+  ],
+  "frame_indices": [
+   6,
+   8,
+   9,
+   11
+  ],
+  "sheet": "ground_truth/frames/d37_rank1_18583/sheet.jpg",
+  "clip": "ground_truth/clips/d37_rank1_18583.mp4",
+  "frame_range": [
+   6,
+   11
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_37/rank1_video-18583.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_37/rank1_video-18583.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 000083); store not given",
+   "sample_id": "000083",
+   "split": "test",
+   "segment_duration_s": 2.800471,
+   "interaction_point_xy": [
+    0.7041,
+    0.2531
+   ]
+  }
+ },
+ {
+  "clip_id": "d29_rank0_14734",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d29_rank0_14734/f1.jpg",
+   "ground_truth/frames/d29_rank0_14734/f2.jpg",
+   "ground_truth/frames/d29_rank0_14734/f3.jpg",
+   "ground_truth/frames/d29_rank0_14734/f4.jpg"
+  ],
+  "frame_indices": [
+   16,
+   18,
+   20,
+   22
+  ],
+  "sheet": "ground_truth/frames/d29_rank0_14734/sheet.jpg",
+  "clip": "ground_truth/clips/d29_rank0_14734.mp4",
+  "frame_range": [
+   16,
+   22
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_29/rank0_video-14734.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_29/rank0_video-14734.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 014733); store not given",
+   "sample_id": "014733",
+   "split": "train",
+   "segment_duration_s": 7.500469,
+   "interaction_point_xy": [
+    0.3664,
+    0.7304
+   ]
+  }
+ },
+ {
+  "clip_id": "d26_rank0_13161",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d26_rank0_13161/f1.jpg",
+   "ground_truth/frames/d26_rank0_13161/f2.jpg",
+   "ground_truth/frames/d26_rank0_13161/f3.jpg",
+   "ground_truth/frames/d26_rank0_13161/f4.jpg"
+  ],
+  "frame_indices": [
+   25,
+   27,
+   29,
+   31
+  ],
+  "sheet": "ground_truth/frames/d26_rank0_13161/sheet.jpg",
+  "clip": "ground_truth/clips/d26_rank0_13161.mp4",
+  "frame_range": [
+   25,
+   31
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_26/rank0_video-13161.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_26/rank0_video-13161.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 013160); store not given",
+   "sample_id": "013160",
+   "split": "train",
+   "segment_duration_s": 7.6,
+   "interaction_point_xy": [
+    0.432,
+    0.834
+   ]
+  }
+ },
+ {
+  "clip_id": "d1_rank1_852",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d1_rank1_852/f1.jpg",
+   "ground_truth/frames/d1_rank1_852/f2.jpg",
+   "ground_truth/frames/d1_rank1_852/f3.jpg",
+   "ground_truth/frames/d1_rank1_852/f4.jpg"
+  ],
+  "frame_indices": [
+   17,
+   20,
+   23,
+   26
+  ],
+  "sheet": "ground_truth/frames/d1_rank1_852/sheet.jpg",
+  "clip": "ground_truth/clips/d1_rank1_852.mp4",
+  "frame_range": [
+   17,
+   26
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_1/rank1_video-852.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_1/rank1_video-852.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 000851); store not given",
+   "sample_id": "000851",
+   "split": "train",
+   "segment_duration_s": 16.60095,
+   "interaction_point_xy": [
+    0.4793,
+    0.2439
+   ]
+  }
+ },
+ {
+  "clip_id": "d41_rank0_20579",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d41_rank0_20579/f1.jpg",
+   "ground_truth/frames/d41_rank0_20579/f2.jpg",
+   "ground_truth/frames/d41_rank0_20579/f3.jpg",
+   "ground_truth/frames/d41_rank0_20579/f4.jpg"
+  ],
+  "frame_indices": [
+   9,
+   12,
+   16,
+   19
+  ],
+  "sheet": "ground_truth/frames/d41_rank0_20579/sheet.jpg",
+  "clip": "ground_truth/clips/d41_rank0_20579.mp4",
+  "frame_range": [
+   9,
+   19
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_41/rank0_video-20579.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_41/rank0_video-20579.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 002079); store not given",
+   "sample_id": "002079",
+   "split": "test",
+   "segment_duration_s": 6.5,
+   "interaction_point_xy": [
+    0.5281,
+    0.3063
+   ]
+  }
+ },
+ {
+  "clip_id": "d2_rank0_1100",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d2_rank0_1100/f1.jpg",
+   "ground_truth/frames/d2_rank0_1100/f2.jpg",
+   "ground_truth/frames/d2_rank0_1100/f3.jpg",
+   "ground_truth/frames/d2_rank0_1100/f4.jpg"
+  ],
+  "frame_indices": [
+   21,
+   22,
+   24,
+   25
+  ],
+  "sheet": "ground_truth/frames/d2_rank0_1100/sheet.jpg",
+  "clip": "ground_truth/clips/d2_rank0_1100.mp4",
+  "frame_range": [
+   21,
+   25
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_2/rank0_video-1100.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_2/rank0_video-1100.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 001099); store not given",
+   "sample_id": "001099",
+   "split": "train",
+   "segment_duration_s": 25.55,
+   "interaction_point_xy": [
+    0.3916,
+    0.526
+   ]
+  }
+ },
+ {
+  "clip_id": "d5_rank0_2823",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d5_rank0_2823/f1.jpg",
+   "ground_truth/frames/d5_rank0_2823/f2.jpg",
+   "ground_truth/frames/d5_rank0_2823/f3.jpg",
+   "ground_truth/frames/d5_rank0_2823/f4.jpg"
+  ],
+  "frame_indices": [
+   6,
+   9,
+   11,
+   14
+  ],
+  "sheet": "ground_truth/frames/d5_rank0_2823/sheet.jpg",
+  "clip": "ground_truth/clips/d5_rank0_2823.mp4",
+  "frame_range": [
+   6,
+   14
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_5/rank0_video-2823.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_5/rank0_video-2823.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 002822); store not given",
+   "sample_id": "002822",
+   "split": "train",
+   "segment_duration_s": 5.2,
+   "interaction_point_xy": [
+    0.3345,
+    0.8226
+   ]
+  }
+ },
+ {
+  "clip_id": "d8_rank1_4313",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d8_rank1_4313/f1.jpg",
+   "ground_truth/frames/d8_rank1_4313/f2.jpg",
+   "ground_truth/frames/d8_rank1_4313/f3.jpg",
+   "ground_truth/frames/d8_rank1_4313/f4.jpg"
+  ],
+  "frame_indices": [
+   23,
+   24,
+   26,
+   27
+  ],
+  "sheet": "ground_truth/frames/d8_rank1_4313/sheet.jpg",
+  "clip": "ground_truth/clips/d8_rank1_4313.mp4",
+  "frame_range": [
+   23,
+   27
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_8/rank1_video-4313.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_8/rank1_video-4313.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 004312); store not given",
+   "sample_id": "004312",
+   "split": "train",
+   "segment_duration_s": 11.8,
+   "interaction_point_xy": [
+    0.6131,
+    0.1886
+   ]
+  }
+ },
+ {
+  "clip_id": "d19_rank1_9753",
+  "action": "take",
+  "frames": [
+   "ground_truth/frames/d19_rank1_9753/f1.jpg",
+   "ground_truth/frames/d19_rank1_9753/f2.jpg",
+   "ground_truth/frames/d19_rank1_9753/f3.jpg",
+   "ground_truth/frames/d19_rank1_9753/f4.jpg"
+  ],
+  "frame_indices": [
+   7,
+   10,
+   13,
+   16
+  ],
+  "sheet": "ground_truth/frames/d19_rank1_9753/sheet.jpg",
+  "clip": "ground_truth/clips/d19_rank1_9753.mp4",
+  "frame_range": [
+   7,
+   16
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_19/rank1_video-9753.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_19/rank1_video-9753.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 009752); store not given",
+   "sample_id": "009752",
+   "split": "train",
+   "segment_duration_s": 3.7,
+   "interaction_point_xy": [
+    0.7045,
+    0.4216
+   ]
+  }
+ },
+ {
+  "clip_id": "d21_rank0_10926",
+  "action": "put",
+  "frames": [
+   "ground_truth/frames/d21_rank0_10926/f1.jpg",
+   "ground_truth/frames/d21_rank0_10926/f2.jpg",
+   "ground_truth/frames/d21_rank0_10926/f3.jpg",
+   "ground_truth/frames/d21_rank0_10926/f4.jpg"
+  ],
+  "frame_indices": [
+   8,
+   11,
+   15,
+   18
+  ],
+  "sheet": "ground_truth/frames/d21_rank0_10926/sheet.jpg",
+  "clip": "ground_truth/clips/d21_rank0_10926.mp4",
+  "frame_range": [
+   8,
+   18
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_21/rank0_video-10926.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_21/rank0_video-10926.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 010925); store not given",
+   "sample_id": "010925",
+   "split": "train",
+   "segment_duration_s": 4.2,
+   "interaction_point_xy": [
+    0.6863,
+    0.2326
+   ]
+  }
+ },
+ {
+  "clip_id": "d40_rank0_20489",
+  "action": "put",
+  "frames": [
+   "ground_truth/frames/d40_rank0_20489/f1.jpg",
+   "ground_truth/frames/d40_rank0_20489/f2.jpg",
+   "ground_truth/frames/d40_rank0_20489/f3.jpg",
+   "ground_truth/frames/d40_rank0_20489/f4.jpg"
+  ],
+  "frame_indices": [
+   1,
+   4,
+   7,
+   10
+  ],
+  "sheet": "ground_truth/frames/d40_rank0_20489/sheet.jpg",
+  "clip": "ground_truth/clips/d40_rank0_20489.mp4",
+  "frame_range": [
+   1,
+   10
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_40/rank0_video-20489.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_40/rank0_video-20489.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 001989); store not given",
+   "sample_id": "001989",
+   "split": "test",
+   "segment_duration_s": 1.6,
+   "interaction_point_xy": [
+    0.7795,
+    0.2866
+   ]
+  }
+ },
+ {
+  "clip_id": "d20_rank1_10368",
+  "action": "put",
+  "frames": [
+   "ground_truth/frames/d20_rank1_10368/f1.jpg",
+   "ground_truth/frames/d20_rank1_10368/f2.jpg",
+   "ground_truth/frames/d20_rank1_10368/f3.jpg",
+   "ground_truth/frames/d20_rank1_10368/f4.jpg"
+  ],
+  "frame_indices": [
+   1,
+   2,
+   4,
+   5
+  ],
+  "sheet": "ground_truth/frames/d20_rank1_10368/sheet.jpg",
+  "clip": "ground_truth/clips/d20_rank1_10368.mp4",
+  "frame_range": [
+   1,
+   5
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_20/rank1_video-10368.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_20/rank1_video-10368.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 010367); store not given",
+   "sample_id": "010367",
+   "split": "train",
+   "segment_duration_s": 2.6,
+   "interaction_point_xy": [
+    0.5659,
+    0.6844
+   ]
+  }
+ },
+ {
+  "clip_id": "d23_rank1_11519",
+  "action": "put",
+  "frames": [
+   "ground_truth/frames/d23_rank1_11519/f1.jpg",
+   "ground_truth/frames/d23_rank1_11519/f2.jpg",
+   "ground_truth/frames/d23_rank1_11519/f3.jpg",
+   "ground_truth/frames/d23_rank1_11519/f4.jpg"
+  ],
+  "frame_indices": [
+   17,
+   19,
+   20,
+   22
+  ],
+  "sheet": "ground_truth/frames/d23_rank1_11519/sheet.jpg",
+  "clip": "ground_truth/clips/d23_rank1_11519.mp4",
+  "frame_range": [
+   17,
+   22
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_23/rank1_video-11519.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_23/rank1_video-11519.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 011518); store not given",
+   "sample_id": "011518",
+   "split": "train",
+   "segment_duration_s": 7.8,
+   "interaction_point_xy": [
+    0.4869,
+    0.7607
+   ]
+  }
+ },
+ {
+  "clip_id": "d24_rank0_12327",
+  "action": "touch",
+  "frames": [
+   "ground_truth/frames/d24_rank0_12327/f1.jpg",
+   "ground_truth/frames/d24_rank0_12327/f2.jpg",
+   "ground_truth/frames/d24_rank0_12327/f3.jpg",
+   "ground_truth/frames/d24_rank0_12327/f4.jpg"
+  ],
+  "frame_indices": [
+   16,
+   18,
+   20,
+   22
+  ],
+  "sheet": "ground_truth/frames/d24_rank0_12327/sheet.jpg",
+  "clip": "ground_truth/clips/d24_rank0_12327.mp4",
+  "frame_range": [
+   16,
+   22
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_24/rank0_video-12327.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_24/rank0_video-12327.mp4",
+   "store_or_camera": "camera view rank0 (sample_id 012326); store not given",
+   "sample_id": "012326",
+   "split": "train",
+   "segment_duration_s": 5.8,
+   "interaction_point_xy": [
+    0.5292,
+    0.2381
+   ]
+  }
+ },
+ {
+  "clip_id": "d4_rank1_2439",
+  "action": "touch",
+  "frames": [
+   "ground_truth/frames/d4_rank1_2439/f1.jpg",
+   "ground_truth/frames/d4_rank1_2439/f2.jpg",
+   "ground_truth/frames/d4_rank1_2439/f3.jpg",
+   "ground_truth/frames/d4_rank1_2439/f4.jpg"
+  ],
+  "frame_indices": [
+   20,
+   22,
+   25,
+   27
+  ],
+  "sheet": "ground_truth/frames/d4_rank1_2439/sheet.jpg",
+  "clip": "ground_truth/clips/d4_rank1_2439.mp4",
+  "frame_range": [
+   20,
+   27
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_4/rank1_video-2439.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_4/rank1_video-2439.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 002438); store not given",
+   "sample_id": "002438",
+   "split": "train",
+   "segment_duration_s": 14.4,
+   "interaction_point_xy": [
+    0.5007,
+    0.2672
+   ]
+  }
+ },
+ {
+  "clip_id": "d27_rank1_13972",
+  "action": "touch",
+  "frames": [
+   "ground_truth/frames/d27_rank1_13972/f1.jpg",
+   "ground_truth/frames/d27_rank1_13972/f2.jpg",
+   "ground_truth/frames/d27_rank1_13972/f3.jpg",
+   "ground_truth/frames/d27_rank1_13972/f4.jpg"
+  ],
+  "frame_indices": [
+   12,
+   14,
+   17,
+   19
+  ],
+  "sheet": "ground_truth/frames/d27_rank1_13972/sheet.jpg",
+  "clip": "ground_truth/clips/d27_rank1_13972.mp4",
+  "frame_range": [
+   12,
+   19
+  ],
+  "screen_two_hand": false,
+  "source": {
+   "filepath": "data/data_27/rank1_video-13972.mp4",
+   "hf_url": "https://huggingface.co/datasets/Voxel51/RetailAction/resolve/main/data/data_27/rank1_video-13972.mp4",
+   "store_or_camera": "camera view rank1 (sample_id 013971); store not given",
+   "sample_id": "013971",
+   "split": "train",
+   "segment_duration_s": 9.700929,
+   "interaction_point_xy": [
+    0.7315,
+    0.6481
+   ]
+  }
+ }
+]
