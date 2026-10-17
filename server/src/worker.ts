@@ -225,9 +225,16 @@ export async function runWorker(brain: BrainStore, engine: StoreEngine, shift: R
   // so the level is not on the card; it comes from the brain or from scanning the slot.
   const c = task.card;
   const r0 = engine.scenario.robots[robot];
+  // $slot.level in a step is the level of the slot being worked: the source until the grasp, then the target
+  const levelOf = (slot: string) => engine.scenario.layout.slots[slot]?.level;
+  let held = false;
   const plan = (ctx.main.procedure?.steps ?? []).map((s, i) => {
+    const slotLevel = levelOf(held ? c.target : c.source);
+    if (s.action === "grasp") held = true;
+    const fill = (val: unknown) =>
+      typeof val !== "string" ? val : val.startsWith("$task.") ? ((c as any)[val.slice(6)] ?? val) : val === "$slot.level" ? (slotLevel ?? val) : val;
     const args = Object.entries(s.args)
-      .map(([k, val]) => `${k}=${typeof val === "string" && val.startsWith("$task.") ? (c as any)[val.slice(6)] ?? val : val}`)
+      .map(([k, val]) => `${k}=${fill(val)}`)
       .join(" ");
     return `  ${i + 1}. ${s.action}${args ? " " + args : ""}`;
   });
@@ -239,6 +246,8 @@ export async function runWorker(brain: BrainStore, engine: StoreEngine, shift: R
     `you are at ${r0.waypoint}, torso level ${r0.torso_level}, arm ${r0.arm_out ? "extended" : "retracted"}, holding ${r0.holding ?? "nothing"}`,
     `the procedure with this task's values ($rule.* comes from the RULES):`,
     ...plan,
+    // only once the brain has learned something in terms of $slot.level (day-one brains never mention it)
+    ...(ctx.text.includes("$slot.level") ? ["$slot.level means the shelf level of the slot you are working at: the third part of its id (A-3-4-1 is level 4)."] : []),
   ].join("\n");
 
   const messages: ChatCompletionMessageParam[] = [

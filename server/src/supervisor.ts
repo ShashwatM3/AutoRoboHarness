@@ -202,7 +202,7 @@ The only allowed brain edits:
   use a priority above 0 to override a default rule at the same scope
 - insert_step { procedure, after_step (a step id, or null to go first), action, args, label, cites }
   actions: navigate_to {waypoint}, set_torso {level}, scan_slot {slot}, reach {slot}, grasp {mode}, retract {}, place {target}, report_issue {kind, detail}
-  args may use $task.source, $task.target, $task.source_waypoint, $task.target_waypoint, $rule.grasp.mode, $rule.torso.level
+  args may use $task.source, $task.target, $task.source_waypoint, $task.target_waypoint, $rule.grasp.mode, $rule.torso.level, $slot.level (the level of the slot the robot is working at)
 - add_protocol { scope, label, trigger: slot_mismatch | slot_empty | grasp_refused | out_of_reach, response: [{ action, args }], then: "stop" | "continue", cites }
 - set_parameter { node, key, value, cites }   (edits to a Guardrail need human approval)
 - retire_node { node, reason, cites }

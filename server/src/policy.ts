@@ -78,6 +78,7 @@ export async function runCompiled(brain: BrainStore, engine: StoreEngine, run: R
     for (const [k, v] of Object.entries(args)) {
       if (typeof v === "string" && v.startsWith("$task.")) out[k] = (card as any)[v.slice(6)];
       else if (typeof v === "string" && v.startsWith("$rule.")) out[k] = ruleValue(scopeCtx(slot).rules, v.slice(6), facts(slot));
+      else if (v === "$slot.level") out[k] = levelOf(slot); // a step such as set_torso { level: "$slot.level" }
       else out[k] = v;
     }
     return out;
