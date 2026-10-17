@@ -56,6 +56,7 @@ test("shared replay clock steps over both recordings and interpolates recorded p
   engine.navigate_to("robot-1", "A-1");
   engine.set_torso("robot-1", 4);
   const steps = engine.snapshot().trajectory;
+  assert.equal(replayCursor(steps, 0).progress, 0);
   const time = steps[0].t / 2,
     cursor = replayCursor(steps, time);
   assert.equal(cursor.index, -1);

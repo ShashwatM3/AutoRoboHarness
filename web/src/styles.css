@@ -2902,3 +2902,5 @@ footer .tiny-dot {
 .graph-search-results strong, .graph-search-results small { display: block; font-size: 11px; }
 .graph-search-results small { font-size: 9px; color: #7b8870; }
 .graph-comparison .brain-body svg { min-height: 360px; }
+.trial-viewport.worker-mode { height: calc(var(--worker-rows, 1) * 400px); }
+.trial-viewport:not(.worker-mode) { height: 460px; }

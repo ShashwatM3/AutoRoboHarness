@@ -110,3 +110,8 @@ op    { op: "add_node", node } | { op: "add_edge", edge } | { op: "set_prop", id
 ```
 
 `PART_OF` links the scope tree (slot → level → bay → aisle or zone → store). Version files are never edited; a retired node keeps its place with `props.retired_in`. When a step has two outgoing `NEXT` edges, the one added last wins, which is how a step is inserted.
+
+
+## Version 2: saved trials and historical comparisons
+
+The [trial and comparison API reference](TRIALS.md) documents persistent initial scenes, action trajectories, partitioned storage, historical-version runs, asynchronous matched comparisons and evaluation metadata. The dashboard uses these read APIs for replay without inference. Old score-only gates remain unchanged and have no replay.

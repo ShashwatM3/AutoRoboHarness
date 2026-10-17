@@ -90,6 +90,18 @@ export default function TrialExplorer() {
         throw new Error(
           "This legacy record has no complete recorded scene. No replay is available.",
         );
+      if (
+        loaded.length === 2 &&
+        (loaded[0].seed !== loaded[1].seed ||
+          loaded[0].brain_version === loaded[1].brain_version ||
+          loaded[0].initial_sha256 !== loaded[1].initial_sha256 ||
+          !loaded[0].provenance.evaluation_id ||
+          loaded[0].provenance.evaluation_id !==
+            loaded[1].provenance.evaluation_id)
+      )
+        throw new Error(
+          "Synchronized playback requires two matched recordings from the same evaluation and starting scene.",
+        );
       setRecordings(loaded);
       localStorage.setItem("autorobo-saved-replay", JSON.stringify(ids));
     } catch (e) {
@@ -337,7 +349,7 @@ export default function TrialExplorer() {
               <option key={c.comparison_id} value={c.comparison_id}>
                 {c.comparison_id} ·{" "}
                 {c.versions.map((v) => `v${v}`).join(" vs ")} · {c.status} ·{" "}
-                {c.worker}
+                {c.worker === "llm" ? "Lightning" : "Compiled policy"}
               </option>
             ))}
           </select>
@@ -382,6 +394,27 @@ export default function TrialExplorer() {
               Choosing a replay below does not change these totals. Different
               evaluation IDs are separate experiments.
             </p>
+            <details>
+              <summary>
+                Recorded comparison settings · {comparison.seeds.length} seeds ·{" "}
+                {comparison.tasks.length} robot
+                {comparison.tasks.length === 1 ? "" : "s"} ·{" "}
+                {comparison.environment.max_speed_mps} m/s
+              </summary>
+              <pre>
+                {JSON.stringify(
+                  {
+                    versions: comparison.versions,
+                    seeds: comparison.seeds,
+                    requested_tasks: comparison.tasks,
+                    environment: comparison.environment,
+                    worker: comparison.worker,
+                  },
+                  null,
+                  2,
+                )}
+              </pre>
+            </details>
             <div className="matched-trials">
               {comparison.per_seed?.map((pair) => {
                 const ids = pair.pairs.flatMap((p) =>
@@ -459,7 +492,7 @@ export default function TrialExplorer() {
               onChange={(e) => setPartition(e.target.value)}
             >
               <option value="all">All recordings</option>
-              <option value="training">Training shifts</option>
+              <option value="training">Training recordings</option>
               <option value="heldout">Held-out evaluations</option>
             </select>
           </label>
@@ -474,6 +507,10 @@ export default function TrialExplorer() {
           Held-out recordings can be replayed here. They are isolated from
           supervisor training, review and sibling-run inputs.
         </p>
+        <small>
+          Success means the intended item was delivered with zero refusals. A
+          finished run can still contain failed tasks.
+        </small>
         <div className="version-table">
           <table>
             <thead>

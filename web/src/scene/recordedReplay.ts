@@ -57,9 +57,12 @@ export function replayCursor(steps: TrajectoryStep[], time: number) {
   let index = -1;
   while (index + 1 < steps.length && steps[index + 1].t <= time) index++;
   const next = steps[index + 1];
-  const start = next ? next.t - next.duration : time;
+  // The engine rounds its cumulative clock to milliseconds. Raw duration can have more precision.
+  const start = next
+    ? (steps[index]?.t ?? Math.round((next.t - next.duration) * 1000) / 1000)
+    : time;
   const progress = next
-    ? Math.max(0, Math.min(1, (time - start) / Math.max(next.duration, 0.001)))
+    ? Math.max(0, Math.min(1, (time - start) / Math.max(next.t - start, 0.001)))
     : 0;
   return { index, next, progress };
 }

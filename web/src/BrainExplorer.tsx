@@ -32,6 +32,7 @@ export interface Evaluation {
   complete: number;
   complete_rate: number;
   worker: string;
+  partition?: "training" | "heldout";
   source?: string;
   replay_available?: boolean;
 }
@@ -316,7 +317,7 @@ export default function BrainExplorer() {
                               {e.worker === "llm"
                                 ? "Lightning"
                                 : "Compiled policy"}{" "}
-                              · {e.evaluation_id}
+                              · {e.partition ?? "heldout"} · {e.evaluation_id}
                             </small>
                           </div>
                         ))

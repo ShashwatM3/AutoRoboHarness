@@ -106,19 +106,23 @@ The user reopened V2 to finish version browsing and durable replay before any V3
 
 ### Person A
 
-- [ ] 1. Dynamic version explorer, actual graph details and full node/edge/property comparison, with zoom, pan, search, focus and neighbor highlighting.
-- [ ] 2. Historical brain selector and matched comparison controls, default v4 versus v5.
-- [ ] 3. Saved-trial browser and synchronized recorded playback with camera views, action logs and timeline controls.
+- [x] 1. Dynamic version explorer, actual graph details and full node/edge/property comparison, with zoom, pan, search, focus and neighbor highlighting.
+- [x] 2. Historical brain selector and matched comparison controls, default v4 versus v5.
+- [x] 3. Saved-trial browser and synchronized recorded playback with camera views, action logs and timeline controls.
 - [ ] 4. Run a fresh complete ten-seed Lightning comparison after backend integration. Person A owns inference quota; Person B runs offline tests only.
 - [ ] 5. Verify restart durability, zero-inference replay, exact recorded scene restoration, unchanged live brain/snapshots and finished dashboard. Publish the explanatory README with pipeline diagrams.
 
 ### Person B
 
-- [ ] 1. Atomically persist explicit initial scene, actions, shoppers, outcomes and final state for new shifts and gate runs. Keep held-out records isolated from supervisor inputs.
-- [ ] 2. Read-only trial APIs and historical matched-comparison runner, with identical settings and no brain/index mutation.
+- [x] 1. Atomically persist explicit initial scene, actions, shoppers, outcomes and final state for new shifts and gate runs. Keep held-out records isolated from supervisor inputs.
+- [x] 2. Read-only trial APIs and historical matched-comparison runner, with identical settings and no brain/index mutation.
 - [ ] 3. Complete evaluation metadata and meaningful storage, matching, isolation and immutability tests.
 - [ ] 4. Push isolated backend branch for Person A integration; jointly verify complete V2 extension.
 
 Person B received the backend scope through the authorized Forge Claude session. Existing brain and evidence file hashes were captured before edits. No V3 work has begun.
 
 Extension checkpoint: the frontend compiles and its five tests pass, including every recorded action boundary across four robots and backward seeks. Nine engine tests pass. The explorer includes graph navigation and property comparison; saved playback uses the shared recorded simulation clock. The explanatory README now covers setup, four pipeline/concept diagrams, original evaluation limits and runtime data. Person B published the backend contract and is implementing it in an isolated branch with offline tests. Integration and fresh Lightning recording remain pending.
+
+Integration checkpoint: Person B commit `82bd302` was integrated as `b86ecab`. Engine and web compile; the six web tests include exact forward/back restoration, misplaced products, shared clock, graph property diffs and robot cameras. The server type check and existing 14 tests pass. A local compiled comparison (`cmp-mvd0tvv7-1`) completed all twenty recordings, with identical initial worlds per seed and zero model calls. A historical v4 training shift (`shift-mvd0tw41`) also produced a durable recording. Held-out trial IDs return 404 from shift/review inputs. Every baseline brain, live-index, gate and original verification-file hash remains unchanged.
+
+The fresh Lightning comparison is now running as **`cmp-mvd0u3kl-2`**, ten held-out seeds 101–110, one PICK A-1-3-1 request per seed, v4 versus v5, maximum speed 0.8 m/s. Person A exclusively owns its inference quota; Person B remains on offline regression tests. No backend edits or restart while it runs. Fresh results remain pending and separate from the original gate. Graph zoom, focus and edge inspection were exercised in Orca; actual recorded camera coordinates are being checked before final restart verification. The explanatory README and frontend are already pushed to `person-a/v2-explorer`; integrated main publication follows verification.

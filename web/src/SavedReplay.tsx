@@ -97,6 +97,9 @@ function ReplayView({
         {trial.worker === "llm"
           ? "Lightning recording"
           : "Compiled policy recording"}
+        {trial.provenance.evaluation_id &&
+          ` · evaluation ${trial.provenance.evaluation_id}`}
+        {trial.provenance.shift_id && ` · shift ${trial.provenance.shift_id}`}
       </small>
       <div
         className={`viewport-wrap trial-viewport ${view === "workers" ? "worker-mode" : ""}`}

@@ -115,8 +115,10 @@ export default function App() {
     () => location.hash.slice(1).split("?")[0] || "shift",
   );
   useEffect(() => {
-    const change = () =>
+    const change = () => {
       setPage(location.hash.slice(1).split("?")[0] || "shift");
+      window.scrollTo({ top: 0 });
+    };
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);

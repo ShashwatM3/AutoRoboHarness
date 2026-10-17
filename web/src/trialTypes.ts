@@ -34,6 +34,7 @@ export interface SavedTrial {
   }[];
   scores: TaskScore[];
   initial: Scenario;
+  initial_sha256: string;
   final?: Omit<Scenario, "trajectory"> | null;
   trajectory: TrajectoryStep[];
   llm: LlmUsage;
