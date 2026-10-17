@@ -26,6 +26,12 @@ export default function TrialExplorer() {
   const [error, setError] = useState<string | null>(null);
   const [brainFilter, setBrainFilter] = useState("all"),
     [partition, setPartition] = useState("all");
+  useEffect(() => {
+    if (!versions) return;
+    if (!versions.versions.some((v) => v.v === left))
+      setLeft(versions.versions[0]?.v ?? versions.live);
+    if (!versions.versions.some((v) => v.v === right)) setRight(versions.live);
+  }, [versions, left, right]);
   const refresh = async () => {
     const [t, c] = await Promise.all([
       api<{ trials: SavedTrial[] }>("/trials"),
@@ -301,7 +307,10 @@ export default function TrialExplorer() {
           <button
             className="play-button"
             disabled={
-              launching || !versions || comparison?.status === "running"
+              launching ||
+              !versions ||
+              left === right ||
+              comparison?.status === "running"
             }
             onClick={() => void launch()}
           >

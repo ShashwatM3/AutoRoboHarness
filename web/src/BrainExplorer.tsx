@@ -186,36 +186,40 @@ export default function BrainExplorer() {
   }, [left, right]);
   useEffect(() => {
     let active = true;
-    api<{
-      versions: {
-        v: number;
-        evaluations: {
-          evaluation_id: string;
-          tasks: number;
-          successes: number;
-          success_rate: number;
-          worker: string;
+    const load = () =>
+      api<{
+        versions: {
+          v: number;
+          evaluations: {
+            evaluation_id: string;
+            tasks: number;
+            successes: number;
+            success_rate: number;
+            worker: string;
+          }[];
         }[];
-      }[];
-    }>("/evaluations")
-      .then((e) => {
-        if (active)
-          setEvaluations(
-            e.versions.flatMap((v) =>
-              v.evaluations.map((row) => ({
-                ...row,
-                brain_version: v.v,
-                complete: row.successes,
-                complete_rate: row.success_rate,
-              })),
-            ),
-          );
-      })
-      .catch((e) => {
-        if (active) setError(`Evaluation metadata unavailable: ${String(e)}`);
-      });
+      }>("/evaluations")
+        .then((e) => {
+          if (active)
+            setEvaluations(
+              e.versions.flatMap((v) =>
+                v.evaluations.map((row) => ({
+                  ...row,
+                  brain_version: v.v,
+                  complete: row.successes,
+                  complete_rate: row.success_rate,
+                })),
+              ),
+            );
+        })
+        .catch((e) => {
+          if (active) setError(`Evaluation metadata unavailable: ${String(e)}`);
+        });
+    void load();
+    const timer = setInterval(() => void load(), 10000);
     return () => {
       active = false;
+      clearInterval(timer);
     };
   }, []);
   const diff = useMemo(

@@ -102,6 +102,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
   const host = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<StoreScene | null>(null);
   const activeRef = useRef<string | null>(null);
+  const activeBrain = useRef<number | null>(null);
   const stepsRef = useRef<ShiftStep[]>([]);
   const seen = useRef(new Set<string>());
   const queued = useRef(new Set<string>());
@@ -118,7 +119,16 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
 
   const loadBrain = async () => {
     try {
-      setBrain(await api<BrainGraphData>("/brain"));
+      const [graph, index] = await Promise.all([
+        api<BrainGraphData>(
+          activeBrain.current == null
+            ? "/brain"
+            : `/brain?v=${activeBrain.current}`,
+        ),
+        api<VersionIndex>("/brain/versions"),
+      ]);
+      setBrain(graph);
+      setVersions(index);
       setBrainError(null);
     } catch (e) {
       setBrainError(e instanceof Error ? e.message : "Brain is unavailable");
@@ -127,9 +137,6 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
 
   useEffect(() => {
     void loadBrain();
-    void api<VersionIndex>("/brain/versions")
-      .then(setVersions)
-      .catch(() => {});
   }, []);
   useEffect(() => {
     let active = true;
@@ -145,6 +152,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
           );
           if (!active) return;
           activeRef.current = saved;
+          activeBrain.current = info.brain_version;
           setSeed(info.seed);
           setSpecs(
             info.tasks.map((task) => ({
@@ -416,6 +424,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
         }),
       });
       activeRef.current = result.shift_id;
+      activeBrain.current = result.brain_version;
       sessionStorage.setItem("autorobo-active-shift", result.shift_id);
       setScenario(shiftScenario(seed, result.tasks));
       setShift({
@@ -445,6 +454,8 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
     if (busy) return;
     sessionStorage.removeItem("autorobo-active-shift");
     activeRef.current = null;
+    activeBrain.current = null;
+    void loadBrain();
     seen.current.clear();
     stepsRef.current = [];
     setSteps([]);
