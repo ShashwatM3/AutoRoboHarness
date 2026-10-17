@@ -6,6 +6,7 @@ Context and planning documents for the Recursive Agents Hackathon build (Crusoe 
 
 | File | What it is |
 |---|---|
+| [SEQUENCE.md](SEQUENCE.md) | The build order: per version, one numbered list per person, with every cross-person dependency marked "Waits for" |
 | [DECISIONS.md](DECISIONS.md) | Every locked decision: workspace, tasks, robot, ground truth, simulator, brain storage, seeds, and the exact Crusoe model IDs |
 | [BUILD-PLAN.md](BUILD-PLAN.md) | The feature sequence for each version, with Person A and Person B owners and time slots |
 
