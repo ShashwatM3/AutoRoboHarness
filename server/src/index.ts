@@ -14,6 +14,7 @@ import { getGate, updateBrain } from "./gate.ts";
 import { getComparison, listComparisons, recoverInterruptedComparisons, startComparison, summarizeComparison } from "./comparisons.ts";
 import { evaluationsByVersion } from "./evaluations.ts";
 import { getTrial, listTrials, recoverInterruptedTrials } from "./trials.ts";
+import { registerAdversaryRoutes, recoverInterruptedAttacks } from "./adversary.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(ROOT, ".env"), quiet: true });
@@ -23,12 +24,14 @@ export const brain = new BrainStore(process.env.BRAIN_DIR ?? path.join(ROOT, "br
 // runs cut off by a restart are recorded as interrupted; their model calls are never resumed
 const cut = [...recoverInterruptedTrials(), ...recoverInterruptedComparisons()];
 if (cut.length) console.log(`marked ${cut.length} interrupted run(s): ${cut.join(", ")}`);
+recoverInterruptedAttacks();
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 
 const api = express.Router();
+registerAdversaryRoutes(api, brain);
 
 // ---------- brain (B1) ----------
 

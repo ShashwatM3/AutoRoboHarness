@@ -27,6 +27,8 @@ export interface Item {
   slot: string;
   home_slot: string;
   asset: string;
+  /** V3 stock ordering; older scenes do not have expiry metadata. */
+  expiry_day?: number;
 }
 export interface Robot extends Point {
   id: string;
@@ -84,6 +86,7 @@ export interface Scenario {
   tasks: Record<string, Task>;
   trajectory: TrajectoryStep[];
   issues: { robot: string; t: number; kind: string; detail: string }[];
+  disturbances?: { kind: string; params: Record<string, unknown> }[];
 }
 export interface ActionState {
   t: number;
@@ -346,7 +349,10 @@ export class StoreEngine {
     if (!r) throw new RangeError(`unknown robot: ${id}`);
     return r;
   }
-  private itemAt(slot: string): Item | undefined { return Object.values(this.scenario.items).find(item => item.slot === slot); }
+  private itemAt(slot: string): Item | undefined {
+    return Object.values(this.scenario.items).find(item => item.slot === slot)
+      ?? Object.values(this.scenario.items).find(item => item.slot === `behind:${slot}`);
+  }
   private route(from: string, to: string): string[] | null {
     const distances = new Map<string, number>([[from, 0]]);
     const previous = new Map<string, string>();
