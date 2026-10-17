@@ -14,7 +14,11 @@ export const MODELS = {
   worker: "nvidia/Nemotron-3.5-Lightning-30B-A3B",
   supervisor: "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
   supervisor_fallback: "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+  judge: "deepseek-ai/DeepSeek-V4-Pro",
 } as const;
+
+/** DeepSeek's chat template reads `thinking`; Nemotron's reads `enable_thinking` (and ignores the other key). */
+const thinkingKwargs = (model: string, on: boolean) => (/^deepseek-ai\//i.test(model) ? { thinking: on } : { enable_thinking: on });
 
 const CACHE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../.cache/llm");
 
@@ -94,7 +98,7 @@ function penalize(model: string, ms: number) {
 
 export interface ChatOptions {
   role: string; // worker | supervisor | clips | ...  (for the llm event)
-  thinking?: boolean; // default false: Nemotron thinks by default and it costs 5-20 s
+  thinking?: boolean; // default false: Nemotron thinks by default and it costs 5-20 s; sent as DeepSeek's own key for deepseek-ai models
   cache?: boolean; // default true unless LLM_CACHE=0
   meta?: Record<string, unknown>; // extra fields for the llm event (shift_id, robot, ...)
 }
@@ -106,7 +110,7 @@ export async function chat(params: ChatParams, opts: ChatOptions): Promise<ChatC
     temperature: 0,
     max_tokens: 1024,
     ...params,
-    chat_template_kwargs: { enable_thinking: !!opts.thinking },
+    chat_template_kwargs: thinkingKwargs(String(params.model), !!opts.thinking),
   };
   const useCache = opts.cache !== false && process.env.LLM_CACHE !== "0";
   const key = crypto.createHash("sha256").update(JSON.stringify(body)).digest("hex").slice(0, 32);

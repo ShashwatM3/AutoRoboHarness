@@ -42,16 +42,19 @@ RESTOCK needs an empty shelf slot (the engine refuses to place into an occupied 
 
 ```
 { shift_id, status: "running" | "done" | "error", brain_version, model,
-  failures: [{ id: "F1", robot, task_id, step, check, nodes_in_effect, cause, verified }],
-  insights: [{ id: "I1", claim, addresses: ["F1"], verified,
-               grounding: [{ kind: "clip", clip_id, note, frames, sheet, description, verified }
-                         | { kind: "run_contrast", ok_run: "shift-x/robot-1", failed_run, note, verified }] }],
-  updates:  [{ id: "U1", summary, ops: [supervisor edits], compiled: [BrainOps], valid, errors, touches_guardrail }],
+  failures: [{ id: "F1", robot, task_id, step, check, nodes_in_effect, cause, verified, judge: { keep, why } }],
+  insights: [{ id: "I1", claim, addresses: ["F1"], verified, judge: { keep, why },
+               grounding: [{ kind: "clip", clip_id, note, frames, sheet, description, verified, judge_supports }
+                         | { kind: "run_contrast", ok_run: "shift-x/robot-1", failed_run, note, verified, judge_supports }] }],
+  updates:  [{ id: "U1", summary, ops: [supervisor edits], compiled: [BrainOps], valid, errors, touches_guardrail, judge_supported }],
   detected: { refused_steps, incomplete_tasks },   // the engine's facts, before any model
+  judge: { model, kept: ["F1", "I1"], dropped: [{ id, why }], finished_at, error? },
   tool_calls: [{ name, args }] }
 ```
 
-`step` matches the trajectory's `step` for that robot. Clip images are served at `/ground_truth/...`, so `frames` and `sheet` paths can be used as URLs directly (for example `http://localhost:8787/ground_truth/frames/d16_rank0_8264/sheet.jpg`).
+`step` matches the trajectory's `step` for that robot.
+
+**Judge (Version 2).** After the supervisor answers, DeepSeek V4 Pro (`deepseek-ai/DeepSeek-V4-Pro`, thinking on, about 20 s, one call) checks every failure and insight against the evidence it cites: the cited step's facts, the clip's library entry, or both runs' items, results and steps. It keeps what that evidence shows and drops the rest, with a reason. A finding that cites a missing step, clip or run is dropped without a model call. `judge_supports: false` marks a citation that doesn't back its claim even when the insight is kept on other evidence, and `judge_supported: false` marks an update whose cited findings were all dropped. The judge never changes `valid` or the gate. If it fails, the review still finishes, with `judge.error` set. `JUDGE=0` turns it off; `POST /review/:shiftId/judge` re-runs it on a finished review (also for reviews made before the judge existed) and returns the review. `review_done` events carry `judge: { kept, dropped }` counts. Clip images are served at `/ground_truth/...`, so `frames` and `sheet` paths can be used as URLs directly (for example `http://localhost:8787/ground_truth/frames/d16_rank0_8264/sheet.jpg`).
 
 ## Update Brain and the gate (step 6)
 

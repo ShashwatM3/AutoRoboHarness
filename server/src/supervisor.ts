@@ -9,6 +9,7 @@ import type { ChatCompletionMessageParam, ChatCompletionTool } from "openai/reso
 import type { TrajectoryStep } from "../../engine/store.ts";
 import type { BrainStore } from "./brain.ts";
 import { emit } from "./events.ts";
+import { judgeReview, type JudgeResult } from "./judge.ts";
 import { chat, MODELS, parseJson } from "./llm.ts";
 import { compileUpdates, REVIEW_SCHEMA, type CompiledUpdate, type EvidenceById, type Update } from "./supervisor-ops.ts";
 import { getShift, listShifts, taskContext, type Shift } from "./worker.ts";
@@ -38,13 +39,16 @@ export interface Review {
   model?: string;
   started_at: string;
   finished_at?: string;
-  failures: { id: string; robot: string; task_id: string; step: number; check: string; nodes_in_effect: string[]; cause: string; verified: boolean }[];
-  insights: { id: string; claim: string; addresses: string[]; grounding: any[]; verified: boolean }[];
-  updates: (Update & CompiledUpdate)[];
+  failures: { id: string; robot: string; task_id: string; step: number; check: string; nodes_in_effect: string[]; cause: string; verified: boolean; judge?: Verdict }[];
+  insights: { id: string; claim: string; addresses: string[]; grounding: any[]; verified: boolean; judge?: Verdict }[];
+  updates: (Update & CompiledUpdate & { judge_supported?: boolean })[];
   detected: ReturnType<typeof detectFailures>;
   evidence?: EvidenceById;
   tool_calls: { name: string; args: unknown }[];
+  judge?: JudgeResult;
 }
+
+type Verdict = { keep: boolean; why: string };
 
 const reviews = new Map<string, Review>();
 
@@ -60,7 +64,7 @@ export function getReview(shiftId: string): Review | undefined {
 }
 
 let library: Clip[] | null = null;
-function clips(): Clip[] {
+export function clips(): Clip[] {
   if (!library) library = fs.existsSync(LIBRARY) ? (JSON.parse(fs.readFileSync(LIBRARY, "utf8")).clips as Clip[]) : [];
   return library;
 }
@@ -74,7 +78,7 @@ export function detectFailures(shift: Shift) {
   return { refused_steps: out, incomplete_tasks: incomplete };
 }
 
-const fmtStep = (s: TrajectoryStep) =>
+export const fmtStep = (s: TrajectoryStep) =>
   `${s.step}. ${s.action} ${JSON.stringify(s.args)} -> ${s.ok ? "ok" : "REFUSED"}: ${s.reason} | torso ${s.torso_level}, holding ${s.holding ?? "-"}, item at ${s.item_location ?? "-"}`;
 
 // ---------- tools ----------
@@ -253,10 +257,37 @@ export function startReview(brain: BrainStore, shiftId: string): Review {
     })
     .finally(() => {
       review.finished_at = new Date().toISOString();
-      fs.mkdirSync(REVIEW_DIR, { recursive: true });
-      fs.writeFileSync(path.join(REVIEW_DIR, `${shiftId}.json`), JSON.stringify(review, null, 2));
-      emit("review_done", { shift_id: shiftId, status: review.status, failures: review.failures.length, insights: review.insights.length, updates: review.updates.length });
+      saveReview(review);
+      emit("review_done", { shift_id: shiftId, status: review.status, failures: review.failures.length, insights: review.insights.length, updates: review.updates.length, judge: judgeCounts(review) });
     });
+  return review;
+}
+
+function saveReview(review: Review) {
+  fs.mkdirSync(REVIEW_DIR, { recursive: true });
+  fs.writeFileSync(path.join(REVIEW_DIR, `${review.shift_id}.json`), JSON.stringify(review, null, 2));
+}
+
+const judgeCounts = (r: Review) => (r.judge && !r.judge.error ? { kept: r.judge.kept.length, dropped: r.judge.dropped.length } : null);
+
+/** Run the judge on a finished review, replacing any earlier verdicts (V2-1; works on reviews made before the judge). */
+async function runJudge(brain: BrainStore, shift: Shift, review: Review) {
+  emit("review_progress", { shift_id: shift.shift_id, stage: "judge", msg: `${MODELS.judge} is checking ${review.failures.length} failures and ${review.insights.length} insights` });
+  try {
+    review.judge = await judgeReview(brain, shift, review);
+  } catch (e: any) {
+    console.error(e);
+    review.judge = { model: MODELS.judge, kept: [], dropped: [], finished_at: new Date().toISOString(), error: String(e?.message ?? e) };
+  }
+}
+
+export async function rejudgeReview(brain: BrainStore, shiftId: string): Promise<Review> {
+  const review = getReview(shiftId);
+  if (!review) throw Object.assign(new Error("no review for that shift"), { status: 404 });
+  if (review.status !== "done") throw Object.assign(new Error(`review is ${review.status}`), { status: 409 });
+  await runJudge(brain, getShift(shiftId)!, review);
+  saveReview(review);
+  emit("review_done", { shift_id: shiftId, status: review.status, failures: review.failures.length, insights: review.insights.length, updates: review.updates.length, judge: judgeCounts(review) });
   return review;
 }
 
@@ -337,6 +368,7 @@ async function runReview(brain: BrainStore, shift: Shift, review: Review) {
       { role: "user", content: `Some brain edits are invalid:\n${bad.map(([id, c]) => `${id}: ${c.errors.join("; ")}`).join("\n")}\nReturn the whole JSON again with these fixed.` },
     );
   }
+  if (process.env.JUDGE !== "0") await runJudge(brain, shift, review);
 }
 
 /** Verify failures and insights against the facts, then validate and compile the updates. */

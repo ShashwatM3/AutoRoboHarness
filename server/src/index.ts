@@ -9,7 +9,7 @@ import { BrainStore } from "./brain.ts";
 import { emit, sseHandler } from "./events.ts";
 import type { BrainOp } from "./types.ts";
 import { getShift, listShifts, startShift, type TaskSpec } from "./worker.ts";
-import { getReview, startReview } from "./supervisor.ts";
+import { getReview, rejudgeReview, startReview } from "./supervisor.ts";
 import { getGate, updateBrain } from "./gate.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -105,6 +105,10 @@ api.post("/review/:shiftId", (req, res) => {
 api.get("/review/:shiftId", (req, res) => {
   const id = req.params.shiftId as string;
   res.json(getReview(id) ?? startReview(brain, id));
+});
+// POST /review/:shiftId/judge re-runs the judge (V2-1) on a finished review and returns it (about 10-60 s)
+api.post("/review/:shiftId/judge", async (req, res) => {
+  res.json(await rejudgeReview(brain, req.params.shiftId as string));
 });
 
 // ---------- Update Brain and the gate (B6) ----------

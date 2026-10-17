@@ -26,7 +26,7 @@ Person A is Shashwat; Person B is the teammate. Each version has two numbered li
 - [x] ~~4. **Footage library** (`ground_truth/`). The library holds about 20 RetailAction clips from the `Voxel51/RetailAction` dataset, four frames from each action extracted with `ffmpeg`, `library.json` with a description of each clip from the supervisor model, and the Standard AI license and notice. **Waits for:** nothing.~~
 - [x] ~~5. **Supervisor** (`server/supervisor.ts`). A tool-calling loop on Nemotron 3.5 Super VL reads a shift's steps, the brain nodes in effect, sibling runs, and the footage library, and returns failures, insights with grounding, and brain updates as operations at `GET /review/:shiftId`. **Waits for:** this list's step 3 (a real shift to review) and step 4.~~
 - [x] ~~6. **Gate** (`server/gate.ts`). `POST /brain/update` applies the operations to a candidate version, re-runs the tasks on held-out seeds 101 to 110 with the old and the candidate brain without graphics, keeps the candidate only if the score rises, and returns both scores and the diff. **Waits for:** Person A step 1 (the engine, already done by this point).~~
-- [x] 7. **Version 1 check, with Person A.** Same as Person A step 9.
+- [x] ~~7. **Version 1 check, with Person A.** Same as Person A step 9.~~
 
 ---
 
@@ -55,7 +55,7 @@ The requested [Crusoe MCP setup guide](CRUSOE-MCP-SETUP.md) is complete. The loc
 
 ### Person B
 
-- [ ] 1. **Judge.** DeepSeek V4 Pro checks every failure and insight against the steps and evidence it cites, drops what it cannot confirm, and adds `judge: { kept, dropped }` to `GET /review/:shiftId`. **Waits for:** nothing.
+- [x] ~~1. **Judge.** DeepSeek V4 Pro checks every failure and insight against the steps and evidence it cites, drops what it cannot confirm, and adds `judge: { kept, dropped }` to `GET /review/:shiftId`. **Waits for:** nothing.~~
 - [ ] 2. **Cache share.** The shift runner sums `cached_tokens` against `prompt_tokens` across all worker calls and exposes `cache_share`. **Waits for:** nothing.
 - [ ] 3. **Brain history.** `GET /brain/history` returns each brain version with its held-out score. **Waits for:** nothing.
 - [ ] 4. **You.com citations.** The supervisor gets a `research(question)` tool calling `POST https://api.you.com/v1/research`, and each insight carries its citations. **Waits for:** nothing.
