@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type BrainGraphData } from "./api.ts";
+import { savedApi as api, type BrainGraphData } from "./api.ts";
 import BrainGraph from "./BrainGraph.tsx";
 import {
   compareGraphs,
@@ -136,10 +136,23 @@ function GraphInspector({ graph }: { graph: BrainGraphData }) {
   );
 }
 
-export default function BrainExplorer() {
+/** Saved snapshots and their full differences. Read-only; selecting a version never changes the live brain. */
+export default function BrainExplorer({
+  initialLeft = 4,
+  initialRight = 5,
+  embedded = false,
+}: {
+  initialLeft?: number;
+  initialRight?: number;
+  embedded?: boolean;
+}) {
   const [index, setIndex] = useState<VersionIndex | null>(null);
-  const [left, setLeft] = useState(4),
-    [right, setRight] = useState(5);
+  const [left, setLeft] = useState(initialLeft),
+    [right, setRight] = useState(initialRight);
+  useEffect(() => {
+    setLeft(initialLeft);
+    setRight(initialRight);
+  }, [initialLeft, initialRight]);
   const [graphs, setGraphs] = useState<[BrainGraphData, BrainGraphData] | null>(
     null,
   );
@@ -256,12 +269,17 @@ export default function BrainExplorer() {
       </select>
     </label>
   );
+  const Wrapper = embedded ? "div" : "main";
   return (
-    <main className="research-main">
-      <div className="eyebrow">V2 / SHARED KNOWLEDGE</div>
-      <h1>
-        Every brain. Every change<span>.</span>
-      </h1>
+    <Wrapper className={embedded ? "brain-explorer embedded" : "research-main"}>
+      {!embedded && (
+        <>
+          <div className="eyebrow">V2 / SHARED KNOWLEDGE</div>
+          <h1>
+            Every brain. Every change<span>.</span>
+          </h1>
+        </>
+      )}
       <p className="research-intro">
         Explore immutable snapshots and compare their actual knowledge.
         Selecting a version leaves the live brain unchanged.
@@ -450,6 +468,6 @@ export default function BrainExplorer() {
           <p>Loading saved graphs…</p>
         )}
       </section>
-    </main>
+    </Wrapper>
   );
 }

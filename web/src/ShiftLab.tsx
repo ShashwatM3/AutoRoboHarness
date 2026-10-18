@@ -35,6 +35,9 @@ import { StoreScene } from "./scene/StoreScene.ts";
 import BrainGraph from "./BrainGraph.tsx";
 import ReviewPanel from "./ReviewPanel.tsx";
 import WorkerViews, { ROBOT_NAMES, ROBOT_COLORS } from "./WorkerViews.tsx";
+import StageNav from "./StageNav.tsx";
+import { liveStages, type Stage } from "./routes.ts";
+import { readPrefill, SHIFT_PREFILL, type ShiftConfig } from "./recordings.ts";
 import type { VersionIndex } from "./BrainExplorer.tsx";
 import type { SavedTrial } from "./trialTypes.ts";
 
@@ -72,14 +75,33 @@ declare global {
   }
 }
 
-export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
-  const [seed, setSeed] = useState(1);
-  const [brainVersion, setBrainVersion] = useState("live");
-  const [versions, setVersions] = useState<VersionIndex | null>(null);
-  const [specs, setSpecs] = useState<TaskSpec[]>(DEFAULT_TASKS.slice(0, 2));
-  const [scenario, setScenario] = useState<Scenario>(() =>
-    launchScenario(1, DEFAULT_TASKS.slice(0, 2)),
+export default function ShiftLab({
+  initialStage,
+}: {
+  initialStage?: Stage | null;
+}) {
+  // A configuration loaded from Previous results replaces any restored shift; launching stays explicit.
+  const [prefill] = useState(() => {
+    const config = readPrefill<ShiftConfig>(SHIFT_PREFILL);
+    if (config) sessionStorage.removeItem("autorobo-active-shift");
+    return config;
+  });
+  const [seed, setSeed] = useState(prefill?.seed ?? 1);
+  const [brainVersion, setBrainVersion] = useState(
+    prefill ? String(prefill.brain) : "live",
   );
+  const [versions, setVersions] = useState<VersionIndex | null>(null);
+  const [specs, setSpecs] = useState<TaskSpec[]>(
+    prefill?.tasks.length ? prefill.tasks : DEFAULT_TASKS.slice(0, 2),
+  );
+  const [scenario, setScenario] = useState<Scenario>(() =>
+    launchScenario(
+      prefill?.seed ?? 1,
+      prefill?.tasks.length ? prefill.tasks : DEFAULT_TASKS.slice(0, 2),
+    ),
+  );
+  const [stage, setStage] = useState<Stage>("launch");
+  const [reviewStarted, setReviewStarted] = useState(false);
   const [ready, setReady] = useState(false);
   const [connected, setConnected] = useState(false);
   const [launching, setLaunching] = useState(false);
@@ -97,7 +119,6 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
   );
   const [notice, setNotice] = useState<string | null>(null);
   const [selectedRobot, setSelectedRobot] = useState("robot-1");
-  const [reviewOpen, setReviewOpen] = useState(false);
   const [replayLabel, setReplayLabel] = useState<string | null>(null);
   const host = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<StoreScene | null>(null);
@@ -174,6 +195,11 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
             setBrain,
           );
           setShift(info);
+          setStage(
+            initialStage === "review" && info.status === "done"
+              ? "review"
+              : "work",
+          );
           const restored = history.map((step) => ({
             ...step,
             shift_id: saved,
@@ -205,6 +231,11 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
   useEffect(() => {
     if (!activeRef.current) setScenario(launchScenario(seed, specs));
   }, [seed, specs]);
+  useEffect(() => {
+    if (activeRef.current) return;
+    activeBrain.current = brainVersion === "live" ? null : Number(brainVersion);
+    void loadBrain();
+  }, [brainVersion]);
 
   useEffect(() => {
     if (!host.current) return;
@@ -440,6 +471,8 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
         setBrain,
       );
       setView("perspective");
+      setStage("work");
+      setReviewStarted(false);
       appendRef.current(earlySteps.current);
       void refreshRef.current();
     } catch (e) {
@@ -466,7 +499,8 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
     setError(null);
     setNotice(null);
     setSelectedRobot("robot-1");
-    setReviewOpen(false);
+    setReviewStarted(false);
+    setStage("launch");
     setReplayLabel(null);
     setScenario(launchScenario(seed, specs));
   };
@@ -502,6 +536,8 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
       return;
     }
     const instance = sceneRef.current;
+    setStage("work");
+    await new Promise((resolve) => requestAnimationFrame(resolve));
     await instance.ready;
     instance.seekToStep(history, index - 1);
     setSelectedRobot(robotId);
@@ -518,42 +554,14 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
     setReplayLabel(null);
   };
 
+  const stagesAvailable = liveStages({
+    hasRun: !!shift,
+    finished: shift?.status === "done",
+    animating,
+  });
   return (
-    <div className="app-shell">
-      <aside className="rail">
-        <a className="brand-mark" href="/" aria-label="AutoRoboHarness home">
-          <Cuboid size={25} strokeWidth={1.6} />
-        </a>
-        <span className="rail-divider" />
-        <button className="rail-icon active" aria-label="Store lab">
-          <Store size={21} />
-        </button>
-        <span className="rail-spacer" />
-        <div className="version-badge">V2</div>
-        <span className="avatar">SM</span>
-      </aside>
-      <div className="workspace">
-        <header className="topbar">
-          <div className="wordmark">
-            auto<span>robo</span>
-            <span className="wordmark-divider">/</span>
-            <small>HARNESS</small>
-          </div>
-          <div className="topbar-middle">
-            <span className="status-dot" /> STORE LAB{" "}
-            <span className="slash">/</span> THE CLOSED LOOP
-          </div>
-          <div className="topbar-right">
-            <button className="outline-tag" disabled={busy} onClick={onPreview}>
-              MOTION PREVIEW ↗
-            </button>
-            <span className={`connection-label ${connected ? "" : "offline"}`}>
-              <span className="status-dot" />
-              {connected ? "SERVER CONNECTED" : "CONNECTING TO SERVER"}
-            </span>
-          </div>
-        </header>
-        <main>
+    <div className="live-trial-body">
+        <div>
           <section className="page-heading">
             <div>
               <div className="eyebrow">
@@ -593,7 +601,31 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
               {notice}
             </div>
           )}
-          <div className="live-layout">
+          <StageNav
+            label="Live trial stages"
+            stage={stage}
+            onStage={setStage}
+            available={stagesAvailable}
+            status={{
+              launch: shift ? "Launched · set up another below" : "Robots, tasks, seed and brain",
+              work: launching
+                ? "Starting…"
+                : live
+                  ? "Workers are acting on Crusoe"
+                  : animating
+                    ? "Playing the final moves"
+                    : shift
+                      ? "Shift finished"
+                      : "Launch a shift first",
+              review:
+                shift?.status === "done"
+                  ? animating
+                    ? "Available when the view catches up"
+                    : "Failures, insights, Update Brain"
+                  : "After the shift finishes",
+            }}
+          />
+          <div className="live-layout" hidden={stage === "review"}>
             <div className="live-main">
               <section className="store-card">
                 <div className="card-toolbar">
@@ -725,7 +757,26 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
               />
             </div>
             <aside className="shift-sidebar">
-              {!shift ? (
+              {stage === "launch" && shift && (
+                <section className="launch-card">
+                  <div className="section-title">
+                    SHIFT SETUP<span>01</span>
+                  </div>
+                  <h2>A shift is loaded.</h2>
+                  <p className="launch-intro">
+                    {busy
+                      ? "Wait for the current shift to finish before setting up another."
+                      : `${shift.shift_id} · brain v${shift.brain_version} · seed ${shift.seed}.`}
+                  </p>
+                  {!busy && (
+                    <button className="new-shift-button" onClick={newShift}>
+                      <RotateCcw size={14} />
+                      Set up another shift
+                    </button>
+                  )}
+                </section>
+              )}
+              {stage === "launch" && shift ? null : !shift ? (
                 <section className="launch-card">
                   <div className="section-title">
                     SHIFT SETUP<span>01</span>
@@ -996,7 +1047,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
               </div>
             </aside>
           </div>
-          {shift && (
+          {shift && stage === "work" && (
             <section className="shift-summary">
               <Terminal size={17} />
               <div>
@@ -1019,15 +1070,15 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
                 <button
                   className="review-shift-button"
                   disabled={animating}
-                  onClick={() => setReviewOpen(!reviewOpen)}
+                  onClick={() => setStage("review")}
                 >
-                  {reviewOpen ? "Close review" : "Review shift"}
+                  Go to review
                   <ArrowRight size={13} />
                 </button>
               )}
             </section>
           )}
-          {lastStep && (
+          {lastStep && stage === "work" && (
             <div className="live-event-line">
               <span className="event-prefix">
                 {lastStep.robot.toUpperCase()} /{" "}
@@ -1041,18 +1092,43 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
               </span>
             </div>
           )}
-          {reviewOpen && shift?.status === "done" && (
-            <ReviewPanel
-              shiftId={shift.shift_id}
-              onReplay={(robot, step) => {
-                void replayFailure(robot, step);
-              }}
-              onClose={() => setReviewOpen(false)}
-              onBrainUpdated={() => {
-                void loadBrain();
-              }}
-            />
-          )}
+          {stage === "review" &&
+            shift?.status === "done" &&
+            (reviewStarted ? (
+              <ReviewPanel
+                shiftId={shift.shift_id}
+                source={shift.source}
+                onReplay={(robot, step) => {
+                  void replayFailure(robot, step);
+                }}
+                onBrainUpdated={() => {
+                  void loadBrain();
+                }}
+              />
+            ) : (
+              <section className="research-card start-review">
+                <div className="eyebrow">STAGE 3 / REVIEW</div>
+                <h2>Review this training shift</h2>
+                <p>
+                  The supervisor (NVIDIA Nemotron 3.5 Super VL on Crusoe) reads
+                  the actions, refusals, brain nodes, sibling training runs and
+                  RetailAction footage, and may ask You.com research questions.
+                  DeepSeek V4 Pro on Crusoe then checks every finding. A saved
+                  example review used 9 model calls. If this shift already has
+                  a review, it opens without new calls.
+                </p>
+                <button
+                  className="launch-button"
+                  onClick={() => setReviewStarted(true)}
+                >
+                  Start or open the review <ArrowRight size={15} />
+                </button>
+                <small>
+                  Only training shifts are reviewed. Held-out evaluations are
+                  never sent to the supervisor.
+                </small>
+              </section>
+            ))}
           <footer>
             <span>
               <Cuboid size={13} />
@@ -1065,8 +1141,7 @@ export default function ShiftLab({ onPreview }: { onPreview: () => void }) {
               VERSION 2
             </span>
           </footer>
-        </main>
-      </div>
+        </div>
     </div>
   );
 }
