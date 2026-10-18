@@ -10,6 +10,7 @@ Code: `src/post-training.ts` (pipeline, records, routes), `src/post-training-dat
 |---|---|
 | `POST /post-training` | Validates the request, saves a new run and answers `202` at once; the pipeline continues in the background |
 | `GET /post-training` | `{ runs }`: every saved run, newest first, without long lists (rejections, provider events, checkpoints, metric series) |
+| `GET /post-training/sources` | Replay-verified strict-success training sources; never inspects held-out trials or starts work |
 | `GET /post-training/:id` | The full saved run. Read-only |
 | `POST /post-training/:id/refresh` | Asks the provider about this run's job (job, events, checkpoints, metrics) and saves the actual answers. Settles an `unknown` upload or create by looking it up. Never uploads or creates. At most one provider poll per run every 5 seconds |
 | `GET /post-training/:id/dataset?format=chat\|robot\|manifest` | The exported file itself. Any other format is `400 bad_format`; a run without an export is `404 no_dataset` |
@@ -109,10 +110,10 @@ Before any run, each plan must be on a training seed, differ from the plain seed
 POST {base}/fine_tuning/jobs
 { "model": "<base model id>", "training_file": "<file id>", "suffix": "autorobo-<post_training_id>",
   "metadata": { "post_training_id": "...", "dataset_sha256": "...", "brain_version": "5" },
-  "method": { "type": "supervised", "supervised": { "hyperparameters": { "n_epochs": 3, "batch_size": 2..8, "learning_rate": 0.0001 } } } }
+  "method": { "type": "supervised", "supervised": { "hyperparameters": { "n_epochs": 3, "batch_size": "auto", "learning_rate": 0.0001 } } } }
 ```
 
-`batch_size` is the example count divided by 16, kept within 2 to 8. LoRA settings use the provider defaults. Without a validation file Crusoe holds out 10% of the rows itself.
+`batch_size` uses Crusoe's `auto` setting. The live API accepts `auto` or 16, 32, 64, 128, 256, 512 and 1024; smaller numeric values are rejected. LoRA settings use the provider defaults. Without a validation file Crusoe holds out 10% of the rows itself.
 
 ## 4. Never twice, never invented
 
@@ -135,7 +136,7 @@ POST {base}/fine_tuning/jobs
 - Variants run one robot, so other robots of a multi-robot parent are absent.
 - The LeRobot-style copy holds named actions and robot state only: it is not the official LeRobot format and has no joint motions and no camera frames.
 - The docs give no per-job console URL; `console_url` is the fine-tuning jobs page, shown next to the job ID.
-- The docs do not state a minimum row count or ranges for `batch_size` and `learning_rate`; a provider refusal is recorded as returned.
+- Provider refusals are recorded as returned. An unsuccessful request is retained, never rewritten into a successful attempt.
 - The Hub upload sends small regular files inline; if the repository routes a path to Git LFS, the step reports it instead of uploading.
 - Lightning variants take the shared inference claim `post-training`; with workers on Lightning, a running comparison blocks a new run.
 - Serving the fine-tuned model requires a Self-Serve Deployment in the Crusoe console; this API does not create one.

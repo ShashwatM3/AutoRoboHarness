@@ -410,7 +410,7 @@ test("POST /post-training runs collect, scale, export, upload and job, and refre
   assert.equal(create.method.type, "supervised");
   const hp = create.method.supervised.hyperparameters;
   assert.equal(hp.n_epochs, 3);
-  assert.ok(hp.batch_size >= 2 && hp.batch_size <= 8);
+  assert.ok(hp.batch_size === "auto" || [16, 32, 64, 128, 256, 512, 1024].includes(hp.batch_size), "batch size must satisfy the Crusoe API enum");
   assert.equal(hp.learning_rate, 0.0001);
   assert.equal(run.provider.job.state, "submitted");
   assert.equal(run.provider.job.id, "ftjob-1");
@@ -599,6 +599,9 @@ test("a restart during the scaler interrupts the running variant and skips what 
     provider: { base_url: "https://ft.test/v1", console_url: "x", model: null, file: { state: "not_started" }, job: { state: "not_started" }, estimate: null, events: [], checkpoints: [], metrics: [], last_polled_at: null, poll_error: null },
     llm: {},
   };
+  fs.writeFileSync(path.join(dir, "run.json"), JSON.stringify({ ...r, owner_pid: process.ppid }));
+  assert.deepEqual(recoverInterruptedPostTraining(), [], "a live pipeline in another process is preserved");
+  assert.equal(getRun(id)!.status, "running");
   fs.writeFileSync(path.join(dir, "run.json"), JSON.stringify(r));
   assert.deepEqual(recoverInterruptedPostTraining(), [id]);
   const after = getRun(id)!;

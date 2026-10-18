@@ -66,6 +66,12 @@ test("V3 inference is exclusive, releases on errors, and interrupted jobs never 
   const a = await startAttack(brain, { worker: 'compiled', proposer: 'catalog', attempts: 1 }, { runner: async () => { throw new Error('worker failed'); } }).done;
   assert.equal(a.tried, 0); assert.equal(a.broke, 0); assert.equal(a.attempts[0].status, 'error');
   const file = path.join(process.env.AUTOROBO_DATA_DIR!, 'adversary', `${a.adversary_id}.json`);
+  fs.writeFileSync(file, JSON.stringify({ ...a, status: 'running', owner_pid: process.ppid }));
+  recoverInterruptedAttacks(true);
+  assert.equal(getAttack(a.adversary_id)!.status, 'running', 'a separate live owner is not interrupted');
+  fs.writeFileSync(file, JSON.stringify({ ...a, status: 'running', owner_pid: undefined }));
+  recoverInterruptedAttacks(true);
+  assert.equal(getAttack(a.adversary_id)!.status, 'running', 'the optional service does not recover legacy demo attacks');
   fs.writeFileSync(file, JSON.stringify({ ...a, status: 'running' }));
   recoverInterruptedAttacks(); assert.equal(getAttack(a.adversary_id)!.status, 'interrupted'); assert.equal(calls, 0);
   assert.equal(attackCatalog(1, { type: 'PICK', slot: 'A-1-3-1' }).length, 4);

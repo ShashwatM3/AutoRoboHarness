@@ -16,6 +16,7 @@ import { evaluationsByVersion } from "./evaluations.ts";
 import { getTrial, listTrials, recoverInterruptedTrials } from "./trials.ts";
 import { registerAdversaryRoutes, recoverInterruptedAttacks } from "./adversary.ts";
 import { getRun, listRuns } from "./runs.ts";
+import { registerPostTrainingRoutes } from "./post-training.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 dotenv.config({ path: path.join(ROOT, ".env"), quiet: true });
@@ -33,6 +34,7 @@ app.use(express.json({ limit: "5mb" }));
 
 const api = express.Router();
 registerAdversaryRoutes(api, brain);
+registerPostTrainingRoutes(api, brain);
 
 // ---------- brain (B1) ----------
 

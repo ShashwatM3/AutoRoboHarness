@@ -1,0 +1,346 @@
+{
+  "verified_at": "2026-10-18T02:09:37.014669+00:00",
+  "release": "V3 workflow dialogs; finalized after V2 submission",
+  "ui": {
+    "changed_existing_component": "web/src/ReviewPanel.tsx",
+    "buttons": [
+      "red Adversarial Attack",
+      "blue Post-training Data"
+    ],
+    "separate_pages_added": false,
+    "opens_without_starting_work": true,
+    "error_boundary": "dialog only",
+    "checked": [
+      "production build",
+      "desktop dialog open/close",
+      "mobile390 no overflow",
+      "workflow outage preserves dashboard",
+      "reopen saved status",
+      "15 targeted backend checks"
+    ]
+  },
+  "adversary": {
+    "run_id": "adv-mvd1z8gx-114e18",
+    "training_seed": 1,
+    "brain_version": 5,
+    "tried": 4,
+    "strict_task_failures": 3,
+    "model_responses": 33,
+    "local_response_replays": 0,
+    "all_attempts_have_recordings": true
+  },
+  "post_training": {
+    "export_only_run": "pt-mvd62jgz-1",
+    "preserved_failed_run": "pt-mvd67g7l-1",
+    "failed_reason": "Crusoe rejected numeric batch_size 2 with HTTP422; no job created",
+    "corrected_batch_size": "auto",
+    "successful_run": "pt-mvd69m95-1",
+    "source_shift": "shift-mvd22etr",
+    "source_trial": "trial-mvd22etu-1",
+    "training_seed": 1,
+    "brain_version": 5,
+    "verified_tasks": 1,
+    "examples": 7,
+    "episodes": 1,
+    "new_worker_model_calls": 0,
+    "live_variants": 0,
+    "scaler_verification": "Offline real-engine replay and one-factor checks. Live provider verification used zero variants to avoid inference during demo practice.",
+    "dataset_files": {
+      "chat": {
+        "name": "train.chat.jsonl",
+        "bytes": 20339,
+        "sha256": "974a188da50dd85a328d1159168adfc1a3c01a64c062989620ad921e9ea4b154",
+        "rows": 7
+      },
+      "robot": {
+        "name": "robot.steps.jsonl",
+        "bytes": 4372,
+        "sha256": "b187aa88c66b97709321cdeba31eafe2d7f5f3bdf97dc558a9a55f1fda1656e8",
+        "rows": 7
+      },
+      "manifest": {
+        "name": "manifest.json",
+        "bytes": 2370,
+        "sha256": "f5fc198238d981331b11e8b7e15d4837ad150dd3f3eff66245e7f0e8523ea5a6",
+        "rows": 1
+      }
+    },
+    "model_registry": {
+      "id": "ftmodel-6c22bf52-fb65-4bd5-94c4-736f0a7d33f0",
+      "model_name": "crusoeai/NVIDIA-Nemotron-3.5-Nano-30B-A3B-BF16-07292026",
+      "source": "env"
+    },
+    "job_id": "ftjob-0d98ad0b40ce4400ae1fc7d854560e6c",
+    "job_status": "succeeded",
+    "output_model": "ftmodel-3de11fce-7594-447b-85eb-6a1e98d95179",
+    "trained_tokens": 168827,
+    "checkpoints": [
+      {
+        "id": "947596e2-3b6c-45eb-a348-b0d425a2f96b",
+        "created_at": 1792288605,
+        "step_number": 3,
+        "fine_tuned_model_checkpoint": "checkpoint-3-ftjob-0d98ad0b40ce4400ae1fc7d854560e6c",
+        "metrics": {
+          "train_loss": 0.5272924304008484
+        }
+      }
+    ],
+    "provider_metrics": [
+      {
+        "metric_name": "ev_loss",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 0.6578116416931152
+          },
+          {
+            "x": 1792288571856,
+            "value": 0.6041848063468933
+          },
+          {
+            "x": 1792288573938,
+            "value": 0.5272924304008484
+          },
+          {
+            "x": 1792288605926,
+            "value": 0.5272924304008484
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_eval_loss",
+        "data": []
+      },
+      {
+        "metric_name": "ev_current_step",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 1
+          },
+          {
+            "x": 1792288571856,
+            "value": 2
+          },
+          {
+            "x": 1792288573938,
+            "value": 3
+          },
+          {
+            "x": 1792288605926,
+            "value": 3
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_total_steps",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 3
+          },
+          {
+            "x": 1792288571856,
+            "value": 3
+          },
+          {
+            "x": 1792288573938,
+            "value": 3
+          },
+          {
+            "x": 1792288605926,
+            "value": 3
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_learning_rate",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 0.0001
+          },
+          {
+            "x": 1792288571856,
+            "value": 7.500000000000001e-05
+          },
+          {
+            "x": 1792288573938,
+            "value": 2.500000000000001e-05
+          },
+          {
+            "x": 1792288605926,
+            "value": 2.500000000000001e-05
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_grad_norm",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 1.3659584522247314
+          },
+          {
+            "x": 1792288571856,
+            "value": 1.2839478254318237
+          },
+          {
+            "x": 1792288573938,
+            "value": 1.2479649782180786
+          },
+          {
+            "x": 1792288605926,
+            "value": 1.2479649782180786
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_num_input_tokens_seen",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 56294
+          },
+          {
+            "x": 1792288571856,
+            "value": 112554
+          },
+          {
+            "x": 1792288573938,
+            "value": 168827
+          },
+          {
+            "x": 1792288605926,
+            "value": 168827
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_eval_samples_per_second",
+        "data": []
+      },
+      {
+        "metric_name": "ev_eval_steps_per_second",
+        "data": []
+      },
+      {
+        "metric_name": "ev_estimated_finish",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 1792288623.5708225
+          },
+          {
+            "x": 1792288571856,
+            "value": 1792288586.4553032
+          },
+          {
+            "x": 1792288573938,
+            "value": 1792288573.9376237
+          },
+          {
+            "x": 1792288605926,
+            "value": 1792288605.9256177
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_train_loss",
+        "data": [
+          {
+            "x": 1792288605926,
+            "value": 0.5964296261469523
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_train_runtime",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 26.9905
+          },
+          {
+            "x": 1792288571856,
+            "value": 29.2182
+          },
+          {
+            "x": 1792288573938,
+            "value": 31.3
+          },
+          {
+            "x": 1792288605926,
+            "value": 63.2873
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_train_samples_per_second",
+        "data": [
+          {
+            "x": 1792288605926,
+            "value": 0.332
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_train_steps_per_second",
+        "data": [
+          {
+            "x": 1792288605926,
+            "value": 0.047
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_train_tokens_per_second",
+        "data": [
+          {
+            "x": 1792288569630,
+            "value": 2085.699
+          },
+          {
+            "x": 1792288571856,
+            "value": 3852.194
+          },
+          {
+            "x": 1792288573938,
+            "value": 5393.837
+          },
+          {
+            "x": 1792288605926,
+            "value": 5393.837
+          }
+        ]
+      },
+      {
+        "metric_name": "ev_total_flos",
+        "data": [
+          {
+            "x": 1792288605926,
+            "value": 5901662350737408
+          }
+        ]
+      }
+    ],
+    "console_url": "https://console.crusoecloud.com/foundry/fine-tuning/jobs",
+    "hugging_face": "not_configured",
+    "robot_format": "LeRobot-style named-action JSONL, no invented images or joint actions; not official LeRobot",
+    "weights_deployed": false,
+    "weights_evaluated": false
+  },
+  "preservation": {
+    "live_brain_at_check": 5,
+    "original_immutable_brain_and_evidence_files_unchanged": 73,
+    "mutable_index_note": "A concurrent candidate v6 was added by activity outside this V3 verification. It was preserved; these workflows never apply or promote a brain.",
+    "candidate_versions_at_check": [
+      6
+    ],
+    "v3_runtime_files_byte_identical_after_service_restart": 16,
+    "demo_api_8787_restarted": false,
+    "demo_web_5173_restarted": false,
+    "existing_ngrok_tunnel_changed": false,
+    "quota": "Forge flock held for provider upload/job phases; no new robot inference during this verification"
+  }
+}

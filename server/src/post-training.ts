@@ -111,6 +111,7 @@ export interface FileRef {
 }
 
 export interface PostTrainingRun {
+  owner_pid?: number;
   post_training_id: string;
   status: RunStatus;
   error?: string;
@@ -235,6 +236,7 @@ function newRun(brain: BrainStore, request: PostTrainingRequest, id: string): Po
   const step = (): StepState => ({ status: "pending", started_at: null, finished_at: null, counts: {} });
   return {
     post_training_id: id,
+    owner_pid: process.pid,
     status: "running",
     request,
     brain_version: request.brain_version,
@@ -266,11 +268,11 @@ function newRun(brain: BrainStore, request: PostTrainingRequest, id: string): Po
 /** POST /post-training: validate, record, and run the pipeline in the background. One run at a time. */
 export function startPostTraining(brain: BrainStore, body: unknown): { run: PostTrainingRun; done: Promise<PostTrainingRun> } {
   const request = validateRequest(brain, body);
-  const active = [...live.values()].find((r) => r.status === "running");
+  const active = [...live.values(), ...listRuns()].find((r) => r.status === "running");
   if (active) throw httpError(409, `post-training ${active.post_training_id} is still running`, { code: "post_training_active", post_training_id: active.post_training_id });
   const id = `pt-${Date.now().toString(36)}-${(++idCounter).toString(36)}`;
   // Lightning is needed only to play variants; the claim is taken before anything is saved
-  const release = request.worker === "llm" && request.variants_per_task > 0 ? claimInference("post-training", id) : () => {};
+  const release = (request.worker === "llm" && request.variants_per_task > 0) || request.upload ? claimInference("post-training", id) : () => {};
   let run: PostTrainingRun;
   try {
     run = newRun(brain, request, id);
@@ -360,7 +362,7 @@ async function runPipeline(brain: BrainStore, run: PostTrainingRun, release: () 
     else await runStep(run, "scale", (s) => runVariants(brain, run, collected, tasks, s)).catch((e) => {
       if (e instanceof Cancelled) throw e;
     });
-    release(); // Lightning is no longer needed
+    // Retain the workflow claim through upload/job creation as well as the variant workers.
 
     // 3. export
     await runStep(run, "export", (s) => exportDataset(brain, run, tasks, s));
@@ -598,13 +600,12 @@ async function upload(run: PostTrainingRun, s: StepState) {
 }
 
 export function jobBody(run: PostTrainingRun, model: string, trainingFile: string): crusoe.JobBody {
-  const rows = run.dataset?.examples ?? 0;
   return {
     model,
     training_file: trainingFile,
     suffix: `autorobo-${run.post_training_id}`,
     metadata: { post_training_id: run.post_training_id, dataset_sha256: run.dataset?.files.chat.sha256 ?? "", brain_version: String(run.brain_version) },
-    method: { type: "supervised", supervised: { hyperparameters: { n_epochs: HYPERPARAMETERS.n_epochs, batch_size: Math.max(2, Math.min(8, Math.round(rows / 16))), learning_rate: HYPERPARAMETERS.learning_rate } } },
+    method: { type: "supervised", supervised: { hyperparameters: { n_epochs: HYPERPARAMETERS.n_epochs, batch_size: "auto", learning_rate: HYPERPARAMETERS.learning_rate } } },
   };
 }
 
@@ -631,7 +632,7 @@ async function createJob(run: PostTrainingRun, s: StepState) {
   try {
     const j = await crusoe.createJob(body);
     Object.assign(run.provider.job, { state: "submitted", id: j.id, status: j.status, provider: j });
-    s.counts = { examples: run.dataset!.examples, ...body.method.supervised.hyperparameters };
+    s.counts = { examples: run.dataset!.examples, n_epochs: body.method.supervised.hyperparameters.n_epochs, learning_rate: body.method.supervised.hyperparameters.learning_rate };
   } catch (e) {
     const unknown = e instanceof crusoe.ProviderError && !e.definitive;
     run.provider.job.state = unknown ? "unknown" : "error";
@@ -771,6 +772,7 @@ export function recoverInterruptedPostTraining(): string[] {
   const fixed: string[] = [];
   for (const r of listRuns()) {
     if (r.status !== "running" || live.has(r.post_training_id)) continue;
+    if (r.owner_pid && r.owner_pid !== process.pid) { try { process.kill(r.owner_pid, 0); continue; } catch { /* owner has exited */ } }
     for (const n of STEP_NAMES) {
       const s = r.steps[n];
       if (s.status === "started") Object.assign(s, { status: "error", error: "the server stopped during this step; it was not resumed", finished_at: now() });
@@ -806,6 +808,14 @@ export function registerPostTrainingRoutes(router: Router, brain: BrainStore): v
     res.status(202).json({ post_training_id: run.post_training_id, status: run.status, request: run.request, steps: run.steps, created_at: run.created_at, console_url: run.provider.console_url });
   });
   router.get("/post-training", (_req, res) => res.json({ runs: listRuns().map(summarizeRun) }));
+  router.get("/post-training/sources", (_req, res) => {
+    const collected = collectTrainingTasks(brain);
+    res.json({ sources: collected.accepted.map((t) => ({
+      trial_id: t.trial_id, shift_id: getTrial(t.trial_id)?.provenance.shift_id ?? null,
+      seed: t.seed, brain_version: t.brain_version, worker: t.worker,
+      steps: t.steps.length, task: `${t.task.type} ${t.task.source} → ${t.task.target}`,
+    })) });
+  });
   router.get("/post-training/:id", (req, res) => res.json(mustGet(req.params.id as string)));
   router.post("/post-training/:id/refresh", async (req, res) => res.json(await refreshRun(req.params.id as string)));
   router.post("/post-training/:id/cancel", async (req, res) => res.json(await cancelRun(req.params.id as string)));

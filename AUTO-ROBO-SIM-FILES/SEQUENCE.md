@@ -84,20 +84,20 @@ Nine engine tests, fourteen server tests, two camera/grid tests, engine/server/w
 
 ### Person A
 
-- [ ] 1. **Disturbances in the engine.** `applyDisturbance(scenario, kind, params)` supports a fixed list: a box blocking an aisle segment, an item in the wrong slot, a heavy item moved to the top shelf, an item placed behind a fresh one. **Waits for:** nothing.
-- [ ] 2. **Adversarial attack button.** The red button calls `POST /adversary`, which plays each disturbed training scenario through the gate's re-run code, keeps the ones that break the current brain, and returns "tried N, broke M"; those failures appear on the review screen labelled "found by adversary." **Waits for:** nothing, since the gate's re-run code exists from Version 1.
-- [ ] 3. **Post-training progress panel.** The review screen shows each post-training step as it completes, and the Crusoe job ID, status, and console link. **Waits for:** Person B step 5. Until then, it uses sample progress values.
-- [ ] 4. **Final steps, with Person B.** Stop adding features, record the one-minute video, write the "Built during the event" README section, and confirm `.env` is not committed.
+- [x] 1. **Disturbances in the engine.** `applyDisturbance(scenario, kind, params)` supports a fixed list: a box blocking an aisle segment, an item in the wrong slot, a heavy item moved to the top shelf, an item placed behind a fresh one. **Waits for:** nothing.
+- [x] 2. **Adversarial attack button.** The red button calls `POST /adversary`, which plays each disturbed training scenario through the gate's re-run code, keeps the ones that break the current brain, and returns "tried N, broke M"; those failures appear on the review screen labelled "found by adversary." **Waits for:** nothing, since the gate's re-run code exists from Version 1.
+- [x] 3. **Post-training progress panel.** The review screen shows each post-training step as it completes, and the Crusoe job ID, status, and console link. **Waits for:** Person B step 5. Until then, it uses sample progress values.
+- [x] 4. **Final steps, with Person B.** Stop adding features, record the one-minute video, write the "Built during the event" README section, and confirm `.env` is not committed.
 
 ### Person B
 
-- [ ] 1. **Collect.** Every step from tasks whose item ended at its target with no refused actions. **Waits for:** nothing.
-- [ ] 2. **Task scaler.** Three variants of each successful task (another shelf level, weight, or start position), played with the current brain, keeping only the variants that succeed. **Waits for:** nothing.
-- [ ] 3. **Chat-format dataset.** One JSON line per kept step: the brain scope as the system message, the observation as the user message, and the chosen action as the assistant message. **Waits for:** nothing.
-- [ ] 4. **Upload.** The file goes to Crusoe's Files API with the purpose "fine-tune," at `https://api.intelligence.crusoecloud.com/v1`. **Waits for:** nothing.
-- [ ] 5. **Fine-tuning job.** A supervised LoRA job on Nemotron 3.5 Lightning is created and its ID, status, and console link are returned through `POST /post-training`. **Waits for:** nothing.
+- [x] 1. **Collect.** Every step from tasks whose item ended at its target with no refused actions. **Waits for:** nothing.
+- [x] 2. **Task scaler.** Three variants of each successful task (another shelf level, weight, or start position), played with the current brain, keeping only the variants that succeed. **Waits for:** nothing.
+- [x] 3. **Chat-format dataset.** One JSON line per kept step: the brain scope as the system message, the observation as the user message, and the chosen action as the assistant message. **Waits for:** nothing.
+- [x] 4. **Upload.** The file goes to Crusoe's Files API with the purpose "fine-tune," at `https://api.intelligence.crusoecloud.com/v1`. **Waits for:** nothing.
+- [x] 5. **Fine-tuning job.** A supervised LoRA job on Nemotron 3.5 Lightning is created and its ID, status, and console link are returned through `POST /post-training`. **Waits for:** nothing.
 - [ ] 6. **Hugging Face copy, if time.** A LeRobot-style copy goes to a public dataset repository on the Hugging Face Hub. **Waits for:** nothing.
-- [ ] 7. **Final steps, with Person A.** Same as Person A step 4.
+- [x] 7. **Final steps, with Person A.** Same as Person A step 4.
 
 
 ## Version 2 extension: brain explorer and saved-trial playback (complete)
@@ -205,3 +205,14 @@ The user authorized a separate improvement-cycle subagent. It locked the second 
 Previous results → Explore → Brain versions now opens a visual map of every saved version together. Directed connections follow actual snapshot parents: v2 and v3 are rejected branches from v1, while the live ancestry is **v1 → v4 → v5**. Per-version cards show the actual added knowledge and parent-relative node/link deltas. The current live ancestry adds **8 nodes and 10 links** (44 → 52 nodes); a zoomable change graph colors inherited v1 knowledge and additions from v4 and v5, with the complete graph and exact node/edge/property inspection available. Natural-language lesson cards show torso positioning, its procedure step and supporting evidence, then grasp-by-weight and its evidence. All values come from saved snapshots.
 
 Evaluation tables and the detailed two-version comparison remain available in a collapsed section, keeping different evaluation sets separate. The dashboard loads new saved versions dynamically. The production build and actual desktop/mobile browser checks pass: five visible version cards, correct rejected branches, zoom, node property/source-version inspection, full 52-node graph and no page overflow at 390 pixels. All 74 existing brain/evidence hashes match the prior baseline. No model calls, brain changes, or demo-service restarts were needed.
+
+
+### V3 resumed and verified with two dialog buttons only
+
+The user resumed V3 and froze every other dashboard element while practicing the demo. The two existing review placeholders are now a red **Adversarial Attack** and blue **Post-training Data** button. Each opens its own native dialog, with explicit run controls, real persisted progress and saved-run history. There are no new workflow pages or tabs. Other existing UI components remain unchanged. Dialog code loads on demand; errors are contained inside the dialog and closing it never restarts a job. Existing reviews are opened from saved records rather than overwritten.
+
+Person B’s post-training implementation is integrated. The real export-only run **pt-mvd62jgz-1** verified one training task and exported **7 actual Lightning decisions**, with zero new worker calls. Provider run **pt-mvd67g7l-1** uploaded its dataset but received HTTP422 for batch size2; that record and upload remain preserved. After fixing the provider contract to batch size **auto**, run **pt-mvd69m95-1** created Crusoe job **ftjob-0d98ad0b40ce4400ae1fc7d854560e6c**, which **succeeded**. It returned output model **ftmodel-3de11fce-7594-447b-85eb-6a1e98d95179**, one checkpoint and actual loss metrics. The final checkpoint training loss is **0.5272924304008484**. These are training metrics, not new task-success results. The weights are neither deployed nor evaluated. This V3 workflow did not edit or promote a brain. The live verification used zero scaler variants to avoid robot inference during demo practice; one-factor scaling and exact replay were exercised in the targeted backend checks. Optional Hugging Face publication is unconfigured; both local dataset formats and their provenance manifest are available.
+
+The original V2 submission MP4 remains the submitted walkthrough; these V3 dialogs are explicitly labeled as added afterward. The final video/README/secret-scan checklist uses that already-completed V2 submission rather than replacing it with a V3 video. The optional Hub checklist remains unchecked. The separate autonomous improvement loop remains stopped pending its full quota agreement; this V3 verification did not run a gate.
+
+A separate V3 process and HTTPS service leave the original demo API8787, Vite5173 and ngrok tunnel running unchanged. Forge’s flock was held for each provider upload/job phase, then released. The production build and 15 relevant backend checks pass. Browser checks cover both dialogs, actual provider metrics, saved status on reopening, close/Escape behavior, 390-pixel layout and a temporary workflow-service outage without losing the dashboard. Restarting only the V3 service preserved all 16 captured V3 runtime file hashes; all 73 original immutable brain/evidence files still match. The mutable index gained an additional v6 candidate during concurrent activity, while v5 remained live at verification; that candidate was preserved. New V3 heavy work yields to pending demo candidates as well as active shifts, reviews and comparisons. Full proof: verification/version-3-workflow-dialogs.json.

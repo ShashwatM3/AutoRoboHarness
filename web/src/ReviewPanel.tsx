@@ -24,6 +24,7 @@ import {
 } from "./api.ts";
 import GatePanel, { GateResult } from "./GatePanel.tsx";
 import BrainHistory from "./BrainHistory.tsx";
+import V3Actions from "./V3Actions.tsx";
 
 function assetURL(path: string): string {
   const clean = path.replace(/^\//, "");
@@ -389,18 +390,7 @@ function ReviewBody({
             </ol>
           </details>
         )}
-        {v3 ?? (
-          <div className="future-buttons">
-            <button disabled>
-              Run post-training
-              <span>VERSION 3</span>
-            </button>
-            <button disabled>
-              Adversarial attack
-              <span>VERSION 3</span>
-            </button>
-          </div>
-        )}
+        {v3 ?? <V3Actions shiftId={review.shift_id} />}
       </section>
     </div>
   );

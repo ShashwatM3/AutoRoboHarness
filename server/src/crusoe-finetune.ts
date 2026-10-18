@@ -195,9 +195,13 @@ export interface BaseModel {
 /** CRUSOE_FT_MODEL if set; otherwise the one fine-tunable Lightning base model the project can see. Never guessed. */
 export async function resolveBaseModel(): Promise<BaseModel> {
   const fromEnv = process.env.CRUSOE_FT_MODEL?.trim();
-  if (fromEnv) return { id: fromEnv, model_name: null, source: "env" };
   const body = await request("GET", "/models", { query: { model_type: "base_model" } });
   const all = list(body).filter((m) => m?.fine_tuning_available === true && typeof m?.id === "string");
+  if (fromEnv) {
+    const configured = all.find((m) => m.id === fromEnv);
+    if (!configured) throw new ProviderError("CRUSOE_FT_MODEL is not an available fine-tunable base model", "config", true);
+    return { id: fromEnv, model_name: str(configured.model_name), source: "env" };
+  }
   const lightning = all.filter((m) => /lightning/i.test(`${m.model_name ?? ""} ${m.id}`));
   const exact = lightning.filter((m) => String(m.model_name ?? m.id).toLowerCase() === LIGHTNING_DOCS_NAME);
   const pick = exact.length === 1 ? exact[0] : lightning.length === 1 ? lightning[0] : null;
@@ -217,7 +221,7 @@ export interface JobBody {
   training_file: string;
   suffix: string;
   metadata: Record<string, string>;
-  method: { type: "supervised"; supervised: { hyperparameters: { n_epochs: number; batch_size: number; learning_rate: number } } };
+  method: { type: "supervised"; supervised: { hyperparameters: { n_epochs: number; batch_size: number | "auto"; learning_rate: number } } };
 }
 
 export async function estimateJobPrice(body: JobBody): Promise<{ estimated_price: string | null; currency: string | null }> {

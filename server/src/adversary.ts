@@ -9,7 +9,7 @@ import { claimInference } from "./inference-lock.ts";
 import { chat, mergeTally, newTally, parseJson, tally, type LlmTally } from "./llm.ts";
 import { dataDir, readJsonDir, safeId, writeJsonAtomic } from "./paths.ts";
 import { runCompiled } from "./policy.ts";
-import { startReview } from "./supervisor.ts";
+import { getReview, startReview } from "./supervisor.ts";
 import { executeTrial, guardrailSpeed, prepareTrial, selectTasks, type Runner, type WorkerKind } from "./trials.ts";
 import { getShift, publishAdversarialShift, runWorker, type TaskSpec } from "./worker.ts";
 
@@ -21,6 +21,7 @@ export interface AttackAttempt {
   successes?: number; tasks?: number; refusals?: number;
 }
 export interface Attack {
+  owner_pid?: number;
   adversary_id: string; status: Status; error?: string;
   brain_version: number; brain_sha256: string; seed: number; task: TaskSpec;
   worker: WorkerKind; proposer: "llm" | "catalog"; model: string | null;
@@ -33,8 +34,12 @@ const directory = () => dataDir("adversary");
 const save = (a: Attack) => { a.updated_at = new Date().toISOString(); writeJsonAtomic(path.join(directory(), `${a.adversary_id}.json`), a); emit("adversary_progress", { ...a }); };
 export const listAttacks = () => readJsonDir<Attack>(directory()).sort((a, b) => b.started_at.localeCompare(a.started_at));
 export const getAttack = (id: string) => listAttacks().find(a => a.adversary_id === safeId(id, "adversary_id"));
-export function recoverInterruptedAttacks() {
-  for (const a of listAttacks()) if (a.status === "running") { a.status = "interrupted"; a.error = "server restarted; no attack or model call was resumed"; a.finished_at = new Date().toISOString(); save(a); }
+export function recoverInterruptedAttacks(ownedOnly = false) {
+  for (const a of listAttacks()) if (a.status === "running") {
+    if (ownedOnly && !a.owner_pid) continue;
+    if (a.owner_pid && a.owner_pid !== process.pid) { try { process.kill(a.owner_pid, 0); continue; } catch { /* owner has exited */ } }
+    a.status = "interrupted"; a.error = "server restarted; no attack or model call was resumed"; a.finished_at = new Date().toISOString(); save(a);
+  }
 }
 
 /** The model selects within this finite, engine-validated catalog. It cannot invent physical parameters. */
@@ -104,7 +109,7 @@ export function startAttack(brain: BrainStore, input: AttackInput, deps: AttackD
   const worker = input.worker ?? "llm", proposer = input.proposer ?? "llm";
   const release = worker === "llm" || proposer === "llm" ? claimInference("adversary", id) : () => {};
   const now = new Date().toISOString();
-  const attack: Attack = { adversary_id: id, status: "running", brain_version: version, brain_sha256: brain.fileSha256(version), seed, task, worker, proposer, model: proposer === "llm" ? (process.env.ADVERSARY_MODEL ?? "zai-org/GLM-5.3") : null, started_at: now, updated_at: now, tried: 0, broke: 0, attempts: [], llm: newTally() };
+  const attack: Attack = { owner_pid: process.pid, adversary_id: id, status: "running", brain_version: version, brain_sha256: brain.fileSha256(version), seed, task, worker, proposer, model: proposer === "llm" ? (process.env.ADVERSARY_MODEL ?? "zai-org/GLM-5.3") : null, started_at: now, updated_at: now, tried: 0, broke: 0, attempts: [], llm: newTally() };
   try { save(attack); } catch (e) { release(); throw e; }
   const done = (async () => {
     try {
@@ -141,6 +146,11 @@ export function startAttack(brain: BrainStore, input: AttackInput, deps: AttackD
 }
 
 export function registerAdversaryRoutes(router: Router, brain: BrainStore) {
+  router.get('/adversary/:id/reviews/:shift', (req, res) => {
+    const attack = getAttack(req.params.id as string), id = safeId(req.params.shift, "shift_id");
+    if (!attack?.attempts.some((a) => a.shift_id === id && a.broken)) throw httpError(404, 'no failed training attempt in this attack with that id');
+    res.json({ review: getReview(id) ?? null });
+  });
   router.get('/adversary', (_req, res) => res.json({ runs: listAttacks() }));
   router.post('/adversary', (req, res) => { const { attack } = startAttack(brain, req.body ?? {}); res.status(202).json(attack); });
   router.get('/adversary/:id', (req, res) => { const a = getAttack(req.params.id as string); if (!a) return res.status(404).json({ error: 'no such adversary run' }); res.json(a); });
@@ -149,6 +159,7 @@ export function registerAdversaryRoutes(router: Router, brain: BrainStore) {
     if (!a) throw httpError(404, 'no such adversary run');
     const id = safeId(req.body?.shift_id, 'shift_id');
     if (!a.attempts.some(t => t.shift_id === id && t.broken)) throw httpError(400, 'choose a failed training attack from this run');
-    res.status(202).json(startReview(brain, id));
+    const existing = getReview(id);
+    res.status(existing ? 200 : 202).json(existing ?? startReview(brain, id));
   });
 }
