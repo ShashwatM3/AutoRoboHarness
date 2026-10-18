@@ -131,7 +131,7 @@ export default function Development() {
         </p>
         <p className="evidence-links">
           <a className="text-link" href={CRUSOE_LINKS.metrics} target="_blank" rel="noreferrer">
-            Crusoe inference metrics <ExternalLink size={11} />
+            Crusoe project metrics (select model and time range) <ExternalLink size={11} />
           </a>
           <a className="text-link" href={CRUSOE_LINKS.deployments} target="_blank" rel="noreferrer">
             Serverless deployments <ExternalLink size={11} />

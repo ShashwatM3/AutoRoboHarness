@@ -154,7 +154,7 @@ Open [http://127.0.0.1:5173](http://127.0.0.1:5173). For a first trial: **Live t
 
 **Replaying saved data.** If you have runtime data (your own runs, or a copy placed in `server/data/` with its brains in `BRAIN_DIR`), restart the API and open Previous results. Replay reads recordings only and makes zero model calls.
 
-**Provider records.** Every run shows its local run ID and model. Crusoe reports usage per model for the whole project in its [inference metrics page](https://console.crusoecloud.com/foundry/metrics) ([documentation](https://docs.crusoecloud.com/serverless-inference/inference-metrics/index.html)); there is no per-run console page.
+**Provider records.** Click **View this run’s recorded usage** for its saved response and token counts, model, timestamps and source record. The panel gives the correct model and a copyable UTC window for Crusoe. Its [project metrics page](https://console.crusoecloud.com/foundry/metrics) has independent filters and may open on another model; choose the indicated model, project and custom time range. Those charts aggregate project traffic, so they are not a per-run record. ([Metrics documentation](https://docs.crusoecloud.com/serverless-inference/inference-metrics/index.html).)
 
 **Troubleshooting.**
 

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ExternalLink, GitCompare, LoaderCircle, Play } from "lucide-react";
+import { GitCompare, LoaderCircle, Play } from "lucide-react";
 import { savedApi } from "./api.ts";
 import BrainExplorer from "./BrainExplorer.tsx";
 import SavedReplay from "./SavedReplay.tsx";
 import StageNav from "./StageNav.tsx";
-import { CRUSOE_LINKS, workerLabel } from "./providers.ts";
+import { workerLabel } from "./providers.ts";
+import ProviderRecords from "./ProviderRecords.tsx";
 import {
   COMPARISON_PREFILL,
   loadRecordings,
@@ -432,17 +433,7 @@ export default function ComparisonWorkspace({
               <div>
                 <dt>Provider records</dt>
                 <dd>
-                  <a
-                    className="text-link"
-                    href={CRUSOE_LINKS.metrics}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Crusoe inference metrics <ExternalLink size={11} />
-                  </a>
-                  <small>
-                    Project-wide, per model. There is no per-run console page.
-                  </small>
+                  <ProviderRecords id={comparison.comparison_id} worker={comparison.worker} usage={comparison.llm} startedAt={comparison.started_at} finishedAt={comparison.finished_at} recordPath={`/api/comparisons/${encodeURIComponent(comparison.comparison_id)}`} />
                 </dd>
               </div>
             </dl>

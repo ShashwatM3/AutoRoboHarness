@@ -3025,3 +3025,27 @@ footer .tiny-dot {
   .stage-nav ol { grid-template-columns: 1fr; }
   .primary-tabs a { padding: 7px 9px; font-size: 12px; }
 }
+
+.provider-records > small { display: block; margin-top: 5px; }
+.provider-dialog { width: min(680px, calc(100vw - 32px)); max-height: 85vh; box-sizing: border-box; overflow: auto; border: 1px solid #d1dac5; border-radius: 16px; padding: 24px; color: #233b2f; background: #fbfcf7; font: 14px/1.55 "DM Sans", sans-serif; }
+.provider-dialog::backdrop { background: rgb(16 35 26 / 60%); }
+.provider-dialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.provider-dialog h2 { font-size: 25px; line-height: 1.2; margin: 6px 0; }
+.provider-dialog h3 { font-size: 18px; margin: 0; }
+.provider-dialog code { display: block; overflow-wrap: anywhere; font-size: 12px; }
+.provider-dialog p { margin: 12px 0; }
+.provider-close { display: grid; place-items: center; padding: 6px; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.provider-usage-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+.provider-usage-counts > div { display: grid; gap: 3px; padding: 12px; background: #ecf2e1; border-radius: 8px; }
+.provider-usage-counts strong { font-size: 24px; }
+.provider-usage-counts span { font-size: 12px; }
+.provider-filter-guide { margin-top: 22px; padding-top: 20px; border-top: 1px solid #d1dac5; }
+.provider-filter-guide ol { padding-left: 20px; }
+.provider-filter-guide li { margin: 8px 0; }
+.provider-filter-guide dl > div { display: flex; flex-wrap: wrap; gap: 10px; margin: 5px 0; }
+.provider-filter-guide dt { min-width: 40px; font-weight: 700; }
+.provider-filter-guide dd { margin: 0; font-variant-numeric: tabular-nums; }
+.provider-filter-guide small { display: block; color: #64725d; }
+.provider-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+.provider-copy-status { min-height: 20px; font-size: 12px; }
+@media (max-width: 480px) { .provider-dialog { padding: 16px; } .provider-usage-counts { grid-template-columns: 1fr; } }

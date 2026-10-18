@@ -59,6 +59,7 @@ export interface SavedComparison {
   tasks: TaskSpec[];
   worker: "llm" | "compiled";
   started_at: string;
+  finished_at?: string;
   progress: { pairs_done: number; pairs_total: number };
   aggregates: ComparisonScore[];
   per_seed: {

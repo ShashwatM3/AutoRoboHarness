@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, GitCompare, LoaderCircle, Swords } from "lucide-react";
+import { GitCompare, LoaderCircle, Swords } from "lucide-react";
 import type { TrajectoryStep } from "../../engine/store.ts";
 import { ApiError, probe, savedApi } from "./api.ts";
 import BrainExplorer from "./BrainExplorer.tsx";
@@ -8,7 +8,8 @@ import { SavedReview } from "./ReviewPanel.tsx";
 import SavedReplay from "./SavedReplay.tsx";
 import StageNav from "./StageNav.tsx";
 import { ROBOT_NAMES } from "./WorkerViews.tsx";
-import { CRUSOE_LINKS, MODELS, workerLabel } from "./providers.ts";
+import { MODELS, workerLabel } from "./providers.ts";
+import ProviderRecords from "./ProviderRecords.tsx";
 import {
   loadRecordings,
   openInLiveTrial,
@@ -270,18 +271,7 @@ export default function RunWorkspace({
             <div>
               <dt>Provider records</dt>
               <dd>
-                <a
-                  className="text-link"
-                  href={CRUSOE_LINKS.metrics}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Crusoe inference metrics <ExternalLink size={11} />
-                </a>
-                <small>
-                  Project-wide, per model. The run ID above is the local record;
-                  there is no per-run console page.
-                </small>
+                <ProviderRecords id={shift.shift_id} worker={shift.worker} usage={shift.llm} startedAt={shift.started_at} finishedAt={shift.finished_at} recordPath={`/api/runs/${encodeURIComponent(shift.shift_id)}`} />
               </dd>
             </div>
           </dl>
