@@ -138,3 +138,45 @@ All extension items are complete. Person B's implementation and follow-up tests 
 **Checks:** engine 9/9, server 29/29, web 6/6; all three type checks and the web production build pass. The README explains setup, the learning loop, knowledge graph, recording isolation and architecture with four Mermaid diagrams. Detailed API documentation is in `server/TRIALS.md`. Original evidence remains unchanged, while the new comparison, verification packet and two UI PDFs have separate filenames in `verification/`.
 
 Person B ran only offline tests while Person A exclusively used the shared inference quota. The completed runtime recordings were copied to Person B with a 47-file hash manifest, preserving existing data. Main was published as `c6177d6`. Person B fast-forwarded to the same commit, restarted the persistent service manually, and independently served the same v5 graph, complete fresh comparison and all twenty recordings. Canonical API hashes for the graph, comparison and trial summaries match across machines. The private environment remains mode 0600; Person B made zero inference calls. **V3 has not started.**
+
+
+## Version 2 dashboard redesign (in progress)
+
+The user requested Live trial and Previous results, then added a Development tab. Both trial experiences follow the original three dashboard stages: **1. Launch**, **2. Robots at work**, **3. Failures, insights and brain updates**. Saved runs must feel like an inspectable recorded workflow, with actual camera playback and step navigation, rather than a long report. Historical browsing never starts review, inference or promotion. Keep original score-only gate evidence separate from fresh recordings. Link actual Crusoe inference dashboards; NVIDIA Nemotron is hosted on Crusoe, and the user confirmed that Crusoe links are sufficient. Post-training and adversarial attack remain clearly identified V3 work. Simplify the README for a new machine's setup and first run.
+
+- [ ] Person A: three-tab navigation, shared three-stage trial flow, interactive recorded-results workspace, Development roadmap and beginner setup guide.
+- [ ] Person B: read-only saved training-run/review/gate API, without the legacy review endpoint's auto-start behavior. No inference calls or edits to existing evidence.
+- [ ] Verify responsive dashboard, recorded playback, review isolation, provider destinations, checks and evidence hashes; publish and synchronize both machines.
+
+
+### Parallel ownership update
+
+The user explicitly reassigned the complete dashboard redesign and beginner README to Person B's machine and asked Person A to start V3 now. This supersedes the earlier instruction to finish the redesign before V3. Person B owns existing web files and README in an isolated branch, plus the separate read-only run-library API task. Person A owns engine disturbances, adversarial execution and post-training backend, plus a new `V3Controls.tsx` integration component. Only Person A may use Crusoe inference; Person B uses offline checks. All existing evidence remains immutable. V3 status is in progress, never presented as completed or measured until verified.
+
+
+### V3 checkpoint: bounded adversary
+
+Person A implemented four engine disturbances with alternate-route and physical-weight validation. Adversarial runs select only from the engine-validated catalog, preserve explicit initial scenes and complete action recordings, and retain only completed failures as ordinary training shifts for explicit supervisor review. Held-out seeds are rejected, model/runtime errors are not counted as discovered failures, and no brain is promoted automatically. Adversary and post-training worker runs claim the same exclusive inference lock as comparisons. Original V2 snapshots and evidence remain untouched. Engine 12/12 and server 37/37 offline tests pass. Person B's read-only run-library API (`8a292a2`) is integrated as `4224d07`; the full dashboard redesign and post-training backend continue in separate Forge worktrees. Crusoe confirms the GLM-5.3 and Lightning model IDs and accepts read-only fine-tuning API access. No new fine-tuning job has been created yet.
+
+
+### V3 live verification checkpoint
+
+The actual GLM-5.3 adversary run **`adv-mvd1z8gx-114e18`** completed four Lightning trials on training seed 1 with brain v5: **tried 4, found 3 failures**. The blocked-aisle trial succeeded; misplaced stock, the heavy top-shelf displacement and stock hidden behind a fresh item failed the strict task check. All four have full recorded scenes and actions. The run used **33 model responses, zero local response replays**. Two earlier GLM output-format failures remain recorded honestly with zero attempted scenarios; neither was counted as a discovered robot failure. The successful proposal is an actual bounded tool selection. Original 74-file evidence baseline remains unchanged. A fresh v5 Lightning training shift (`shift-mvd22etr`) is now collecting a clean success for post-training; the misplaced-stock attack's supervisor review is running. These are training-only and separate from all held-out evaluations. No model-weight improvement is claimed.
+
+
+The fresh training source completed: **`shift-mvd22etr` / `trial-mvd22etu-1`**, v5, seed 1, PICK A-1-3-1 (3.98 kg Orange), **1/1 strict success, 7 actions, 7 model responses, zero refusals and response replays**. The adversarial review finished with an actual DeepSeek verdict: I2 kept, F1 and I1 dropped, and U1 marked unsupported; the gate correctly remains unavailable for that update. All five V3 recordings reconstruct their exact initial and final worlds (35 physical action records). Crusoe's fine-tuning registry exposes the 30B BF16 Nemotron under a legacy Nano name; NVIDIA's official Nano BF16 URL redirects to Lightning BF16. The actual registry ID and descriptor will be preserved in the job record. An explicit local registry-model setting is configured; credentials remain private and the environment file is ignored. Hugging Face publication is optional and currently unconfigured; local dataset exports must remain downloadable.
+
+
+The user additionally requested a separate submission-video subagent on Prithvi's machine. A third Forge worker now owns a one-minute, 16:9 actual-dashboard walkthrough in an isolated temporary video project. It will coordinate with the UI and post-training workers, capture only actual recorded runs and true provider status, and produce an MP4 plus transcript and verification. It has no model quota and will not submit or publish the video. Existing source ownership and evidence preservation remain in force.
+
+
+### UI release boundary: V2 only
+
+The user clarified that the redesigned dashboard must depend **only on completed V2**, while V3 is developed separately. This supersedes the earlier request to wire V3 controls into the current redesign. Person B has been explicitly redirected: release Live trial / Previous results / Development, with Launch → Robots at work → Review, using V2 APIs, graph exploration, read-only saved reviews and actual recorded comparisons. No adversary/post-training probes or controls in the V2 release; those buttons remain disabled as V3 roadmap items. Filter V3 attack and post-training records out of the V2 results browser. The submission video must capture this completed V2 UI; unfinished V3 features must not delay or appear as shipped. The dashboard redesign is **not live yet**; the user has been told that integration and main publication are still pending. V3 backend work continues independently.
+
+
+### V2 dashboard redesign completed
+
+Person B delivered **`d901b4b`**, integrated as **`a073f91`**. The V2 dashboard now has Live trial / Previous results / Development, with Launch → Robots at work → Review in both live and saved workflows. Saved runs show actual camera playback or legacy action logs, recorded graph-read pulses, exact-step navigation, saved judge/grounding/graph changes and actual Crusoe metrics links. The original score-only gate remains separate from fresh replayable comparisons. V3 controls and API probes are absent; V3-generated records are filtered out of this V2 library. README setup now explains first launch, the three tabs, runtime-data limits and troubleshooting.
+
+Per the user's explicit instruction, the UI test suite was skipped. Person B and Person A each verified the production build. Person A inspected the actual dashboard in Orca: all three tabs render, matched playback advances its recorded timeline with two robot cameras and graph reads, and the original saved review shows its actual 2-kept/1-dropped judge result. Saved browsing made **zero legacy review calls and zero V3 API calls**, with no UI alerts. Two final labels distinguish a completed saved shift from live inference and identify the historical gate's base accurately. Main publication follows the whole-file credential/reference scan. V3 backend and the separate video worker continue independently; neither blocks this V2 release.

@@ -633,7 +633,7 @@ export default function ShiftLab({
                     <span className="live-dot" />
                     <strong>Store environment</strong>
                     <span className="subtle-tag">
-                      {shift ? "LIVE" : "READY"}
+                      {live ? "LIVE" : shift ? "SAVED SHIFT" : "READY"}
                     </span>
                   </div>
                   <div className="view-switch">

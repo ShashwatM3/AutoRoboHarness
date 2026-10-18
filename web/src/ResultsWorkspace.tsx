@@ -76,7 +76,7 @@ function GateWorkspace({
             <div>
               <dt>Brains</dt>
               <dd>
-                v{gate.base} (live) vs candidate v{gate.candidate}
+                v{gate.base} (base at evaluation) vs candidate v{gate.candidate}
               </dd>
             </div>
             <div>
