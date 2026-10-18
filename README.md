@@ -6,7 +6,7 @@ AutoRoboHarness is a simulated convenience store where up to four robots pick pr
 
 The dashboard makes that process inspectable: browse every saved knowledge graph, compare versions, run historical brains without changing the live brain, and replay recorded trials through each robot's head camera.
 
-Built at the Recursive Agents Hackathon, Crusoe × Cerebral Valley, October 17, 2026. The current work completes **Version 2**; Version 3 has not started.
+Built at the Recursive Agents Hackathon, Crusoe × Cerebral Valley, October 17, 2026. Version 2 is complete; Version 3 is in progress and not part of this dashboard.
 
 ## The learning loop
 
@@ -36,19 +36,17 @@ A successful task means the intended item reaches its target **with zero refused
 
 ## What to open
 
-Once the server and web app are running:
+The dashboard has three tabs. Live trials and saved results both follow the same three stages: **1 Launch** (robots, tasks, seed, brain), **2 Robots at work** (3D store or robot head cameras, per-robot action logs, the knowledge graph pulsing the nodes each action read) and **3 Review** (failures linked to their exact step, grounded insights, brain updates in plain English with their graph operations, and Update Brain with before/after graphs and the gate).
 
-| Dashboard | Address | What it does |
+| Tab | Address | What it does |
 | --- | --- | --- |
-| Run a shift | [localhost:5173/#shift](http://127.0.0.1:5173/#shift) | Choose a brain, seed, one to four robots, and PICK or RESTOCK tasks. Watch the store or robot cameras. |
-| Brain explorer | [localhost:5173/#brains](http://127.0.0.1:5173/#brains) | Browse saved versions, their parents, change reasons, evaluation IDs and task counts. Pan, zoom, search and inspect graphs side by side. |
-| Trials and comparisons | [localhost:5173/#trials](http://127.0.0.1:5173/#trials) | Launch a matched historical comparison or replay saved trials without inference. The default comparison is v4 versus v5 when those snapshots are available. |
+| Live trial | [localhost:5173/#live](http://127.0.0.1:5173/#live) | Launch a training shift (1–4 robots, a task per robot, a training seed, any saved brain) or a matched comparison of two brains. Makes Crusoe model calls. A local Motion preview makes none. |
+| Previous results | [localhost:5173/#results](http://127.0.0.1:5173/#results) | Step through saved training runs, comparisons, the original gate and every recording: saved configuration, **Replay saved trial** with controls, and the recorded review. Read-only; it never calls a model or starts a review. Brain versions and full graph differences are a drilldown here. |
+| Development | [localhost:5173/#development](http://127.0.0.1:5173/#development) | What Version 1 and Version 2 implemented and measured, and what Version 3 plans. Models and Crusoe console links. |
 
-The graph supports scroll-to-zoom, drag-to-pan, node search, double-click-to-focus, neighbor highlighting, and node/edge inspection. Green, red and amber identify additions, removals and changes. The property comparison includes nested values, labels and node types. Missing evaluations say **“Not evaluated.”**
+Older links still work: `#shift` opens Live trial, `#trials` opens Previous results and `#brains` opens its brain-version drilldown.
 
-Replay offers play/pause, speed, backward/forward steps, a seekable timeline and synchronized comparison views. Each camera and action log identifies its brain version. Both recordings share elapsed simulation time; a finished recording holds its final scene while its partner continues.
-
-**“Run new comparison” makes model calls. “Replay saved trial” reads recorded data only.** The separate Motion Preview is a local engine demonstration and does not represent an agent evaluation.
+Runs saved before full recordings existed show their actual action logs and saved review, but no 3D replay; their starting scene was never saved, so it is not reconstructed. Version 3 buttons stay disabled.
 
 ## The verified improvement, and its limits
 
@@ -73,7 +71,7 @@ The earlier Version 1 gate used another task specification and measured 40% vers
 
 A separate Lightning run, **`cmp-mvd0u3kl-2`**, completed all **20/20 trials** and saved **144 physical action records**. It measured **v4: 6/10 (60%)** and **v5: 9/10 (90%)**, with **147 model responses and zero local response replays**. Refusals per task were **0.5 → 0.1**, and steps per task were **7.5 → 6.9**.
 
-This fresh run used the same requested PICK task and ten held-out seeds, and happened to reproduce the original success percentages. It remains a separate experiment. Its [complete result](AUTO-ROBO-SIM-FILES/verification/version-2-fresh-comparison.json) includes every task outcome; its saved recordings can be opened under **Saved trials & comparisons**. The original gate still has no replay. [The explorer verification](AUTO-ROBO-SIM-FILES/verification/version-2-explorer-verification.json) records unchanged brain/evidence hashes, restart durability and the zero-inference replay audit.
+This fresh run used the same requested PICK task and ten held-out seeds, and happened to reproduce the original success percentages. It remains a separate experiment. Its [complete result](AUTO-ROBO-SIM-FILES/verification/version-2-fresh-comparison.json) includes every task outcome; its saved recordings can be opened under **Previous results**. The original gate still has no replay. [The explorer verification](AUTO-ROBO-SIM-FILES/verification/version-2-explorer-verification.json) records unchanged brain/evidence hashes, restart durability and the zero-inference replay audit.
 
 ## How the brain works
 
@@ -123,7 +121,7 @@ Matched comparisons use the same seed, actual task specifications, robot count, 
 
 ## Run locally
 
-Node.js **22.12 or newer** is required. The engine, server and web app each have a lockfile.
+You need **Node.js 22.12 or newer** (`node -v`) and git.
 
 ```sh
 git clone https://github.com/ShashwatM3/AutoRoboHarness.git
@@ -134,32 +132,36 @@ npm ci --prefix web
 cp .env.example .env
 ```
 
-Fill in `.env` locally:
+Fill in `.env` locally (it is git-ignored; the browser never receives it):
 
-- `CRUSOE_API_KEY`: Crusoe Managed Inference key.
+- `CRUSOE_API_KEY` (**required** for live trials, reviews and gates): a Crusoe Managed Inference key.
 - `CRUSOE_BASE_URL`: defaults to `https://api.inference.crusoecloud.com/v1`.
-- `YDC_API_KEY`: You.com key for supervisor research. `YDC_API_KEY_2` is an optional second key.
-- `LLM_RPM`, `LLM_CONCURRENCY`, `LLM_429_WAIT_S`: request pacing and recovery, defaulting to 18 starts/minute, concurrency 4, and 600 seconds of 429 recovery.
+- `YDC_API_KEY` (optional): You.com key for the supervisor's research citations. `YDC_API_KEY_2` is an optional second key.
+- `LLM_RPM`, `LLM_CONCURRENCY`, `LLM_429_WAIT_S`: pacing, defaulting to 18 starts/minute, 4 in flight and 600 seconds of 429 recovery.
 
-Credentials stay in the git-ignored `.env`; the browser never receives them. The optional [Crusoe Cloud MCP setup guide](AUTO-ROBO-SIM-FILES/CRUSOE-MCP-SETUP.md) explains infrastructure access. The application itself uses Crusoe's inference API.
-
-Start the backend in one terminal:
+Start the API in one terminal and the dashboard in a second:
 
 ```sh
-npm start --prefix server
+npm start --prefix server      # API on http://127.0.0.1:8787
+npm run dev --prefix web       # dashboard on http://127.0.0.1:5173
 ```
 
-Start the dashboard in another:
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). For a first trial: **Live trial → Training shift**, keep two robots and seed 01, press **Launch shift**, watch stage 2, then press **Go to review** and **Start or open the review**. The review calls the Super VL supervisor and the DeepSeek judge on Crusoe (a saved example used 9 model calls); **Update Brain** runs a held-out gate of about 150 Lightning calls.
 
-```sh
-npm run dev --prefix web
-```
+**What a fresh clone contains.** Only the checked-in seed brain (`brain/v1.json`) and the documented verification files. Generated brain versions, saved shifts, reviews, gates, comparisons and recordings are runtime data under `server/data/` (or the directory in `BRAIN_DIR` for brains) and are not in git, so Previous results starts empty until you run something.
 
-The API listens on port **8787** and the dashboard on **5173**. Vite forwards `/api` and `/ground_truth` to the backend. Use `npm start` for long evaluations; restart the server deliberately after code changes, once active work finishes. Watch mode is available as `npm run dev --prefix server` for ordinary development.
+**Without an API key.** The dashboard still opens. Live trial's Motion preview runs the real engine locally with no model calls, Development works, and Previous results shows whatever saved data exists. Launching a shift, a review or a gate needs the key.
 
-A fresh checkout starts with the checked-in seed brain. The explorer lists the snapshots actually available in `brain/`, or the directory selected by `BRAIN_DIR`. Saved local trials, generated versions, response caches and live-index state are runtime data; they are not downloaded by `npm ci`. Original verification records remain available in the documentation even when a local snapshot or replay is absent.
+**Replaying saved data.** If you have runtime data (your own runs, or a copy placed in `server/data/` with its brains in `BRAIN_DIR`), restart the API and open Previous results. Replay reads recordings only and makes zero model calls.
 
-Crusoe quota is shared across machines using the same project. Run inference on one machine at a time. The scheduler honors a shared per-model cooldown and retries 429 responses for up to `LLM_429_WAIT_S`; simultaneous clients can still compete for quota. Provider cache usage appears only when reported. Local response-cache replays are counted separately and never presented as Crusoe cache hits.
+**Provider records.** Every run shows its local run ID and model. Crusoe reports usage per model for the whole project in its [inference metrics page](https://console.crusoecloud.com/foundry/metrics) ([documentation](https://docs.crusoecloud.com/serverless-inference/inference-metrics/index.html)); there is no per-run console page.
+
+**Troubleshooting.**
+
+- *Port in use:* another API or Vite is already running on 8787 or 5173. Stop it, or reuse it.
+- *429 responses:* the Crusoe quota is shared by every machine using the same project. The server waits and retries for up to `LLM_429_WAIT_S`; run inference on one machine at a time.
+- *After pulling code:* restart the API deliberately once active work finishes; a restart marks unfinished recordings interrupted and never resumes model calls.
+- *"Server offline" in the header:* start the API first; Vite forwards `/api` and `/ground_truth` to port 8787.
 
 ## Architecture and models
 

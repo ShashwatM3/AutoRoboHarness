@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import type { TrajectoryStep } from "../../engine/store.ts";
+import { savedApi, type BrainGraphData } from "./api.ts";
+import BrainGraph from "./BrainGraph.tsx";
 import { StoreScene } from "./scene/StoreScene.ts";
 import { replayBoundaries, replayCursor } from "./scene/recordedReplay.ts";
-import WorkerViews from "./WorkerViews.tsx";
+import WorkerViews, { ROBOT_COLORS, ROBOT_NAMES } from "./WorkerViews.tsx";
 import type { SavedTrial } from "./trialTypes.ts";
 
 declare global {
@@ -12,6 +15,76 @@ declare global {
       { scene: StoreScene; trial: SavedTrial; time: number }
     >;
   }
+}
+
+/** The action being performed at `time`, or the last finished one: the brain nodes it read pulse on the graph. */
+export function activeStep(
+  steps: TrajectoryStep[],
+  time: number,
+): TrajectoryStep | undefined {
+  const { index, next, progress } = replayCursor(steps, time);
+  return next && progress > 0 ? next : steps[index];
+}
+
+export function RobotLogs({
+  steps,
+  robots,
+  current,
+  onSeek,
+  label,
+}: {
+  steps: TrajectoryStep[];
+  robots: string[];
+  current?: TrajectoryStep;
+  onSeek: (step: TrajectoryStep) => void;
+  label: string;
+}) {
+  const refs = useRef(new Map<string, HTMLLIElement>());
+  useEffect(() => {
+    if (!current) return;
+    const node = refs.current.get(`${current.robot}:${current.step}`);
+    const list = node?.parentElement;
+    if (node && list)
+      list.scrollTop = node.offsetTop - list.offsetTop - list.clientHeight / 2;
+  }, [current]);
+  return (
+    <div className="robot-logs" aria-label={label}>
+      {robots.map((robot, i) => {
+        const own = steps.filter((s) => s.robot === robot);
+        return (
+          <section key={robot}>
+            <header>
+              <span className={`robot-tab-dot ${ROBOT_COLORS[i]}`} />
+              R0{i + 1} · {ROBOT_NAMES[i]}
+              <small>{own.length} actions</small>
+            </header>
+            <ol>
+              {own.map((s) => (
+                <li
+                  key={s.step}
+                  ref={(node) => {
+                    const k = `${robot}:${s.step}`;
+                    if (node) refs.current.set(k, node);
+                    else refs.current.delete(k);
+                  }}
+                  className={`${s.ok ? "" : "refused-step"} ${current === s ? "current-step" : ""}`}
+                >
+                  <button onClick={() => onSeek(s)}>
+                    <span>{String(s.step).padStart(2, "0")}</span>
+                    <strong>{s.action}</strong>
+                    <small>
+                      {s.t.toFixed(2)} s · {s.ok ? s.reason : `REFUSED: ${s.reason}`}
+                    </small>
+                  </button>
+                </li>
+              ))}
+              {!own.length && <li className="waiting-step">No recorded actions.</li>}
+            </ol>
+          </section>
+        );
+      })}
+    </div>
+  );
 }
 
 function ReplayView({
@@ -86,6 +159,7 @@ function ReplayView({
   const delivered = trial.scores.filter(
     (s) => s.item_location === s.target_location,
   ).length;
+  const current = activeStep(trial.trajectory, time);
   return (
     <section
       className="replay-view"
@@ -145,7 +219,7 @@ function ReplayView({
             : "Recorded starting scene"}
       </p>
       {refusals.length > 0 && (
-        <details className="recorded-refusals">
+        <details className="recorded-refusals" open>
           <summary>
             {refusals.length} recorded refusal{refusals.length === 1 ? "" : "s"}{" "}
             · jump to evidence
@@ -161,6 +235,13 @@ function ReplayView({
           ))}
         </details>
       )}
+      <RobotLogs
+        steps={trial.trajectory}
+        robots={Object.keys(trial.initial.robots)}
+        current={current}
+        onSeek={(s) => onSeek(s.t)}
+        label={`Brain v${trial.brain_version} recorded action logs`}
+      />
       <details>
         <summary>Recorded tasks, environment and outcomes</summary>
         <pre>
@@ -179,38 +260,59 @@ function ReplayView({
           )}
         </pre>
       </details>
-      <details>
-        <summary>
-          v{trial.brain_version} · full action log ({shown.length}/
-          {trial.trajectory.length})
-        </summary>
-        <ol className="replay-full-log">
-          {shown.map((s, i) => (
-            <li key={i} className={s.ok ? "" : "diff-removed"}>
-              v{trial.brain_version} · {s.robot} · {s.t.toFixed(2)}s ·{" "}
-              {s.action}({JSON.stringify(s.args)}) · {s.ok ? "OK" : "REFUSED"}:{" "}
-              {s.reason}
-            </li>
-          ))}
-        </ol>
-      </details>
     </section>
   );
 }
 
-export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
+/** Recorded playback on the saved simulation clock. Reads recordings only and never calls a model. */
+export default function SavedReplay({
+  trials,
+  title,
+  seek,
+  showGraph = true,
+}: {
+  trials: SavedTrial[];
+  title?: string;
+  /** Change `key` to move the shared clock to `time` (for example, from a failure link). */
+  seek?: { time: number; key: number } | null;
+  showGraph?: boolean;
+}) {
   const [time, setTime] = useState(0),
     [playing, setPlaying] = useState(false),
     [speed, setSpeed] = useState(1);
   const [view, setView] = useState<"workers" | "perspective" | "overhead">(
     "workers",
   );
+  const [graphSide, setGraphSide] = useState(0);
+  const [graphs, setGraphs] = useState<Record<number, BrainGraphData>>({});
+  const [graphError, setGraphError] = useState<string | null>(null);
   const boundaries = useMemo(() => replayBoundaries(trials), [trials]);
   const duration = boundaries.at(-1) ?? 0;
   useEffect(() => {
     setTime(0);
     setPlaying(false);
+    setGraphSide(0);
   }, [trials]);
+  useEffect(() => {
+    if (!seek) return;
+    setPlaying(false);
+    setTime(Math.max(0, Math.min(seek.time, duration)));
+  }, [seek?.key]);
+  const graphTrial = trials[graphSide] ?? trials[0];
+  useEffect(() => {
+    if (!showGraph || !graphTrial || graphs[graphTrial.brain_version]) return;
+    let active = true;
+    savedApi<BrainGraphData>(`/brain?v=${graphTrial.brain_version}`)
+      .then((g) => {
+        if (active) setGraphs((all) => ({ ...all, [g.version]: g }));
+      })
+      .catch((e) => {
+        if (active) setGraphError(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      active = false;
+    };
+  }, [showGraph, graphTrial?.brain_version]);
   useEffect(() => {
     if (!playing) return;
     let frame = 0,
@@ -228,10 +330,11 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
   }, [playing, speed, duration]);
-  const seek = (t: number) => {
+  const doSeek = (t: number) => {
     setPlaying(false);
     setTime(t);
   };
+  const reading = graphTrial ? activeStep(graphTrial.trajectory, time) : undefined;
   return (
     <section
       className="research-card saved-replay"
@@ -239,12 +342,15 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
     >
       <div className="replay-heading">
         <div>
+          <span className="recorded-badge">RECORDED · ZERO MODEL CALLS</span>
           <h2>
-            Replay saved trial{trials.length > 1 ? "s · synchronized" : ""}
+            {title ??
+              `Replay saved trial${trials.length > 1 ? "s · synchronized" : ""}`}
           </h2>
           <p>
-            Recorded data only · zero model calls. Both views share elapsed
-            simulation time; a finished trial holds its final scene.
+            Plays the stored recording on its saved simulation clock. Both views
+            share elapsed simulation time; a finished trial holds its final
+            scene.
           </p>
         </div>
         <label>
@@ -264,7 +370,7 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
           aria-label="Step backward"
           disabled={time <= 0}
           onClick={() =>
-            seek([...boundaries].reverse().find((t) => t < time - 0.001) ?? 0)
+            doSeek([...boundaries].reverse().find((t) => t < time - 0.001) ?? 0)
           }
         >
           <SkipBack size={17} /> Back
@@ -283,7 +389,7 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
           aria-label="Step forward"
           disabled={time >= duration}
           onClick={() =>
-            seek(boundaries.find((t) => t > time + 0.001) ?? duration)
+            doSeek(boundaries.find((t) => t > time + 0.001) ?? duration)
           }
         >
           Step <SkipForward size={17} />
@@ -303,7 +409,7 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
           </select>
         </label>
         <output>
-          {time.toFixed(2)} / {duration.toFixed(2)} s
+          {time.toFixed(2)} / {duration.toFixed(2)} s simulated
         </output>
       </div>
       <input
@@ -314,7 +420,7 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
         max={duration || 1}
         step="0.001"
         value={time}
-        onChange={(e) => seek(Number(e.target.value))}
+        onChange={(e) => doSeek(Number(e.target.value))}
       />
       <div className={`replay-grid ${trials.length > 1 ? "paired" : ""}`}>
         {trials.map((t) => (
@@ -323,10 +429,43 @@ export default function SavedReplay({ trials }: { trials: SavedTrial[] }) {
             trial={t}
             time={time}
             view={view}
-            onSeek={seek}
+            onSeek={doSeek}
           />
         ))}
       </div>
+      {showGraph && graphTrial && (
+        <div className="replay-graph">
+          <div className="replay-graph-heading">
+            <div>
+              <h3>Brain nodes read at this moment</h3>
+              <p>
+                {reading
+                  ? `${reading.robot} step ${reading.step} (${reading.action}) read ${reading.brain_nodes_read.length} nodes from brain v${graphTrial.brain_version}.`
+                  : "Press play or choose an action to see which knowledge it read."}
+              </p>
+            </div>
+            {trials.length > 1 && (
+              <div className="view-switch">
+                {trials.map((t, i) => (
+                  <button
+                    key={t.trial_id}
+                    className={graphSide === i ? "selected" : ""}
+                    onClick={() => setGraphSide(i)}
+                  >
+                    v{t.brain_version}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <BrainGraph
+            data={graphs[graphTrial.brain_version] ?? null}
+            error={graphError}
+            readIds={reading?.brain_nodes_read ?? []}
+            epoch={reading ? reading.step * 10 + reading.t : 0}
+          />
+        </div>
+      )}
     </section>
   );
 }

@@ -29,6 +29,13 @@ export interface ShiftInfo {
   llm: LlmUsage;
   trial_id?: string | null;
   replay_available?: boolean;
+  source?: RunSource;
+}
+/** Training shifts published by the V3 adversary carry their disturbance. */
+export interface RunSource {
+  kind: "adversary";
+  adversary_id: string;
+  disturbance: Record<string, unknown>;
 }
 export interface ShiftStep extends TrajectoryStep {
   shift_id: string;
@@ -88,6 +95,17 @@ export interface GateInfo {
   diff: BrainDiff;
   cache_share?: number | null;
   llm: LlmUsage;
+  update_ids?: string[];
+  judge_policy?: string;
+  tasks?: TaskSpec[];
+  started_at?: string;
+  finished_at?: string;
+  per_seed?: {
+    seed: number;
+    skipped?: unknown[];
+    base: TaskScore[];
+    candidate: TaskScore[];
+  }[];
 }
 export type Grounding =
   | {
@@ -143,6 +161,8 @@ export interface ReviewInfo {
   error?: string;
   brain_version: number;
   model?: string;
+  started_at?: string;
+  finished_at?: string;
   failures: {
     id: string;
     robot: string;
@@ -207,4 +227,33 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
     throw new ApiError(message, response.status);
   }
   return response.json() as Promise<T>;
+}
+
+// Saved results are strictly read-only. Only GET requests to recorded-data routes are allowed; the legacy
+// GET /review/:shiftId is excluded because it starts a supervisor review when none exists.
+const SAVED_READ =
+  /^\/(runs(\/[A-Za-z0-9_-]+)?|trials(\/[A-Za-z0-9_-]+)?|comparisons(\/[A-Za-z0-9_-]+)?|gate\/[A-Za-z0-9_-]+|brain(\/versions|\/history|\/diff)?|evaluations|shifts?(\/[A-Za-z0-9_-]+(\/trajectory)?)?|health)(\?[^#]*)?$/;
+
+export function isSavedReadPath(path: string): boolean {
+  return SAVED_READ.test(path);
+}
+
+export function savedApi<T>(path: string): Promise<T> {
+  if (!isSavedReadPath(path))
+    return Promise.reject(
+      new Error(`Saved results are read-only and cannot request ${path}.`),
+    );
+  return api<T>(path, { method: "GET" });
+}
+
+export type Availability = "available" | "missing" | "offline";
+
+/** A list route answering 404 means this server version does not have the feature yet. */
+export async function probe(path: string): Promise<Availability> {
+  try {
+    await savedApi(path);
+    return "available";
+  } catch (e) {
+    return e instanceof ApiError && e.status === 404 ? "missing" : "offline";
+  }
 }
