@@ -1,0 +1,62 @@
+.brain-evolution { border: 1px solid #dce2d1; border-radius: 16px; background: #fcfdf8; padding: 24px; min-width: 0; color: #203f32; }
+.evolution-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.evolution-heading h2 { font: 600 clamp(22px,2.3vw,32px)/1.15 "Space Grotesk",sans-serif; letter-spacing: -.8px; margin: 8px 0; }
+.evolution-heading p { color: #677967; margin: 6px 0; font-size: 13px; }
+.evolution-total { flex-shrink: 0; background: #edf3de; border-radius: 12px; padding: 13px 17px; display: grid; gap: 4px; }
+.evolution-total > span { display: flex; align-items: center; gap: 12px; font: 600 23px "Space Grotesk",sans-serif; }
+.evolution-total strong { font-size: 13px; font-weight: 550; }
+.evolution-total i { font-style: normal; color: #81916e; padding: 0 4px; }
+.evolution-total small { font-size: 11px; color: #617153; }
+.evolution-lineage-scroll { overflow-x: auto; margin: 8px -4px 0; padding: 0 4px 5px; }
+.evolution-connectors { width: 100%; height: 66px; display: block; }
+.evolution-versions { display: grid; gap: 9px; }
+.evolution-version { border: 1px solid #dbe1d2; border-top: 3px solid var(--version-color); border-radius: 9px; padding: 12px 10px; background: #fff; text-align: left; display: flex; flex-direction: column; align-items: stretch; gap: 8px; color: #264535; min-width: 0; }
+.evolution-version:hover, .evolution-version.is-expanded { border-color: var(--version-color); box-shadow: 0 2px 8px #203f3214; }
+.evolution-version.is-live { background: #f0f5e4; }
+.evolution-version.rejected { background: #f5f5f0; border-top-style: dashed; color: #6a7265; }
+.evolution-version-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.evolution-version-top b { font: 600 25px "Space Grotesk",sans-serif; color: var(--version-color); }
+.evolution-version-top > span { font-size: 9px; font-weight: 600; text-align: right; }
+.evolution-version > small { font-size: 10px; color: #77846e; }
+.evolution-version > strong { font-size: 12px; line-height: 1.45; font-weight: 550; flex: 1; }
+.evolution-delta { font-size: 10px; padding-top: 8px; border-top: 1px solid #e2e7d9; }
+.evolution-path { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 14px 0 18px; font-size: 12px; color: #5a705a; }
+.evolution-path strong { color: #294a39; margin-left: 6px; }
+.evolution-path > small { margin-left: auto; color: #78836e; font-size: 11px; }
+.evolution-knowledge { display: grid; grid-template-columns: minmax(0,1fr) minmax(200px,.42fr); gap: 24px; border-top: 1px solid #e1e7d7; padding-top: 22px; }
+.evolution-map { min-width: 0; }
+.evolution-map-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.evolution-map h3 { font: 600 19px "Space Grotesk",sans-serif; margin: 0; }
+.evolution-map-heading p { font-size: 11px; color: #70816a; margin: 6px 0; }
+.evolution-map-heading button { font-size: 11px; flex-shrink: 0; }
+.evolution-legend { display: flex; gap: 15px; flex-wrap: wrap; margin: 12px 0; }
+.evolution-legend > span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #596e57; }
+.evolution-legend i { width: 9px; height: 9px; border-radius: 50%; }
+.evolution-map .brain-body { display: block; }
+.evolution-map .brain-body > svg { height: 255px; }
+.evolution-map .graph-description { border-left: 0; border-top: 1px solid #e2e7d9; padding: 12px 14px; min-height: 83px; }
+.evolution-map .graph-description strong { font-size: 12px; color: #3a5b3b; }
+.evolution-map .graph-description p { font-size: 11px; color: #6c7f62; margin: 4px 0; }
+.evolution-map .graph-description > span { font-size: 10px; }
+.evolution-map .graph-legend { display: none; }
+.evolution-map .graph-count { font-size: 8px; }
+.evolution-map .card-toolbar strong { font-size: 11px; }
+.evolution-context { display: block; font-size: 10px; color: #74816b; line-height: 1.5; margin-top: 8px; }
+.evolution-lessons { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.evolution-lessons > .eyebrow { font-size: 10px; margin: 4px 0 0; }
+.evolution-lessons article { border: 1px solid #dce3d4; border-left: 3px solid var(--lesson-color); border-radius: 8px; padding: 13px 14px; background: #fff; }
+.evolution-lesson-version { display: flex; align-items: center; gap: 6px; color: var(--lesson-color); font-size: 14px; font-weight: 650; }
+.evolution-lesson-version small { color: #8b9680; font-size: 10px; margin-left: auto; font-weight: 450; }
+.evolution-lesson { margin-top: 12px; }
+.evolution-lesson small { display: block; color: #8a967f; font-size: 8px; letter-spacing: .1em; margin-bottom: 4px; }
+.evolution-lesson strong { display: block; font: 550 14px/1.5 "DM Sans",sans-serif; }
+.evolution-lessons footer { margin-top: 12px; padding-top: 9px; border-top: 1px solid #e9ecdf; font-size: 10px; color: #829075; }
+.evolution-lessons > p { font-size: 10px; line-height: 1.7; color: #7a8770; margin: 0; }
+.evolution-expanded { border: 1px solid #dce4d0; background: #f1f6e7; padding: 16px; border-radius: 8px; margin: 0 0 18px; font-size: 12px; }
+.evolution-expanded h3 { margin: 0 0 7px; font-size: 15px; }
+.evolution-expanded pre { max-height: 270px; overflow: auto; font-size: 10px; }
+.brain-explorer > .brain-advanced { border: 1px solid #dce2d1; border-radius: 10px; padding: 16px 20px; background: #fafcf6; }
+.brain-advanced > summary { font-size: 13px; font-weight: 550; cursor: pointer; color: #536d4f; }
+.brain-advanced .research-card { margin-bottom: 0; }
+@media (max-width:1200px) { .evolution-knowledge { grid-template-columns: minmax(0,1fr); } .evolution-lessons { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); } .evolution-lessons > .eyebrow, .evolution-lessons > p { grid-column: 1 / -1; } }
+@media (max-width:600px) { .brain-evolution { padding: 16px; } .evolution-heading { flex-direction: column; } .evolution-total { width: 100%; box-sizing: border-box; } .evolution-total > span { font-size: 20px; } .evolution-lessons { grid-template-columns: 1fr; } .evolution-map-heading { align-items: flex-start; } .evolution-map-heading button { max-width: 100px; white-space: normal; } .evolution-path > small { margin-left: 0; width: 100%; } }

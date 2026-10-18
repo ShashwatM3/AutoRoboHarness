@@ -77,6 +77,8 @@ This fresh run used the same requested PICK task and ten held-out seeds, and hap
 
 Each saved version is a complete JSON knowledge graph. A scope tree lets a worker retrieve knowledge for its task's shelf slot and its ancestors. Procedures specify action order; rules fill parameters; protocols handle conditions; guardrails constrain behavior; evidence records why a lesson exists.
 
+For a quick demo, open **Previous results → Explore → Brain versions** ([direct link](http://127.0.0.1:5173/#results?view=brains)). The evolution map shows every saved version together, with actual parent connections and rejected branches. The current v1→v4→v5 ancestry adds torso positioning, then weight-based grasping: eight knowledge nodes and ten links in total. The graph colors additions by version; zoom, inspect a node, or expand the complete graph. Evaluation records and the detailed two-version comparison remain available below the map. Those scores retain their individual evaluation IDs and task sets.
+
 ```mermaid
 flowchart TD
     Store[Store scope] --> Aisle[Aisle scope]

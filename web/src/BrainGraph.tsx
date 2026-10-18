@@ -90,6 +90,8 @@ export default function BrainGraph({
   addedEdges = [],
   removedEdges = [],
   changedEdges = [],
+  nodeAccents,
+  heading = "Shared brain",
 }: {
   data: BrainGraphData | null;
   readIds: string[];
@@ -101,6 +103,8 @@ export default function BrainGraph({
   addedEdges?: string[];
   removedEdges?: string[];
   changedEdges?: string[];
+  nodeAccents?: Record<string, { color: string; label: string }>;
+  heading?: string;
 }) {
   const positions = useMemo(() => (data ? layout(data) : null), [data]);
   const markerId = `graph-arrow-${useId().replaceAll(":", "")}`;
@@ -177,7 +181,7 @@ export default function BrainGraph({
       <div className="card-toolbar">
         <div>
           <GitBranch size={15} />
-          <strong>Shared brain</strong>
+          <strong>{heading}</strong>
           {data && <span className="subtle-tag">v{data.version}</span>}
         </div>
         <span className="graph-count">
@@ -424,7 +428,7 @@ export default function BrainGraph({
                         ? "#bd644d"
                         : addedIds.includes(n.id)
                           ? "#4b995b"
-                          : (COLORS[n.type] ?? "#b3bd9e")
+                          : (nodeAccents?.[n.id]?.color ?? COLORS[n.type] ?? "#b3bd9e")
                   }
                   stroke={selected === n.id ? "#294d38" : "#f7f9f0"}
                   strokeWidth={selected === n.id ? 2 : 1.5}
@@ -458,7 +462,7 @@ export default function BrainGraph({
             <>
               <strong>{selectedNode.label}</strong>
               <span>
-                {selectedNode.type} · {selectedNode.id}
+                {selectedNode.type} · {selectedNode.id}{nodeAccents?.[selectedNode.id] ? ` · ${nodeAccents[selectedNode.id].label}` : ""}
               </span>
               <p>
                 {Object.entries(selectedNode.props)

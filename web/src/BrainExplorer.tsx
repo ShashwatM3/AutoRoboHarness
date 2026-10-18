@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { savedApi as api, type BrainGraphData } from "./api.ts";
 import BrainGraph from "./BrainGraph.tsx";
+import BrainEvolution from "./BrainEvolution.tsx";
 import {
   compareGraphs,
   edgeKey,
@@ -280,15 +281,14 @@ export default function BrainExplorer({
           </h1>
         </>
       )}
-      <p className="research-intro">
-        Explore immutable snapshots and compare their actual knowledge.
-        Selecting a version leaves the live brain unchanged.
-      </p>
       {error && (
         <p role="alert" className="research-error">
           {error}
         </p>
       )}
+      <BrainEvolution index={index} />
+      <details className="brain-advanced">
+      <summary>Evaluation records & detailed two-version comparison</summary>
       <section className="research-card">
         <h2>
           Saved brain versions{" "}
@@ -468,6 +468,7 @@ export default function BrainExplorer({
           <p>Loading saved graphs…</p>
         )}
       </section>
+      </details>
     </Wrapper>
   );
 }
